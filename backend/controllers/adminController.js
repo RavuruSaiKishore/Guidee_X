@@ -35,66 +35,43 @@ export const getAllStudents = async (req, res) => {
   }
 };
 
-export const createStudent = async (req, res) => {
-  try {
-    const { firstName, lastName, email, password } = req.body;
+// ==========================
+// SEND EMAIL USING RESEND
+// ==========================
 
-    // Validate required fields
-    if (!firstName || !lastName || !email || !password) {
-      return res.status(400).json({
-        success: false,
-        message: "First name, last name, email, and password are required.",
-      });
-    }
+console.log("========== RESEND EMAIL START ==========");
 
-    // Check if email already exists
-    const existingUser = await Student.findOne({
-      email: email.trim().toLowerCase(),
-    });
+console.log("Student Email:", student.email);
+console.log("Frontend URL:", process.env.FRONTEND_URL);
+console.log(
+  "RESEND_API_KEY Exists:",
+  process.env.RESEND_API_KEY ? "YES" : "NO"
+);
 
-    if (existingUser) {
-      return res.status(400).json({
-        success: false,
-        message: "Email already exists.",
-      });
-    }
+if (!process.env.RESEND_API_KEY) {
+  console.error("❌ RESEND_API_KEY is missing.");
 
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
+  return res.status(500).json({
+    success: false,
+    message: "RESEND_API_KEY is missing.",
+  });
+}
 
-    // Create student
-    const student = await Student.create({
-      firstName: firstName.trim(),
-      lastName: lastName.trim(),
-      email: email.trim().toLowerCase(),
-      password: hashedPassword,
-      role: "student",
-      isActive: false,
-    });
+try {
+  const resend = new Resend(process.env.RESEND_API_KEY);
 
-    // ==========================
-    // SEND EMAIL USING RESEND
-    // ==========================
+  console.log("Resend instance created successfully.");
 
-    if (!process.env.RESEND_API_KEY) {
-      return res.status(500).json({
-        success: false,
-        message: "RESEND_API_KEY is missing.",
-      });
-    }
+  const { data, error } = await resend.emails.send({
+    from: "GuideX <onboarding@resend.dev>",
+    to: student.email,
+    subject: "Welcome to GuideX - Student Account Created",
 
-    const resend = new Resend(process.env.RESEND_API_KEY);
-
-    const { data, error } = await resend.emails.send({
-      from: "GuideX <onboarding@resend.dev>",
-      to: student.email,
-      subject: "Welcome to GuideX - Student Account Created",
-
-      text: `Hello ${student.firstName},
+    text: `Hello ${student.firstName},
 
 Your GuideX student account has been created successfully.
 
-Login Details:
+Login Details
 
 Email: ${student.email}
 Password: ${password}
@@ -107,7 +84,7 @@ ${process.env.FRONTEND_URL}/login
 Regards,
 GuideX Team`,
 
-      html: `
+    html: `
       <div style="
         max-width:600px;
         margin:30px auto;
@@ -131,14 +108,13 @@ GuideX Team`,
           Your student account has been created successfully by the administrator.
         </p>
 
-        <table style="
-          margin-top:20px;
-          border-collapse:collapse;
-        ">
+        <table style="margin-top:20px;border-collapse:collapse;">
+
           <tr>
             <td style="padding:10px 0;">
               <strong>Email:</strong>
             </td>
+
             <td style="padding:10px 15px;">
               ${student.email}
             </td>
@@ -148,14 +124,16 @@ GuideX Team`,
             <td style="padding:10px 0;">
               <strong>Password:</strong>
             </td>
+
             <td style="padding:10px 15px;">
               ${password}
             </td>
           </tr>
+
         </table>
 
         <p style="margin-top:25px;">
-          Please login using the above credentials and change your password immediately after your first login.
+          Please login using the above credentials and change your password immediately.
         </p>
 
         <a
@@ -165,84 +143,53 @@ GuideX Team`,
             margin-top:20px;
             padding:12px 24px;
             background:#2563eb;
-            color:#ffffff;
+            color:white;
             text-decoration:none;
             border-radius:6px;
           "
         >
-          Login to GuideX
+          Login
         </a>
-
-        <p style="
-          margin-top:30px;
-          color:#6b7280;
-          font-size:13px;
-        ">
-          If you were not expecting this account, please contact the GuideX administrator.
-        </p>
 
         <hr style="margin:25px 0;">
 
-        <p style="
-          color:#9ca3af;
-          font-size:12px;
-        ">
+        <small>
           © ${new Date().getFullYear()} GuideX
-        </p>
+        </small>
 
       </div>
-      `,
-    });
+    `,
+  });
 
-    if (error) {
-      console.error("Resend Error:", error);
+  console.log("Resend Data:", data);
+  console.log("Resend Error:", error);
 
-      return res.status(500).json({
-        success: false,
-        message: "Failed to send welcome email.",
-      });
-    }
-
-    // ==========================
-    // AUDIT LOG
-    // ==========================
-
-    const admin = await Student.findById(req.user.id).select("-password");
-
-    await createAuditLog({
-      req,
-      user: {
-        ...admin.toObject(),
-        role: "Admin",
-      },
-      action: "Create Student",
-      module: "Admin",
-      description: `Created student ${student.firstName} ${student.lastName}.`,
-      targetId: student._id,
-      targetType: "Student",
-    });
-
-    return res.status(201).json({
-      success: true,
-      message: "Student created successfully.",
-      student: {
-        id: student._id,
-        firstName: student.firstName,
-        lastName: student.lastName,
-        email: student.email,
-        role: student.role,
-        isActive: student.isActive,
-      },
-    });
-  } catch (error) {
-    console.error("Create Student Error:", error);
+  if (error) {
+    console.error("❌ Failed to send email:", error);
 
     return res.status(500).json({
       success: false,
-      message: error.message || "Internal Server Error",
+      message: "Failed to send welcome email.",
+      error,
     });
   }
-};
+
+  console.log("✅ Welcome email sent successfully.");
+
+} catch (err) {
+  console.error("========== RESEND EXCEPTION ==========");
+  console.error(err);
+  console.error("Message:", err.message);
+  console.error("Stack:", err.stack);
+
+  return res.status(500).json({
+    success: false,
+    message: "Email sending failed.",
+    error: err.message,
+  });
+}
+
+console.log("========== RESEND EMAIL END ==========");
 
 export const getDashboard = async (req, res) => {
   try {
