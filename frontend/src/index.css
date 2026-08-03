@@ -1,0 +1,112 @@
+@import "tailwindcss";
+
+
+/* ===========================================================
+   GUIDE X STUDENT COMMUNITY MARQUEE
+=========================================================== */
+
+/* Marquee Left -> Right */
+
+@keyframes marquee {
+  from {
+    transform: translateX(-50%);
+  }
+
+  to {
+    transform: translateX(0%);
+  }
+}
+
+/* Marquee Right -> Left */
+
+@keyframes marqueeReverse {
+  from {
+    transform: translateX(0%);
+  }
+
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* Floating Animation */
+
+@keyframes floating {
+  0% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
+
+  100% {
+    transform: translateY(0px);
+  }
+}
+
+/* Top Row */
+
+.animate-marquee {
+  display: flex;
+  width: max-content;
+  animation: marquee 35s linear infinite;
+}
+
+/* Bottom Row */
+
+.animate-marquee-reverse {
+  display: flex;
+  width: max-content;
+  animation: marqueeReverse 35s linear infinite;
+}
+
+/* Float Every Card */
+
+.student-card {
+  animation: floating 5s ease-in-out infinite;
+}
+
+/* Pause on Hover */
+
+.animate-marquee:hover,
+.animate-marquee-reverse:hover {
+  animation-play-state: paused;
+}
+
+.animate-marquee:hover .student-card,
+.animate-marquee-reverse:hover .student-card {
+  animation-play-state: paused;
+}
+
+/* Different Floating Delay */
+
+.student-card:nth-child(2n) {
+  animation-delay: .5s;
+}
+
+.student-card:nth-child(3n) {
+  animation-delay: 1s;
+}
+
+.student-card:nth-child(4n) {
+  animation-delay: 1.5s;
+}
+
+.student-card:nth-child(5n) {
+  animation-delay: 2s;
+}
+
+/* Mobile */
+
+@media (max-width:768px){
+
+  .animate-marquee{
+    animation-duration:22s;
+  }
+
+  .animate-marquee-reverse{
+    animation-duration:22s;
+  }
+
+}
