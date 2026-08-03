@@ -35,43 +35,102 @@ export const getAllStudents = async (req, res) => {
   }
 };
 
-// ==========================
-// SEND EMAIL USING RESEND
-// ==========================
+export const createStudent = async (req, res) => {
+  try {
+    console.log("========== CREATE STUDENT START ==========");
 
-console.log("========== RESEND EMAIL START ==========");
+    const { firstName, lastName, email, password } = req.body;
 
-console.log("Student Email:", student.email);
-console.log("Frontend URL:", process.env.FRONTEND_URL);
-console.log(
-  "RESEND_API_KEY Exists:",
-  process.env.RESEND_API_KEY ? "YES" : "NO"
-);
+    console.log("Request Body:", {
+      firstName,
+      lastName,
+      email,
+      passwordLength: password ? password.length : 0,
+    });
 
-if (!process.env.RESEND_API_KEY) {
-  console.error("❌ RESEND_API_KEY is missing.");
+    // Validate required fields
+    if (!firstName || !lastName || !email || !password) {
+      console.log("❌ Required fields missing.");
 
-  return res.status(500).json({
-    success: false,
-    message: "RESEND_API_KEY is missing.",
-  });
-}
+      return res.status(400).json({
+        success: false,
+        message: "First name, last name, email, and password are required.",
+      });
+    }
 
-try {
-  const resend = new Resend(process.env.RESEND_API_KEY);
+    console.log("Checking existing student...");
 
-  console.log("Resend instance created successfully.");
+    // Check if email already exists
+    const existingUser = await Student.findOne({
+      email: email.trim().toLowerCase(),
+    });
 
-  const { data, error } = await resend.emails.send({
-    from: "GuideX <onboarding@resend.dev>",
-    to: student.email,
-    subject: "Welcome to GuideX - Student Account Created",
+    if (existingUser) {
+      console.log("❌ Student already exists:", existingUser.email);
 
-    text: `Hello ${student.firstName},
+      return res.status(400).json({
+        success: false,
+        message: "Email already exists.",
+      });
+    }
+
+    console.log("Hashing password...");
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    console.log("Password hashed successfully.");
+
+    // Create student
+    const student = await Student.create({
+      firstName: firstName.trim(),
+      lastName: lastName.trim(),
+      email: email.trim().toLowerCase(),
+      password: hashedPassword,
+      role: "student",
+      isActive: false,
+    });
+
+    console.log("✅ Student created successfully.");
+    console.log("Student ID:", student._id);
+    console.log("Student Email:", student.email);
+
+    // ==========================
+    // SEND EMAIL USING RESEND
+    // ==========================
+
+    console.log("========== RESEND EMAIL ==========");
+    console.log("Frontend URL:", process.env.FRONTEND_URL);
+    console.log(
+      "RESEND_API_KEY Exists:",
+      process.env.RESEND_API_KEY ? "YES" : "NO"
+    );
+
+    if (!process.env.RESEND_API_KEY) {
+      console.error("❌ RESEND_API_KEY is missing.");
+
+      return res.status(500).json({
+        success: false,
+        message: "RESEND_API_KEY is missing.",
+      });
+    }
+
+    const resend = new Resend(process.env.RESEND_API_KEY);
+
+    console.log("Resend instance created.");
+
+    console.log("Sending email to:", student.email);
+
+    const { data, error } = await resend.emails.send({
+      from: "GuideX <onboarding@resend.dev>",
+      to: student.email,
+      subject: "Welcome to GuideX - Student Account Created",
+
+      text: `Hello ${student.firstName},
 
 Your GuideX student account has been created successfully.
 
-Login Details
+Login Details:
 
 Email: ${student.email}
 Password: ${password}
@@ -84,7 +143,7 @@ ${process.env.FRONTEND_URL}/login
 Regards,
 GuideX Team`,
 
-    html: `
+      html: `
       <div style="
         max-width:600px;
         margin:30px auto;
@@ -108,13 +167,14 @@ GuideX Team`,
           Your student account has been created successfully by the administrator.
         </p>
 
-        <table style="margin-top:20px;border-collapse:collapse;">
-
+        <table style="
+          margin-top:20px;
+          border-collapse:collapse;
+        ">
           <tr>
             <td style="padding:10px 0;">
               <strong>Email:</strong>
             </td>
-
             <td style="padding:10px 15px;">
               ${student.email}
             </td>
@@ -124,16 +184,14 @@ GuideX Team`,
             <td style="padding:10px 0;">
               <strong>Password:</strong>
             </td>
-
             <td style="padding:10px 15px;">
               ${password}
             </td>
           </tr>
-
         </table>
 
         <p style="margin-top:25px;">
-          Please login using the above credentials and change your password immediately.
+          Please login using the above credentials and change your password immediately after your first login.
         </p>
 
         <a
@@ -143,53 +201,99 @@ GuideX Team`,
             margin-top:20px;
             padding:12px 24px;
             background:#2563eb;
-            color:white;
+            color:#ffffff;
             text-decoration:none;
             border-radius:6px;
           "
         >
-          Login
+          Login to GuideX
         </a>
+
+        <p style="
+          margin-top:30px;
+          color:#6b7280;
+          font-size:13px;
+        ">
+          If you were not expecting this account, please contact the GuideX administrator.
+        </p>
 
         <hr style="margin:25px 0;">
 
-        <small>
+        <p style="
+          color:#9ca3af;
+          font-size:12px;
+        ">
           © ${new Date().getFullYear()} GuideX
-        </small>
+        </p>
 
       </div>
-    `,
-  });
+      `,
+    });
 
-  console.log("Resend Data:", data);
-  console.log("Resend Error:", error);
+    console.log("========== RESEND RESPONSE ==========");
+    console.log("Resend Data:", data);
+    console.log("Resend Error:", error);
 
-  if (error) {
-    console.error("❌ Failed to send email:", error);
+    if (error) {
+      console.error("❌ Failed to send welcome email.");
+      console.error(error);
+
+      return res.status(500).json({
+        success: false,
+        message: "Failed to send welcome email.",
+      });
+    }
+
+    console.log("✅ Welcome email sent successfully.");
+
+    // ==========================
+    // AUDIT LOG
+    // ==========================
+
+    console.log("Creating audit log...");
+
+    const admin = await Student.findById(req.user.id).select("-password");
+
+    await createAuditLog({
+      req,
+      user: {
+        ...admin.toObject(),
+        role: "Admin",
+      },
+      action: "Create Student",
+      module: "Admin",
+      description: `Created student ${student.firstName} ${student.lastName}.`,
+      targetId: student._id,
+      targetType: "Student",
+    });
+
+    console.log("✅ Audit log created.");
+    console.log("========== CREATE STUDENT SUCCESS ==========");
+
+    return res.status(201).json({
+      success: true,
+      message: "Student created successfully.",
+      student: {
+        id: student._id,
+        firstName: student.firstName,
+        lastName: student.lastName,
+        email: student.email,
+        role: student.role,
+        isActive: student.isActive,
+      },
+    });
+  } catch (error) {
+    console.error("========== CREATE STUDENT ERROR ==========");
+    console.error(error);
+    console.error("Error Message:", error.message);
+    console.error("Error Stack:", error.stack);
 
     return res.status(500).json({
       success: false,
-      message: "Failed to send welcome email.",
-      error,
+      message: error.message || "Internal Server Error",
     });
   }
-
-  console.log("✅ Welcome email sent successfully.");
-
-} catch (err) {
-  console.error("========== RESEND EXCEPTION ==========");
-  console.error(err);
-  console.error("Message:", err.message);
-  console.error("Stack:", err.stack);
-
-  return res.status(500).json({
-    success: false,
-    message: "Email sending failed.",
-    error: err.message,
-  });
-}
-
-console.log("========== RESEND EMAIL END ==========");
+};
 
 export const getDashboard = async (req, res) => {
   try {
