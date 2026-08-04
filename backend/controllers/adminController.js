@@ -130,8 +130,20 @@ export const createStudent = async (req, res) => {
         user: process.env.BREVO_LOGIN,
         pass: process.env.BREVO_SMTP_KEY,
       },
+      connectionTimeout: 30000,
+      greetingTimeout: 30000,
+      socketTimeout: 30000,
     });
 
+    try {
+      console.log("Verifying SMTP connection...");
+      await transporter.verify();
+      console.log("✅ SMTP connection verified.");
+    } catch (err) {
+      console.error("❌ SMTP Verify Failed:");
+      console.error(err);
+    }
+    
     try {
       const info = await transporter.sendMail({
         from: "GuideX <ravurusaikishore@gmail.com>",
