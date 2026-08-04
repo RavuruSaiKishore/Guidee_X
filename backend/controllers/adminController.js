@@ -18,6 +18,7 @@ import EventRegistration from "../models/EventRegistration.js";
 import Badge from "../models/Badges.js";
 const FRONTEND_URL = process.env.FRONTEND_URL;
 import { Resend } from "resend";
+import axios from "axios";
 
 
 
@@ -101,170 +102,65 @@ export const createStudent = async (req, res) => {
     // SEND EMAIL USING BREVO
     // ==========================
 
-    console.log("========== BREVO EMAIL ==========");
-    console.log("Frontend URL:", process.env.FRONTEND_URL);
-
-    console.log("BREVO_LOGIN Exists:", process.env.BREVO_LOGIN ? "YES" : "NO");
-
-    console.log(
-      "BREVO_SMTP_KEY Exists:",
-      process.env.BREVO_SMTP_KEY ? "YES" : "NO"
-    );
-
-    if (!process.env.BREVO_LOGIN || !process.env.BREVO_SMTP_KEY) {
-      console.error("❌ Brevo credentials are missing.");
-
-      return res.status(500).json({
-        success: false,
-        message: "Brevo credentials are missing.",
-      });
-    }
-
-    console.log("Sending welcome email to:", student.email);
-
-    const transporter = nodemailer.createTransport({
-      host: process.env.BREVO_HOST,
-      port: Number(process.env.BREVO_PORT),
-      secure: false,
-      auth: {
-        user: process.env.BREVO_LOGIN,
-        pass: process.env.BREVO_SMTP_KEY,
-      },
-      connectionTimeout: 30000,
-      greetingTimeout: 30000,
-      socketTimeout: 30000,
-    });
-
     try {
-      console.log("Verifying SMTP connection...");
-      await transporter.verify();
-      console.log("✅ SMTP connection verified.");
-    } catch (err) {
-      console.error("❌ SMTP Verify Failed:");
-      console.error(err);
-    }
-    
-    try {
-      const info = await transporter.sendMail({
-        from: "GuideX <ravurusaikishore@gmail.com>",
-        to: student.email,
-        subject: "Welcome to GuideX - Student Account Created",
+      const response = await axios.post(
+        "https://api.brevo.com/v3/smtp/email",
+        {
+          sender: {
+            name: "GuideX",
+            email: "ravurusaikishore@gmail.com",
+          },
 
-        text: `Hello ${student.firstName},
+          to: [
+            {
+              email: student.email,
+              name: `${student.firstName} ${student.lastName}`,
+            },
+          ],
 
-Your GuideX student account has been created successfully.
+          subject: "Welcome to GuideX - Student Account Created",
 
-Login Details:
+          htmlContent: `
+      <h2>Welcome to GuideX 🎉</h2>
+
+      <p>Hello <b>${student.firstName}</b>,</p>
+
+      <p>Your account has been created successfully.</p>
+
+      <p><b>Email:</b> ${student.email}</p>
+
+      <p><b>Password:</b> ${password}</p>
+
+      <a href="${process.env.FRONTEND_URL}/login">
+        Login
+      </a>
+    `,
+
+          textContent: `
+Welcome to GuideX
 
 Email: ${student.email}
 Password: ${password}
 
-Please login and change your password after your first login.
-
 Login:
 ${process.env.FRONTEND_URL}/login
+`,
+        },
+        {
+          headers: {
+            accept: "application/json",
+            "content-type": "application/json",
+            "api-key": process.env.BREVO_API_KEY,
+          },
+        }
+      );
 
-Regards,
-GuideX Team`,
-
-        html: `
-    <div style="
-      max-width:600px;
-      margin:30px auto;
-      padding:30px;
-      background:#ffffff;
-      border-radius:12px;
-      border:1px solid #e5e7eb;
-      font-family:Arial,sans-serif;
-    ">
-
-      <h2 style="color:#2563eb;">
-        Welcome to GuideX 🎉
-      </h2>
-
-      <p>
-        Hello
-        <strong>${student.firstName} ${student.lastName}</strong>,
-      </p>
-
-      <p>
-        Your student account has been created successfully by the administrator.
-      </p>
-
-      <table style="margin-top:20px;border-collapse:collapse;">
-        <tr>
-          <td style="padding:10px 0;">
-            <strong>Email:</strong>
-          </td>
-          <td style="padding:10px 15px;">
-            ${student.email}
-          </td>
-        </tr>
-
-        <tr>
-          <td style="padding:10px 0;">
-            <strong>Password:</strong>
-          </td>
-          <td style="padding:10px 15px;">
-            ${password}
-          </td>
-        </tr>
-      </table>
-
-      <p style="margin-top:25px;">
-        Please login using the above credentials and change your password immediately after your first login.
-      </p>
-
-      <a
-        href="${process.env.FRONTEND_URL}/login"
-        style="
-          display:inline-block;
-          margin-top:20px;
-          padding:12px 24px;
-          background:#2563eb;
-          color:#ffffff;
-          text-decoration:none;
-          border-radius:6px;
-        "
-      >
-        Login to GuideX
-      </a>
-
-      <p style="
-        margin-top:30px;
-        color:#6b7280;
-        font-size:13px;
-      ">
-        If you were not expecting this account, please contact the GuideX administrator.
-      </p>
-
-      <hr style="margin:25px 0;">
-
-      <p style="
-        color:#9ca3af;
-        font-size:12px;
-      ">
-        © ${new Date().getFullYear()} GuideX
-      </p>
-
-    </div>
-    `,
-      });
-
-      console.log("========== BREVO RESPONSE ==========");
-      console.log(info);
-
-      console.log("✅ Welcome email sent successfully.");
-    } catch (mailError) {
-      console.error("========== BREVO ERROR ==========");
-      console.error(mailError);
-
-      return res.status(500).json({
-        success: false,
-        message: "Failed to send welcome email.",
-        error: mailError.message,
-      });
+      console.log(response.data);
+    } catch (error) {
+      console.error(error.response?.data || error.message);
     }
+    
+
 
     // ==========================
     // AUDIT LOG
