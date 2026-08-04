@@ -7,6 +7,8 @@ import OTP from "../models/Otp.js";
 import nodemailer from "nodemailer";
 import createAuditLog from "../utils/createAuditLog.js";
 import { Resend } from "resend";
+import axios from "axios";
+
 
 export const registerUser = async (req, res) => {
   try {
@@ -55,27 +57,36 @@ export const registerUser = async (req, res) => {
       }
     );
 
-    // Create Resend instance
-    const resend = new Resend(process.env.RESEND_API_KEY);
+    // ==========================
+    // SEND OTP USING BREVO API
+    // ==========================
 
-    // Send Email
-    const { data, error } = await resend.emails.send({
-      from: "GuideX <onboarding@resend.dev>",
-      to: email,
-      subject: "Verify Your GuideX Account",
+    if (!process.env.BREVO_API_KEY) {
+      return res.status(500).json({
+        success: false,
+        message: "BREVO_API_KEY is missing.",
+      });
+    }
 
-      text: `Hello ${firstName},
+    try {
+      await axios.post(
+        "https://api.brevo.com/v3/smtp/email",
+        {
+          sender: {
+            name: "GuideX",
+            email: "ravurusaikishore@gmail.com",
+          },
 
-Your GuideX verification OTP is: ${otp}
+          to: [
+            {
+              email: email,
+              name: `${firstName} ${lastName}`,
+            },
+          ],
 
-This OTP is valid for 10 minutes.
+          subject: "Verify Your GuideX Account",
 
-If you did not create this account, please ignore this email.
-
-Regards,
-GuideX Team`,
-
-      html: `
+          htmlContent: `
       <div style="
         max-width:500px;
         margin:30px auto;
@@ -125,18 +136,38 @@ GuideX Team`,
 
       </div>
       `,
-    });
 
-    if (error) {
-      console.error(error);
+          textContent: `Hello ${firstName},
 
+Your GuideX verification OTP is: ${otp}
+
+This OTP is valid for 10 minutes.
+
+If you did not create this account, please ignore this email.
+
+Regards,
+GuideX Team`,
+        },
+        {
+          headers: {
+            accept: "application/json",
+            "api-key": process.env.BREVO_API_KEY,
+            "content-type": "application/json",
+          },
+        }
+      );
+
+      return res.status(200).json({
+        success: true,
+        message: "OTP sent successfully",
+      });
+    } catch (error) {
       return res.status(500).json({
         success: false,
         message: "Failed to send OTP email",
+        error: error.response?.data || error.message,
       });
     }
-
-    console.log("Email sent:", data);
 
     return res.status(200).json({
       success: true,
@@ -256,15 +287,32 @@ export const forgotPassword = async (req, res) => {
       },
       { upsert: true }
     );
+    
 
-    const resend = new Resend(process.env.RESEND_API_KEY);
+    if (!process.env.BREVO_API_KEY) {
+      return res.status(500).json({
+        success: false,
+        message: "BREVO_API_KEY is missing.",
+      });
+    }
 
-    const { data, error } = await resend.emails.send({
-      from: "GuideX <onboarding@resend.dev>", // Change to your verified domain/email later
-      to: email,
-      subject: "Reset Your GuideX Password",
 
-      text: `Hello ${user.firstName || "there"},
+     const response = await axios.post(
+       "https://api.brevo.com/v3/smtp/email",
+       {
+         sender: {
+           name: "GuideX",
+           email: "ravurusaikishore@gmail.com",
+         },
+         to: [
+           {
+             email,
+             name: `${user.firstName || ""} ${user.lastName || ""}`.trim(),
+           },
+         ],
+         subject: "Reset Your GuideX Password",
+
+         textContent: `Hello ${user.firstName || "there"},
 
 Your GuideX password reset OTP is: ${otp}
 
@@ -275,116 +323,120 @@ If you did not request this, please ignore this email.
 Regards,
 The GuideX Team`,
 
-      html: `
-    <div style="
-      max-width: 500px;
-      margin: 30px auto;
-      padding: 30px;
-      background: #ffffff;
-      border-radius: 12px;
-      font-family: Arial, sans-serif;
-      color: #374151;
-      text-align: center;
-      border: 1px solid #e5e7eb;
-    ">
+         htmlContent: `
+        <div style="
+          max-width:500px;
+          margin:30px auto;
+          padding:30px;
+          background:#ffffff;
+          border-radius:12px;
+          font-family:Arial,sans-serif;
+          color:#374151;
+          text-align:center;
+          border:1px solid #e5e7eb;
+        ">
 
-      <h1 style="
-        margin: 0;
-        color: #059669;
-        font-size: 28px;
-      ">
-        GuideX
-      </h1>
+          <h1 style="
+            margin:0;
+            color:#059669;
+            font-size:28px;
+          ">
+            GuideX
+          </h1>
 
-      <p style="
-        color: #6b7280;
-        margin: 8px 0 25px;
-      ">
-        Learn. Connect. Grow.
-      </p>
+          <p style="
+            color:#6b7280;
+            margin:8px 0 25px;
+          ">
+            Learn. Connect. Grow.
+          </p>
 
-      <h2 style="
-        color: #111827;
-        margin-bottom: 10px;
-      ">
-        Reset Your Password
-      </h2>
+          <h2 style="
+            color:#111827;
+            margin-bottom:10px;
+          ">
+            Reset Your Password
+          </h2>
 
-      <p style="
-        font-size: 15px;
-        line-height: 1.6;
-      ">
-        Hello <strong>${user.firstName || "there"}</strong>,
-      </p>
+          <p style="
+            font-size:15px;
+            line-height:1.6;
+          ">
+            Hello <strong>${user.firstName || "there"}</strong>,
+          </p>
 
-      <p style="
-        font-size: 15px;
-        line-height: 1.6;
-      ">
-        Use the OTP below to reset your GuideX password.
-      </p>
+          <p style="
+            font-size:15px;
+            line-height:1.6;
+          ">
+            Use the OTP below to reset your GuideX password.
+          </p>
 
-      <div style="
-        margin: 25px auto;
-        padding: 15px;
-        background: #ecfdf5;
-        border: 2px dashed #10b981;
-        border-radius: 10px;
-        font-size: 30px;
-        font-weight: bold;
-        letter-spacing: 8px;
-        color: #047857;
-      ">
-        ${otp}
-      </div>
+          <div style="
+            margin:25px auto;
+            padding:15px;
+            background:#ecfdf5;
+            border:2px dashed #10b981;
+            border-radius:10px;
+            font-size:30px;
+            font-weight:bold;
+            letter-spacing:8px;
+            color:#047857;
+          ">
+            ${otp}
+          </div>
 
-      <p style="
-        color: #92400e;
-        font-size: 14px;
-        background: #fffbeb;
-        padding: 10px;
-        border-radius: 6px;
-      ">
-        This OTP is valid for <strong>10 minutes</strong>.
-      </p>
+          <p style="
+            color:#92400e;
+            font-size:14px;
+            background:#fffbeb;
+            padding:10px;
+            border-radius:6px;
+          ">
+            This OTP is valid for <strong>10 minutes</strong>.
+          </p>
 
-      <p style="
-        margin-top: 25px;
-        color: #6b7280;
-        font-size: 13px;
-        line-height: 1.6;
-      ">
-        If you did not request a password reset, you can safely ignore this email.
-      </p>
+          <p style="
+            margin-top:25px;
+            color:#6b7280;
+            font-size:13px;
+            line-height:1.6;
+          ">
+            If you did not request a password reset, you can safely ignore this email.
+          </p>
 
-      <hr style="
-        border: none;
-        border-top: 1px solid #e5e7eb;
-        margin: 25px 0;
-      ">
+          <hr style="
+            border:none;
+            border-top:1px solid #e5e7eb;
+            margin:25px 0;
+          ">
 
-      <p style="
-        margin: 0;
-        color: #9ca3af;
-        font-size: 12px;
-      ">
-        © ${new Date().getFullYear()} GuideX · The GuideX Team
-      </p>
+          <p style="
+            margin:0;
+            color:#9ca3af;
+            font-size:12px;
+          ">
+            © ${new Date().getFullYear()} GuideX · The GuideX Team
+          </p>
 
-    </div>
-  `,
-    });
+        </div>
+        `,
+       },
+       {
+         headers: {
+           accept: "application/json",
+           "api-key": process.env.BREVO_API_KEY,
+           "content-type": "application/json",
+         },
+       }
+     );
 
-    if (error) {
-      console.error("Resend Error:", error);
-
-      return res.status(500).json({
-        success: false,
-        message: "Failed to send reset OTP email",
-      });
-    }
-
-    console.log("Email sent successfully:", data);
+     if (response.status !== 201) {
+       return res.status(500).json({
+         success: false,
+         message: "Failed to send reset OTP email",
+       });
+     }
 
     await createAuditLog({
       req,

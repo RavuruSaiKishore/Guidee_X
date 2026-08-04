@@ -17,7 +17,6 @@ import RescheduleRequest from "../models/RescheduleRequest.js";
 import EventRegistration from "../models/EventRegistration.js";
 import Badge from "../models/Badges.js";
 const FRONTEND_URL = process.env.FRONTEND_URL;
-import { Resend } from "resend";
 import axios from "axios";
 
 
@@ -41,20 +40,11 @@ export const getAllStudents = async (req, res) => {
 
 export const createStudent = async (req, res) => {
   try {
-    console.log("========== CREATE STUDENT START ==========");
 
     const { firstName, lastName, email, password } = req.body;
 
-    console.log("Request Body:", {
-      firstName,
-      lastName,
-      email,
-      passwordLength: password ? password.length : 0,
-    });
-
     // Validate required fields
     if (!firstName || !lastName || !email || !password) {
-      console.log("❌ Required fields missing.");
 
       return res.status(400).json({
         success: false,
@@ -62,7 +52,6 @@ export const createStudent = async (req, res) => {
       });
     }
 
-    console.log("Checking existing student...");
 
     // Check if email already exists
     const existingUser = await Student.findOne({
@@ -70,7 +59,6 @@ export const createStudent = async (req, res) => {
     });
 
     if (existingUser) {
-      console.log("❌ Student already exists:", existingUser.email);
 
       return res.status(400).json({
         success: false,
@@ -78,12 +66,10 @@ export const createStudent = async (req, res) => {
       });
     }
 
-    console.log("Hashing password...");
 
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    console.log("Password hashed successfully.");
 
     // Create student
     const student = await Student.create({
@@ -95,12 +81,17 @@ export const createStudent = async (req, res) => {
       isActive: false,
     });
 
-    console.log("✅ Student created successfully.");
-    console.log("Student ID:", student._id);
-    console.log("Student Email:", student.email);
     // ==========================
     // SEND EMAIL USING BREVO
     // ==========================
+
+    if (!process.env.BREVO_API_KEY) {
+      return res.status(500).json({
+        success: false,
+        message: "BREVO_API_KEY is missing.",
+      });
+    }
+
 
     try {
       const response = await axios.post(
@@ -155,7 +146,6 @@ ${process.env.FRONTEND_URL}/login
         }
       );
 
-      console.log(response.data);
     } catch (error) {
       console.error(error.response?.data || error.message);
     }
@@ -166,7 +156,6 @@ ${process.env.FRONTEND_URL}/login
     // AUDIT LOG
     // ==========================
 
-    console.log("Creating audit log...");
 
     const admin = await Student.findById(req.user.id).select("-password");
 
@@ -183,9 +172,7 @@ ${process.env.FRONTEND_URL}/login
       targetType: "Student",
     });
 
-    console.log("✅ Audit log created.");
-    console.log("========== CREATE STUDENT SUCCESS ==========");
-
+  
     return res.status(201).json({
       success: true,
       message: "Student created successfully.",
@@ -199,10 +186,6 @@ ${process.env.FRONTEND_URL}/login
       },
     });
   } catch (error) {
-    console.error("========== CREATE STUDENT ERROR ==========");
-    console.error(error);
-    console.error("Error Message:", error.message);
-    console.error("Error Stack:", error.stack);
 
     return res.status(500).json({
       success: false,
@@ -539,167 +522,206 @@ export const approveMentor = async (req, res) => {
 
     const admin = await Student.findById(req.user.id).select("-password");
 
-    if (!process.env.RESEND_API_KEY) {
+    // ======================================
+    // SEND EMAIL USING BREVO EMAIL API
+    // ======================================
+
+    if (!process.env.BREVO_API_KEY) {
       return res.status(500).json({
         success: false,
-        message: "RESEND_API_KEY is missing.",
+        message: "BREVO_API_KEY is missing.",
       });
     }
 
-    const resend = new Resend(process.env.RESEND_API_KEY);
+    try {
+      const response = await axios.post(
+        "https://api.brevo.com/v3/smtp/email",
+        {
+          sender: {
+            name: "GuideX",
+            email: "ravurusaikishore@gmail.com",
+          },
 
-    const { data, error } = await resend.emails.send({
-      from: "GuideX <onboarding@resend.dev>",
-      to: mentor.email,
-      subject:
-        "🎉 Congratulations! Your GuideX Mentor Application Has Been Approved",
-      html: `
-  <div style="margin:0;padding:0;background:#f4f7fb;font-family:Arial,Helvetica,sans-serif;">
-    <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f7fb;padding:30px 0;">
-      <tr>
-        <td align="center">
+          to: [
+            {
+              email: mentor.email,
+              name: `${mentor.firstName} ${mentor.lastName}`,
+            },
+          ],
 
-          <table width="650" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb;">
+          subject:
+            "🎉 Congratulations! Your GuideX Mentor Application Has Been Approved",
 
-            <!-- Header -->
-            <tr>
-              <td align="center" style="background:#2563eb;padding:35px;">
-                <h1 style="margin:0;color:#ffffff;font-size:34px;">
-                  GuideX
-                </h1>
+          htmlContent: `
+      <div style="margin:0;padding:0;background:#f4f7fb;font-family:Arial,Helvetica,sans-serif;">
+        <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f7fb;padding:30px 0;">
+          <tr>
+            <td align="center">
 
-                <p style="margin:10px 0 0;color:#dbeafe;font-size:18px;">
-                  Mentor Application Approved
-                </p>
-              </td>
-            </tr>
+              <table width="650" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb;">
 
-            <!-- Body -->
-            <tr>
-              <td style="padding:40px;">
+                <tr>
+                  <td align="center" style="background:#2563eb;padding:35px;">
+                    <h1 style="margin:0;color:#ffffff;font-size:34px;">
+                      GuideX
+                    </h1>
 
-                <h2 style="margin-top:0;color:#111827;">
-                  Congratulations ${mentor.firstName}! 🎉
-                </h2>
+                    <p style="margin:10px 0 0;color:#dbeafe;font-size:18px;">
+                      Mentor Application Approved
+                    </p>
+                  </td>
+                </tr>
 
-                <p style="font-size:16px;color:#4b5563;line-height:1.8;">
-                  Great news! Your mentor application has been successfully
-                  reviewed and approved by the GuideX Admin Team.
-                </p>
+                <tr>
+                  <td style="padding:40px;">
 
-                <p style="font-size:16px;color:#4b5563;line-height:1.8;">
-                  Your mentor account is now active and you can start accepting
-                  mentoring sessions from students.
-                </p>
+                    <h2 style="margin-top:0;color:#111827;">
+                      Congratulations ${mentor.firstName}! 🎉
+                    </h2>
 
-                <!-- Details -->
-                <table width="100%" cellpadding="12" cellspacing="0" style="margin-top:30px;border-collapse:collapse;border:1px solid #e5e7eb;">
+                    <p style="font-size:16px;color:#4b5563;line-height:1.8;">
+                      Great news! Your mentor application has been successfully
+                      reviewed and approved by the GuideX Admin Team.
+                    </p>
 
-                  <tr style="background:#f9fafb;">
-                    <td><strong>Name</strong></td>
-                    <td>${mentor.firstName} ${mentor.lastName}</td>
-                  </tr>
+                    <p style="font-size:16px;color:#4b5563;line-height:1.8;">
+                      Your mentor account is now active and you can start accepting
+                      mentoring sessions from students.
+                    </p>
 
-                  <tr>
-                    <td><strong>Email</strong></td>
-                    <td>${mentor.email}</td>
-                  </tr>
+                    <table width="100%" cellpadding="12" cellspacing="0"
+                      style="margin-top:30px;border-collapse:collapse;border:1px solid #e5e7eb;">
 
-                  <tr style="background:#f9fafb;">
-                    <td><strong>Profession</strong></td>
-                    <td>${mentor.profession}</td>
-                  </tr>
+                      <tr style="background:#f9fafb;">
+                        <td><strong>Name</strong></td>
+                        <td>${mentor.firstName} ${mentor.lastName}</td>
+                      </tr>
 
-                  <tr>
-                    <td><strong>Status</strong></td>
-                    <td>
-                      <span style="
-                        background:#dcfce7;
-                        color:#15803d;
-                        padding:6px 12px;
-                        border-radius:20px;
-                        font-weight:bold;">
-                        Approved
-                      </span>
-                    </td>
-                  </tr>
+                      <tr>
+                        <td><strong>Email</strong></td>
+                        <td>${mentor.email}</td>
+                      </tr>
 
-                </table>
+                      <tr style="background:#f9fafb;">
+                        <td><strong>Profession</strong></td>
+                        <td>${mentor.profession}</td>
+                      </tr>
 
-                <!-- Next Steps -->
-                <div style="margin-top:35px;background:#eff6ff;border-left:5px solid #2563eb;padding:20px;border-radius:8px;">
+                      <tr>
+                        <td><strong>Status</strong></td>
+                        <td>
+                          <span style="
+                            background:#dcfce7;
+                            color:#15803d;
+                            padding:6px 12px;
+                            border-radius:20px;
+                            font-weight:bold;">
+                            Approved
+                          </span>
+                        </td>
+                      </tr>
 
-                  <h3 style="margin-top:0;color:#1d4ed8;">
-                    What's Next?
-                  </h3>
+                    </table>
 
-                  <ul style="padding-left:20px;color:#374151;line-height:2;">
-                    <li>Complete your mentor profile if needed.</li>
-                    <li>Keep your availability updated.</li>
-                    <li>Accept mentoring session requests.</li>
-                    <li>Start helping students grow their careers.</li>
-                  </ul>
+                    <div style="margin-top:35px;background:#eff6ff;border-left:5px solid #2563eb;padding:20px;border-radius:8px;">
 
-                </div>
+                      <h3 style="margin-top:0;color:#1d4ed8;">
+                        What's Next?
+                      </h3>
 
-                <!-- Button -->
-                <div style="text-align:center;margin-top:40px;">
+                      <ul style="padding-left:20px;color:#374151;line-height:2;">
+                        <li>Complete your mentor profile if needed.</li>
+                        <li>Keep your availability updated.</li>
+                        <li>Accept mentoring session requests.</li>
+                        <li>Start helping students grow their careers.</li>
+                      </ul>
 
-                  <a
-                    href="${process.env.FRONTEND_URL}/login"
-                    style="
-                      background:#2563eb;
-                      color:#ffffff;
-                      text-decoration:none;
-                      padding:15px 35px;
-                      border-radius:8px;
-                      font-size:16px;
-                      font-weight:bold;
-                      display:inline-block;">
-                    Login to GuideX
-                  </a>
+                    </div>
 
-                </div>
+                    <div style="text-align:center;margin-top:40px;">
 
-                <hr style="margin:40px 0;border:none;border-top:1px solid #e5e7eb;">
+                      <a
+                        href="${process.env.FRONTEND_URL}/login"
+                        style="
+                          background:#2563eb;
+                          color:#ffffff;
+                          text-decoration:none;
+                          padding:15px 35px;
+                          border-radius:8px;
+                          font-size:16px;
+                          font-weight:bold;
+                          display:inline-block;">
+                        Login to GuideX
+                      </a>
 
-                <p style="font-size:14px;color:#6b7280;">
-                  Need help? Contact the GuideX support team if you have any
-                  questions.
-                </p>
+                    </div>
 
-                <p style="margin-top:25px;font-size:15px;">
-                  Best Regards,<br>
-                  <strong>GuideX Team</strong>
-                </p>
+                    <hr style="margin:40px 0;border:none;border-top:1px solid #e5e7eb;">
 
-              </td>
-            </tr>
+                    <p style="font-size:14px;color:#6b7280;">
+                      Need help? Contact the GuideX support team if you have any questions.
+                    </p>
 
-            <!-- Footer -->
-            <tr>
-              <td align="center" style="padding:20px;background:#f9fafb;color:#6b7280;font-size:13px;">
-                © ${new Date().getFullYear()} GuideX. All Rights Reserved.
-              </td>
-            </tr>
+                    <p style="margin-top:25px;font-size:15px;">
+                      Best Regards,<br>
+                      <strong>GuideX Team</strong>
+                    </p>
 
-          </table>
+                  </td>
+                </tr>
 
-        </td>
-      </tr>
-    </table>
-  </div>
-  `,
-    });
+                <tr>
+                  <td align="center"
+                    style="padding:20px;background:#f9fafb;color:#6b7280;font-size:13px;">
+                    © ${new Date().getFullYear()} GuideX. All Rights Reserved.
+                  </td>
+                </tr>
 
-     if (error) {
-       console.error("Resend Error:", error);
+              </table>
 
-       return res.status(500).json({
-         success: false,
-         message: "Failed to send welcome email.",
-       });
-     }
+            </td>
+          </tr>
+        </table>
+      </div>
+      `,
+
+          textContent: `Congratulations ${mentor.firstName},
+
+Your GuideX mentor application has been approved.
+
+You can now log in and start accepting mentoring sessions.
+
+Login:
+${process.env.FRONTEND_URL}/login
+
+GuideX Team`,
+        },
+        {
+          headers: {
+            accept: "application/json",
+            "content-type": "application/json",
+            "api-key": process.env.BREVO_API_KEY,
+          },
+        }
+      );
+
+     
+    } catch (mailError) {
+      
+      return res.status(500).json({
+        success: false,
+        message: "Failed to send approval email.",
+      });
+    }
+
+    if (error) {
+      console.error("Resend Error:", error);
+
+      return res.status(500).json({
+        success: false,
+        message: "Failed to send welcome email.",
+      });
+    }
 
     await createAuditLog({
       req,
@@ -1731,164 +1753,187 @@ export const suspendMentor = async (req, res) => {
 
     await mentor.save();
 
-    if (!process.env.RESEND_API_KEY) {
+    // ==========================
+    // SEND EMAIL USING BREVO API
+    // ==========================
+
+    console.log("========== BREVO EMAIL API ==========");
+
+    if (!process.env.BREVO_API_KEY) {
       return res.status(500).json({
         success: false,
-        message: "RESEND_API_KEY is missing.",
+        message: "BREVO_API_KEY is missing.",
       });
     }
 
-    const resend = new Resend(process.env.RESEND_API_KEY);
+    try {
+      const response = await axios.post(
+        "https://api.brevo.com/v3/smtp/email",
+        {
+          sender: {
+            name: "GuideX",
+            email: "ravurusaikishore@gmail.com",
+          },
 
-     const { data, error } = await resend.emails.send({
-       from: "GuideX <onboarding@resend.dev>",
-       to: mentor.email,
-       subject: "GuideX - Your Mentor Account Has Been Suspended",
-       html: `
-  <div style="margin:0;padding:0;background:#f4f7fb;font-family:Arial,Helvetica,sans-serif;">
-    <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f7fb;padding:30px 0;">
-      <tr>
-        <td align="center">
+          to: [
+            {
+              email: mentor.email,
+              name: `${mentor.firstName} ${mentor.lastName}`,
+            },
+          ],
 
-          <table width="650" cellpadding="0" cellspacing="0"
-            style="background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb;">
+          subject: "GuideX - Your Mentor Account Has Been Suspended",
 
-            <!-- Header -->
-            <tr>
-              <td align="center" style="background:#dc2626;padding:35px;">
-                <h1 style="margin:0;color:#ffffff;font-size:34px;">
-                  GuideX
-                </h1>
+          htmlContent: `
+<div style="margin:0;padding:0;background:#f4f7fb;font-family:Arial,Helvetica,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f7fb;padding:30px 0;">
+    <tr>
+      <td align="center">
 
-                <p style="margin:10px 0 0;color:#fee2e2;font-size:18px;">
-                  Mentor Account Suspended
-                </p>
-              </td>
-            </tr>
+        <table width="650" cellpadding="0" cellspacing="0"
+          style="background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb;">
 
-            <!-- Body -->
-            <tr>
-              <td style="padding:40px;">
+          <tr>
+            <td align="center" style="background:#dc2626;padding:35px;">
+              <h1 style="margin:0;color:#ffffff;font-size:34px;">
+                GuideX
+              </h1>
 
-                <h2 style="margin-top:0;color:#111827;">
-                  Hello ${mentor.firstName} ${mentor.lastName},
-                </h2>
+              <p style="margin:10px 0 0;color:#fee2e2;font-size:18px;">
+                Mentor Account Suspended
+              </p>
+            </td>
+          </tr>
 
-                <p style="font-size:16px;color:#4b5563;line-height:1.8;">
-                  We regret to inform you that your <strong>GuideX Mentor Account</strong>
-                  has been temporarily suspended by the administration.
-                </p>
+          <tr>
+            <td style="padding:40px;">
 
-                <table width="100%" cellpadding="12" cellspacing="0"
-                  style="margin-top:30px;border-collapse:collapse;border:1px solid #e5e7eb;">
+              <h2 style="margin-top:0;color:#111827;">
+                Hello ${mentor.firstName} ${mentor.lastName},
+              </h2>
 
-                  <tr style="background:#f9fafb;">
-                    <td><strong>Name</strong></td>
-                    <td>${mentor.firstName} ${mentor.lastName}</td>
-                  </tr>
+              <p style="font-size:16px;color:#4b5563;line-height:1.8;">
+                We regret to inform you that your
+                <strong>GuideX Mentor Account</strong>
+                has been temporarily suspended by the administration.
+              </p>
 
-                  <tr>
-                    <td><strong>Email</strong></td>
-                    <td>${mentor.email}</td>
-                  </tr>
+              <table width="100%" cellpadding="12" cellspacing="0"
+                style="margin-top:30px;border-collapse:collapse;border:1px solid #e5e7eb;">
 
-                  <tr style="background:#f9fafb;">
-                    <td><strong>Account Status</strong></td>
-                    <td>
-                      <span style="
-                        background:#fee2e2;
-                        color:#b91c1c;
-                        padding:6px 12px;
-                        border-radius:20px;
-                        font-weight:bold;">
-                        Suspended
-                      </span>
-                    </td>
-                  </tr>
+                <tr style="background:#f9fafb;">
+                  <td><strong>Name</strong></td>
+                  <td>${mentor.firstName} ${mentor.lastName}</td>
+                </tr>
 
-                  <tr>
-                    <td><strong>Reason</strong></td>
-                    <td>${
-                      reason || "No reason provided by the administrator."
-                    }</td>
-                  </tr>
+                <tr>
+                  <td><strong>Email</strong></td>
+                  <td>${mentor.email}</td>
+                </tr>
 
-                </table>
+                <tr style="background:#f9fafb;">
+                  <td><strong>Account Status</strong></td>
+                  <td>
+                    <span style="
+                      background:#fee2e2;
+                      color:#b91c1c;
+                      padding:6px 12px;
+                      border-radius:20px;
+                      font-weight:bold;">
+                      Suspended
+                    </span>
+                  </td>
+                </tr>
 
-                <div style="margin-top:35px;background:#fef2f2;border-left:5px solid #dc2626;padding:20px;border-radius:8px;">
+                <tr>
+                  <td><strong>Reason</strong></td>
+                  <td>${
+                    reason || "No reason provided by the administrator."
+                  }</td>
+                </tr>
 
-                  <h3 style="margin-top:0;color:#b91c1c;">
-                    What does this mean?
-                  </h3>
+              </table>
 
-                  <ul style="padding-left:20px;color:#374151;line-height:2;">
-                    <li>Your mentor profile is temporarily unavailable.</li>
-                    <li>You cannot accept new mentoring sessions.</li>
-                    <li>Your existing sessions may be reviewed by the admin.</li>
-                    <li>You may contact GuideX Support for clarification.</li>
-                  </ul>
+              <div style="margin-top:35px;background:#fef2f2;border-left:5px solid #dc2626;padding:20px;border-radius:8px;">
 
-                </div>
+                <h3 style="margin-top:0;color:#b91c1c;">
+                  What does this mean?
+                </h3>
 
-                <div style="text-align:center;margin-top:40px;">
+                <ul style="padding-left:20px;color:#374151;line-height:2;">
+                  <li>Your mentor profile is temporarily unavailable.</li>
+                  <li>You cannot accept new mentoring sessions.</li>
+                  <li>Your existing sessions may be reviewed by the admin.</li>
+                  <li>You may contact GuideX Support for clarification.</li>
+                </ul>
 
-                  <a
-                    href="${process.env.FRONTEND_URL}/contact"
-                    style="
-                      background:#dc2626;
-                      color:#ffffff;
-                      text-decoration:none;
-                      padding:15px 35px;
-                      border-radius:8px;
-                      font-size:16px;
-                      font-weight:bold;
-                      display:inline-block;">
-                    Contact Support
-                  </a>
+              </div>
 
-                </div>
+              <div style="text-align:center;margin-top:40px;">
 
-                <hr style="margin:40px 0;border:none;border-top:1px solid #e5e7eb;">
+                <a
+                  href="${process.env.FRONTEND_URL}/contact"
+                  style="
+                    background:#dc2626;
+                    color:#ffffff;
+                    text-decoration:none;
+                    padding:15px 35px;
+                    border-radius:8px;
+                    font-size:16px;
+                    font-weight:bold;
+                    display:inline-block;">
+                  Contact Support
+                </a>
 
-                <p style="font-size:14px;color:#6b7280;">
-                  If you believe this suspension was made in error, please contact
-                  the GuideX Support Team.
-                </p>
+              </div>
 
-                <p style="margin-top:25px;font-size:15px;">
-                  Regards,<br>
-                  <strong>GuideX Administration</strong>
-                </p>
+              <hr style="margin:40px 0;border:none;border-top:1px solid #e5e7eb;">
 
-              </td>
-            </tr>
+              <p style="font-size:14px;color:#6b7280;">
+                If you believe this suspension was made in error, please contact
+                the GuideX Support Team.
+              </p>
 
-            <!-- Footer -->
-            <tr>
-              <td align="center"
-                style="padding:20px;background:#f9fafb;color:#6b7280;font-size:13px;">
-                © ${new Date().getFullYear()} GuideX. All Rights Reserved.
-              </td>
-            </tr>
+              <p style="margin-top:25px;font-size:15px;">
+                Regards,<br>
+                <strong>GuideX Administration</strong>
+              </p>
 
-          </table>
+            </td>
+          </tr>
 
-        </td>
-      </tr>
-    </table>
-  </div>
-  `,
-     });
+          <tr>
+            <td align="center"
+              style="padding:20px;background:#f9fafb;color:#6b7280;font-size:13px;">
+              © ${new Date().getFullYear()} GuideX. All Rights Reserved.
+            </td>
+          </tr>
 
-      if (error) {
-        console.error("Resend Error:", error);
+        </table>
 
-        return res.status(500).json({
-          success: false,
-          message: "Failed to send welcome email.",
-        });
-      }
+      </td>
+    </tr>
+  </table>
+</div>
+      `,
+        },
+        {
+          headers: {
+            accept: "application/json",
+            "api-key": process.env.BREVO_API_KEY,
+            "content-type": "application/json",
+          },
+        }
+      );
 
+    } catch (error) {
+    
+      return res.status(500).json({
+        success: false,
+        message: "Failed to send suspension email.",
+        error: error.response?.data || error.message,
+      });
+    }
 
     res.status(200).json({
       success: true,
@@ -1920,162 +1965,181 @@ export const activateMentor = async (req, res) => {
 
     await mentor.save();
 
-    if (!process.env.RESEND_API_KEY) {
+    // ==========================
+    // SEND EMAIL USING BREVO API
+    // ==========================
+
+    if (!process.env.BREVO_API_KEY) {
       return res.status(500).json({
         success: false,
-        message: "RESEND_API_KEY is missing.",
+        message: "BREVO_API_KEY is missing.",
       });
     }
 
-    const resend = new Resend(process.env.RESEND_API_KEY);
+    try {
+      await axios.post(
+        "https://api.brevo.com/v3/smtp/email",
+        {
+          sender: {
+            name: "GuideX",
+            email: "ravurusaikishore@gmail.com",
+          },
 
-    const { data, error } = await resend.emails.send({
-      from: "GuideX <onboarding@resend.dev>",
-      to: mentor.email,
-      subject: "🎉 GuideX - Your Mentor Account Has Been Reactivated",
-      html: `
-  <div style="margin:0;padding:0;background:#f4f7fb;font-family:Arial,Helvetica,sans-serif;">
-    <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f7fb;padding:30px 0;">
-      <tr>
-        <td align="center">
+          to: [
+            {
+              email: mentor.email,
+              name: `${mentor.firstName} ${mentor.lastName}`,
+            },
+          ],
 
-          <table width="650" cellpadding="0" cellspacing="0"
-            style="background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb;">
+          subject: "🎉 GuideX - Your Mentor Account Has Been Reactivated",
 
-            <!-- Header -->
-            <tr>
-              <td align="center" style="background:#16a34a;padding:35px;">
-                <h1 style="margin:0;color:#ffffff;font-size:34px;">
-                  GuideX
-                </h1>
+          htmlContent: `
+<div style="margin:0;padding:0;background:#f4f7fb;font-family:Arial,Helvetica,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f7fb;padding:30px 0;">
+    <tr>
+      <td align="center">
 
-                <p style="margin:10px 0 0;color:#dcfce7;font-size:18px;">
-                  Mentor Account Reactivated
-                </p>
-              </td>
-            </tr>
+        <table width="650" cellpadding="0" cellspacing="0"
+          style="background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb;">
 
-            <!-- Body -->
-            <tr>
-              <td style="padding:40px;">
+          <tr>
+            <td align="center" style="background:#16a34a;padding:35px;">
+              <h1 style="margin:0;color:#ffffff;font-size:34px;">
+                GuideX
+              </h1>
 
-                <h2 style="margin-top:0;color:#111827;">
-                  Welcome Back, ${mentor.firstName} ${mentor.lastName}! 🎉
-                </h2>
+              <p style="margin:10px 0 0;color:#dcfce7;font-size:18px;">
+                Mentor Account Reactivated
+              </p>
+            </td>
+          </tr>
 
-                <p style="font-size:16px;color:#4b5563;line-height:1.8;">
-                  We're pleased to inform you that your <strong>GuideX Mentor Account</strong>
-                  has been successfully reactivated.
-                </p>
+          <tr>
+            <td style="padding:40px;">
 
-                <p style="font-size:16px;color:#4b5563;line-height:1.8;">
-                  You can now log in and continue mentoring students, manage your
-                  availability, and accept new session requests.
-                </p>
+              <h2 style="margin-top:0;color:#111827;">
+                Welcome Back, ${mentor.firstName} ${mentor.lastName}! 🎉
+              </h2>
 
-                <table width="100%" cellpadding="12" cellspacing="0"
-                  style="margin-top:30px;border-collapse:collapse;border:1px solid #e5e7eb;">
+              <p style="font-size:16px;color:#4b5563;line-height:1.8;">
+                We're pleased to inform you that your
+                <strong>GuideX Mentor Account</strong>
+                has been successfully reactivated.
+              </p>
 
-                  <tr style="background:#f9fafb;">
-                    <td><strong>Name</strong></td>
-                    <td>${mentor.firstName} ${mentor.lastName}</td>
-                  </tr>
+              <p style="font-size:16px;color:#4b5563;line-height:1.8;">
+                You can now log in and continue mentoring students, manage your
+                availability, and accept new session requests.
+              </p>
 
-                  <tr>
-                    <td><strong>Email</strong></td>
-                    <td>${mentor.email}</td>
-                  </tr>
+              <table width="100%" cellpadding="12" cellspacing="0"
+                style="margin-top:30px;border-collapse:collapse;border:1px solid #e5e7eb;">
 
-                  <tr style="background:#f9fafb;">
-                    <td><strong>Account Status</strong></td>
-                    <td>
-                      <span style="
-                        background:#dcfce7;
-                        color:#15803d;
-                        padding:6px 12px;
-                        border-radius:20px;
-                        font-weight:bold;">
-                        Active
-                      </span>
-                    </td>
-                  </tr>
+                <tr style="background:#f9fafb;">
+                  <td><strong>Name</strong></td>
+                  <td>${mentor.firstName} ${mentor.lastName}</td>
+                </tr>
 
-                </table>
+                <tr>
+                  <td><strong>Email</strong></td>
+                  <td>${mentor.email}</td>
+                </tr>
 
-                <div style="margin-top:35px;background:#ecfdf5;border-left:5px solid #16a34a;padding:20px;border-radius:8px;">
+                <tr style="background:#f9fafb;">
+                  <td><strong>Account Status</strong></td>
+                  <td>
+                    <span style="
+                      background:#dcfce7;
+                      color:#15803d;
+                      padding:6px 12px;
+                      border-radius:20px;
+                      font-weight:bold;">
+                      Active
+                    </span>
+                  </td>
+                </tr>
 
-                  <h3 style="margin-top:0;color:#15803d;">
-                    You can now:
-                  </h3>
+              </table>
 
-                  <ul style="padding-left:20px;color:#374151;line-height:2;">
-                    <li>Accept new mentoring session requests.</li>
-                    <li>Update your mentor profile and availability.</li>
-                    <li>Continue guiding and supporting students.</li>
-                    <li>Access all mentor features on GuideX.</li>
-                  </ul>
+              <div style="margin-top:35px;background:#ecfdf5;border-left:5px solid #16a34a;padding:20px;border-radius:8px;">
 
-                </div>
+                <h3 style="margin-top:0;color:#15803d;">
+                  You can now:
+                </h3>
 
-                <div style="text-align:center;margin-top:40px;">
+                <ul style="padding-left:20px;color:#374151;line-height:2;">
+                  <li>Accept new mentoring session requests.</li>
+                  <li>Update your mentor profile and availability.</li>
+                  <li>Continue guiding and supporting students.</li>
+                  <li>Access all mentor features on GuideX.</li>
+                </ul>
 
-                  <a
-                    href="${process.env.FRONTEND_URL}/login"
-                    style="
-                      background:#16a34a;
-                      color:#ffffff;
-                      text-decoration:none;
-                      padding:15px 35px;
-                      border-radius:8px;
-                      font-size:16px;
-                      font-weight:bold;
-                      display:inline-block;">
-                    Login to GuideX
-                  </a>
+              </div>
 
-                </div>
+              <div style="text-align:center;margin-top:40px;">
 
-                <hr style="margin:40px 0;border:none;border-top:1px solid #e5e7eb;">
+                <a
+                  href="${process.env.FRONTEND_URL}/login"
+                  style="
+                    background:#16a34a;
+                    color:#ffffff;
+                    text-decoration:none;
+                    padding:15px 35px;
+                    border-radius:8px;
+                    font-size:16px;
+                    font-weight:bold;
+                    display:inline-block;">
+                  Login to GuideX
+                </a>
 
-                <p style="font-size:14px;color:#6b7280;">
-                  Thank you for being a valued member of the GuideX mentor community.
-                  We look forward to your continued support for students.
-                </p>
+              </div>
 
-                <p style="margin-top:25px;font-size:15px;">
-                  Best Regards,<br>
-                  <strong>GuideX Team</strong>
-                </p>
+              <hr style="margin:40px 0;border:none;border-top:1px solid #e5e7eb;">
 
-              </td>
-            </tr>
+              <p style="font-size:14px;color:#6b7280;">
+                Thank you for being a valued member of the GuideX mentor community.
+                We look forward to your continued support for students.
+              </p>
 
-            <!-- Footer -->
-            <tr>
-              <td align="center"
-                style="padding:20px;background:#f9fafb;color:#6b7280;font-size:13px;">
-                © ${new Date().getFullYear()} GuideX. All Rights Reserved.
-              </td>
-            </tr>
+              <p style="margin-top:25px;font-size:15px;">
+                Best Regards,<br>
+                <strong>GuideX Team</strong>
+              </p>
 
-          </table>
+            </td>
+          </tr>
 
-        </td>
-      </tr>
-    </table>
-  </div>
-  `,
-    });
+          <tr>
+            <td align="center"
+              style="padding:20px;background:#f9fafb;color:#6b7280;font-size:13px;">
+              © ${new Date().getFullYear()} GuideX. All Rights Reserved.
+            </td>
+          </tr>
 
-     if (error) {
-       console.error("Resend Error:", error);
+        </table>
 
-       return res.status(500).json({
-         success: false,
-         message: "Failed to send welcome email.",
-       });
-     }
-
+      </td>
+    </tr>
+  </table>
+</div>
+      `,
+        },
+        {
+          headers: {
+            accept: "application/json",
+            "api-key": process.env.BREVO_API_KEY,
+            "content-type": "application/json",
+          },
+        }
+      );
+    } catch (error) {
+      return res.status(500).json({
+        success: false,
+        message: "Failed to send reactivation email.",
+        error: error.response?.data || error.message,
+      });
+    }
 
     res.status(200).json({
       success: true,

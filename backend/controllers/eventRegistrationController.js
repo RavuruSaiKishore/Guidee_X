@@ -1,7 +1,8 @@
 import mongoose from "mongoose";
 import Event from "../models/Event.js";
 import EventRegistration from "../models/EventRegistration.js";
-import { Resend } from "resend";
+import axios from "axios";
+
 
 
 export const registerForEvent = async (req, res) => {
@@ -153,16 +154,26 @@ export const registerForEvent = async (req, res) => {
       },
     ]);
 
-    // Create Resend instance
-    const resend = new Resend(process.env.RESEND_API_KEY);
+    // ==========================
+    // SEND EMAIL USING BREVO API
+    // ==========================
 
-    // Send Registration Confirmation Email
-    const { data, error } = await resend.emails.send({
-      from: "GuideX <onboarding@resend.dev>",
-      to: registration.student.email,
-      subject: `Registration Confirmed - ${registration.event.title}`,
+    const response = await axios.post(
+      "https://api.brevo.com/v3/smtp/email",
+      {
+        sender: {
+          name: "GuideX",
+          email: "ravurusaikishore@gmail.com",
+        },
+        to: [
+          {
+            email: registration.student.email,
+            name: registration.student.name,
+          },
+        ],
+        subject: `Registration Confirmed - ${registration.event.title}`,
 
-      text: `Hello ${registration.student.name},
+        textContent: `Hello ${registration.student.name},
 
 Congratulations! Your registration for the event has been confirmed.
 
@@ -180,151 +191,157 @@ Thank you for choosing GuideX!
 Regards,
 GuideX Team`,
 
-      html: `
-  <div style="
-    max-width:600px;
-    margin:30px auto;
-    padding:30px;
-    font-family:Arial,sans-serif;
-    background:#ffffff;
-    border-radius:12px;
-    border:1px solid #e5e7eb;
-  ">
-
-    <div style="text-align:center;">
-      <h1 style="color:#4f46e5;margin-bottom:5px;">
-        GuideX
-      </h1>
-
-      <p style="color:#6b7280;">
-        Learn. Connect. Grow.
-      </p>
-    </div>
-
-    <h2 style="color:#111827;">
-      Event Registration Successful 🎉
-    </h2>
-
-    <p>
-      Hello
-      <strong>${registration.student.name}</strong>,
-    </p>
-
-    <p>
-      Congratulations! You have successfully registered for the following event.
-    </p>
-
-    <table
-      style="
-        width:100%;
-        border-collapse:collapse;
-        margin-top:20px;
-      "
-    >
-
-      <tr>
-        <td style="padding:10px;font-weight:bold;">
-          Event
-        </td>
-
-        <td style="padding:10px;">
-          ${registration.event.title}
-        </td>
-      </tr>
-
-      <tr style="background:#f9fafb;">
-        <td style="padding:10px;font-weight:bold;">
-          Speaker
-        </td>
-
-        <td style="padding:10px;">
-          ${registration.event.speaker}
-        </td>
-      </tr>
-
-      <tr>
-        <td style="padding:10px;font-weight:bold;">
-          Role
-        </td>
-
-        <td style="padding:10px;">
-          ${registration.event.speakerRole || "N/A"}
-        </td>
-      </tr>
-
-      <tr style="background:#f9fafb;">
-        <td style="padding:10px;font-weight:bold;">
-          Company
-        </td>
-
-        <td style="padding:10px;">
-          ${registration.event.speakerCompany || "N/A"}
-        </td>
-      </tr>
-
-      <tr>
-        <td style="padding:10px;font-weight:bold;">
-          Starts
-        </td>
-
-        <td style="padding:10px;">
-          ${new Date(registration.event.startDateTime).toLocaleString()}
-        </td>
-      </tr>
-
-      <tr style="background:#f9fafb;">
-        <td style="padding:10px;font-weight:bold;">
-          Ends
-        </td>
-
-        <td style="padding:10px;">
-          ${new Date(registration.event.endDateTime).toLocaleString()}
-        </td>
-      </tr>
-
-    </table>
-
+        htmlContent: `
     <div style="
-      background:#eef4ff;
-      border-left:4px solid #4f46e5;
-      padding:15px;
-      margin-top:25px;
-      border-radius:6px;
+      max-width:600px;
+      margin:30px auto;
+      padding:30px;
+      font-family:Arial,sans-serif;
+      background:#ffffff;
+      border-radius:12px;
+      border:1px solid #e5e7eb;
     ">
-      <strong>Meeting Link</strong>
 
-      <p style="margin-top:8px;">
-        The meeting link will be shared with you before the event begins.
+      <div style="text-align:center;">
+        <h1 style="color:#4f46e5;margin-bottom:5px;">
+          GuideX
+        </h1>
+
+        <p style="color:#6b7280;">
+          Learn. Connect. Grow.
+        </p>
+      </div>
+
+      <h2 style="color:#111827;">
+        Event Registration Successful 🎉
+      </h2>
+
+      <p>
+        Hello
+        <strong>${registration.student.name}</strong>,
       </p>
+
+      <p>
+        Congratulations! You have successfully registered for the following event.
+      </p>
+
+      <table
+        style="
+          width:100%;
+          border-collapse:collapse;
+          margin-top:20px;
+        "
+      >
+
+        <tr>
+          <td style="padding:10px;font-weight:bold;">
+            Event
+          </td>
+
+          <td style="padding:10px;">
+            ${registration.event.title}
+          </td>
+        </tr>
+
+        <tr style="background:#f9fafb;">
+          <td style="padding:10px;font-weight:bold;">
+            Speaker
+          </td>
+
+          <td style="padding:10px;">
+            ${registration.event.speaker}
+          </td>
+        </tr>
+
+        <tr>
+          <td style="padding:10px;font-weight:bold;">
+            Role
+          </td>
+
+          <td style="padding:10px;">
+            ${registration.event.speakerRole || "N/A"}
+          </td>
+        </tr>
+
+        <tr style="background:#f9fafb;">
+          <td style="padding:10px;font-weight:bold;">
+            Company
+          </td>
+
+          <td style="padding:10px;">
+            ${registration.event.speakerCompany || "N/A"}
+          </td>
+        </tr>
+
+        <tr>
+          <td style="padding:10px;font-weight:bold;">
+            Starts
+          </td>
+
+          <td style="padding:10px;">
+            ${new Date(registration.event.startDateTime).toLocaleString()}
+          </td>
+        </tr>
+
+        <tr style="background:#f9fafb;">
+          <td style="padding:10px;font-weight:bold;">
+            Ends
+          </td>
+
+          <td style="padding:10px;">
+            ${new Date(registration.event.endDateTime).toLocaleString()}
+          </td>
+        </tr>
+
+      </table>
+
+      <div style="
+        background:#eef4ff;
+        border-left:4px solid #4f46e5;
+        padding:15px;
+        margin-top:25px;
+        border-radius:6px;
+      ">
+        <strong>Meeting Link</strong>
+
+        <p style="margin-top:8px;">
+          The meeting link will be shared with you before the event begins.
+        </p>
+      </div>
+
+      <p style="margin-top:25px;">
+        We look forward to seeing you at the event.
+      </p>
+
+      <p>
+        Regards,<br>
+        <strong>GuideX Team</strong>
+      </p>
+
+      <hr>
+
+      <div style="text-align:center;">
+        <small>
+          © ${new Date().getFullYear()} GuideX
+        </small>
+      </div>
+
     </div>
+    `,
+      },
+      {
+        headers: {
+          accept: "application/json",
+          "api-key": process.env.BREVO_API_KEY,
+          "content-type": "application/json",
+        },
+      }
+    );
 
-    <p style="margin-top:25px;">
-      We look forward to seeing you at the event.
-    </p>
-
-    <p>
-      Regards,<br>
-      <strong>GuideX Team</strong>
-    </p>
-
-    <hr>
-
-    <div style="text-align:center;">
-      <small>
-        © ${new Date().getFullYear()} GuideX
-      </small>
-    </div>
-
-  </div>
-  `,
-    });
-
-    if (error) {
-      console.error(error);
-
+    if (response.status !== 201) {
       return res.status(500).json({
         success: false,
-        message: "Failed to send OTP email",
+        message: "Failed to send registration confirmation email",
       });
     }
 
@@ -749,15 +766,26 @@ export const cancelEventRegistration = async (req, res) => {
 
     await registration.save();
 
-    const resend = new Resend(process.env.RESEND_API_KEY);
+    // ==========================
+    // SEND EMAIL USING BREVO API
+    // ==========================
 
-    // Send Cancellation Email
-    const { data, error } = await resend.emails.send({
-      from: "GuideX <onboarding@resend.dev>",
-      to: registration.student.email,
-      subject: `Registration Cancelled - ${registration.event.title}`,
+    const response = await axios.post(
+      "https://api.brevo.com/v3/smtp/email",
+      {
+        sender: {
+          name: "GuideX",
+          email: "ravurusaikishore@gmail.com",
+        },
+        to: [
+          {
+            email: registration.student.email,
+            name: registration.student.name,
+          },
+        ],
+        subject: `Registration Cancelled - ${registration.event.title}`,
 
-      text: `Hello ${registration.student.name},
+        textContent: `Hello ${registration.student.name},
 
 Your registration for the following event has been cancelled successfully.
 
@@ -775,154 +803,159 @@ If registration is still open, you can register again anytime before the registr
 Regards,
 GuideX Team`,
 
-      html: `
-  <div style="
-    max-width:600px;
-    margin:30px auto;
-    padding:30px;
-    font-family:Arial,sans-serif;
-    background:#ffffff;
-    border-radius:12px;
-    border:1px solid #e5e7eb;
-  ">
-
-    <div style="text-align:center;">
-      <h1 style="color:#dc2626;margin-bottom:5px;">
-        GuideX
-      </h1>
-
-      <p style="color:#6b7280;">
-        Learn. Connect. Grow.
-      </p>
-    </div>
-
-    <h2 style="color:#dc2626;">
-      Registration Cancelled
-    </h2>
-
-    <p>
-      Hello
-      <strong>${registration.student.name}</strong>,
-    </p>
-
-    <p>
-      Your registration has been cancelled successfully for the following event.
-    </p>
-
-    <table
-      style="
-        width:100%;
-        border-collapse:collapse;
-        margin-top:20px;
-      "
-    >
-
-      <tr>
-        <td style="padding:10px;font-weight:bold;">
-          Event
-        </td>
-
-        <td style="padding:10px;">
-          ${registration.event.title}
-        </td>
-      </tr>
-
-      <tr style="background:#f9fafb;">
-        <td style="padding:10px;font-weight:bold;">
-          Speaker
-        </td>
-
-        <td style="padding:10px;">
-          ${registration.event.speaker}
-        </td>
-      </tr>
-
-      <tr>
-        <td style="padding:10px;font-weight:bold;">
-          Role
-        </td>
-
-        <td style="padding:10px;">
-          ${registration.event.speakerRole || "N/A"}
-        </td>
-      </tr>
-
-      <tr style="background:#f9fafb;">
-        <td style="padding:10px;font-weight:bold;">
-          Company
-        </td>
-
-        <td style="padding:10px;">
-          ${registration.event.speakerCompany || "N/A"}
-        </td>
-      </tr>
-
-      <tr>
-        <td style="padding:10px;font-weight:bold;">
-          Starts
-        </td>
-
-        <td style="padding:10px;">
-          ${new Date(registration.event.startDateTime).toLocaleString()}
-        </td>
-      </tr>
-
-      <tr style="background:#f9fafb;">
-        <td style="padding:10px;font-weight:bold;">
-          Ends
-        </td>
-
-        <td style="padding:10px;">
-          ${new Date(registration.event.endDateTime).toLocaleString()}
-        </td>
-      </tr>
-
-    </table>
-
+        htmlContent: `
     <div style="
-      background:#fef2f2;
-      border-left:4px solid #dc2626;
-      padding:15px;
-      margin-top:25px;
-      border-radius:6px;
+      max-width:600px;
+      margin:30px auto;
+      padding:30px;
+      font-family:Arial,sans-serif;
+      background:#ffffff;
+      border-radius:12px;
+      border:1px solid #e5e7eb;
     ">
-      <strong>Your registration has been cancelled.</strong>
 
-      <p style="margin-top:8px;">
-        If registration is still open, you're welcome to register again anytime before the deadline.
+      <div style="text-align:center;">
+        <h1 style="color:#dc2626;margin-bottom:5px;">
+          GuideX
+        </h1>
+
+        <p style="color:#6b7280;">
+          Learn. Connect. Grow.
+        </p>
+      </div>
+
+      <h2 style="color:#dc2626;">
+        Registration Cancelled
+      </h2>
+
+      <p>
+        Hello
+        <strong>${registration.student.name}</strong>,
       </p>
+
+      <p>
+        Your registration has been cancelled successfully for the following event.
+      </p>
+
+      <table
+        style="
+          width:100%;
+          border-collapse:collapse;
+          margin-top:20px;
+        "
+      >
+
+        <tr>
+          <td style="padding:10px;font-weight:bold;">
+            Event
+          </td>
+
+          <td style="padding:10px;">
+            ${registration.event.title}
+          </td>
+        </tr>
+
+        <tr style="background:#f9fafb;">
+          <td style="padding:10px;font-weight:bold;">
+            Speaker
+          </td>
+
+          <td style="padding:10px;">
+            ${registration.event.speaker}
+          </td>
+        </tr>
+
+        <tr>
+          <td style="padding:10px;font-weight:bold;">
+            Role
+          </td>
+
+          <td style="padding:10px;">
+            ${registration.event.speakerRole || "N/A"}
+          </td>
+        </tr>
+
+        <tr style="background:#f9fafb;">
+          <td style="padding:10px;font-weight:bold;">
+            Company
+          </td>
+
+          <td style="padding:10px;">
+            ${registration.event.speakerCompany || "N/A"}
+          </td>
+        </tr>
+
+        <tr>
+          <td style="padding:10px;font-weight:bold;">
+            Starts
+          </td>
+
+          <td style="padding:10px;">
+            ${new Date(registration.event.startDateTime).toLocaleString()}
+          </td>
+        </tr>
+
+        <tr style="background:#f9fafb;">
+          <td style="padding:10px;font-weight:bold;">
+            Ends
+          </td>
+
+          <td style="padding:10px;">
+            ${new Date(registration.event.endDateTime).toLocaleString()}
+          </td>
+        </tr>
+
+      </table>
+
+      <div style="
+        background:#fef2f2;
+        border-left:4px solid #dc2626;
+        padding:15px;
+        margin-top:25px;
+        border-radius:6px;
+      ">
+        <strong>Your registration has been cancelled.</strong>
+
+        <p style="margin-top:8px;">
+          If registration is still open, you're welcome to register again anytime before the deadline.
+        </p>
+      </div>
+
+      <p style="margin-top:25px;">
+        We hope to see you at another GuideX event soon.
+      </p>
+
+      <p>
+        Regards,<br>
+        <strong>GuideX Team</strong>
+      </p>
+
+      <hr>
+
+      <div style="text-align:center;">
+        <small>
+          © ${new Date().getFullYear()} GuideX
+        </small>
+      </div>
+
     </div>
+    `,
+      },
+      {
+        headers: {
+          accept: "application/json",
+          "api-key": process.env.BREVO_API_KEY,
+          "content-type": "application/json",
+        },
+      }
+    );
 
-    <p style="margin-top:25px;">
-      We hope to see you at another GuideX event soon.
-    </p>
-
-    <p>
-      Regards,<br>
-      <strong>GuideX Team</strong>
-    </p>
-
-    <hr>
-
-    <div style="text-align:center;">
-      <small>
-        © ${new Date().getFullYear()} GuideX
-      </small>
-    </div>
-
-  </div>
-  `,
-    });
-
-    if (error) {
-      console.error(error);
-
+    if (response.status !== 201) {
       return res.status(500).json({
         success: false,
-        message: "Failed to send OTP email",
+        message: "Failed to send cancellation email",
       });
     }
-
     return res.status(200).json({
       success: true,
       message: "Registration cancelled successfully",

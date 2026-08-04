@@ -6,7 +6,8 @@ import Review from "../models/Reviews.js";
 import crypto from "crypto";
 import nodemailer from "nodemailer";
 import Meeting from "../models/Meeting.js";
-import { Resend } from "resend";
+import axios from "axios";
+
 
 
 export const applyMentor = async (req, res) => {
@@ -387,120 +388,35 @@ export const applyMentor = async (req, res) => {
 
   
 
-     if (!process.env.RESEND_API_KEY) {
-       return res.status(500).json({
-         success: false,
-         message: "RESEND_API_KEY is missing.",
-       });
-     }
-
-     const resend = new Resend(process.env.RESEND_API_KEY);
-
-     const { data, error } = await resend.emails.send({
-       from: "GuideX <onboarding@resend.dev>",
-       to: mentor.email,
-       subject: "GuideX - Mentor Application Submitted Successfully",
-       html: `
-  <div style="font-family: Arial, sans-serif; max-width: 650px; margin:auto; border:1px solid #e5e7eb; border-radius:10px; overflow:hidden;">
-
-    <div style="background:#2563eb; padding:20px; text-align:center;">
-      <h1 style="color:#ffffff; margin:0;">GuideX</h1>
-      <p style="color:#dbeafe; margin-top:8px;">
-        Mentor Application Confirmation
-      </p>
-    </div>
-
-    <div style="padding:30px;">
-
-      <h2 style="color:#111827;">
-        Hello ${mentor.firstName} ${mentor.lastName},
-      </h2>
-
-      <p style="color:#374151; line-height:1.7;">
-        Thank you for applying to become a mentor on <strong>GuideX</strong>.
-        We have successfully received your mentor application.
-      </p>
-
-      <p style="color:#374151; line-height:1.7;">
-        Our team will carefully review your profile, qualifications, uploaded
-        documents, and experience before approving your application.
-      </p>
-
-      <table style="width:100%; margin-top:25px; border-collapse:collapse;">
-        <tr>
-          <td style="padding:10px; border:1px solid #e5e7eb;"><strong>Name</strong></td>
-          <td style="padding:10px; border:1px solid #e5e7eb;">
-            ${mentor.firstName} ${mentor.lastName}
-          </td>
-        </tr>
-
-        <tr>
-          <td style="padding:10px; border:1px solid #e5e7eb;"><strong>Email</strong></td>
-          <td style="padding:10px; border:1px solid #e5e7eb;">
-            ${mentor.email}
-          </td>
-        </tr>
-
-        <tr>
-          <td style="padding:10px; border:1px solid #e5e7eb;"><strong>Profession</strong></td>
-          <td style="padding:10px; border:1px solid #e5e7eb;">
-            ${mentor.profession}
-          </td>
-        </tr>
-
-        <tr>
-          <td style="padding:10px; border:1px solid #e5e7eb;"><strong>Application Status</strong></td>
-          <td style="padding:10px; border:1px solid #e5e7eb; color:#d97706; font-weight:bold;">
-            Pending Review
-          </td>
-        </tr>
-      </table>
-
-      <div style="margin-top:30px; padding:18px; background:#eff6ff; border-left:4px solid #2563eb;">
-        <strong>What happens next?</strong>
-
-        <ul style="margin-top:10px; color:#374151; line-height:1.8;">
-          <li>Your application will be reviewed by the GuideX Admin Team.</li>
-          <li>Your submitted documents will be verified.</li>
-          <li>Once approved, you'll receive another email notification.</li>
-          <li>After approval, you can start accepting mentoring sessions.</li>
-        </ul>
-      </div>
-
-      <div style="text-align:center; margin-top:35px;">
-        <a
-          href="${process.env.FRONTEND_URL}/login"
-          style="display:inline-block; background:#2563eb; color:#ffffff; padding:12px 28px; border-radius:6px; text-decoration:none; font-weight:bold;"
-        >
-          Login to GuideX
-        </a>
-      </div>
-
-      <p style="margin-top:35px; color:#6b7280; font-size:14px;">
-        If you have any questions regarding your application, please contact the
-        GuideX support team.
-      </p>
-
-      <p style="margin-top:25px;">
-        Best Regards,<br>
-        <strong>GuideX Team</strong>
-      </p>
-
-    </div>
-
-  </div>
-  `,
+     const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+       method: "POST",
+       headers: {
+         "Content-Type": "application/json",
+         "api-key": process.env.BREVO_API_KEY,
+       },
+       body: JSON.stringify({
+         sender: {
+           name: "GuideX",
+           email: process.env.BREVO_SENDER_EMAIL,
+         },
+         to: [
+           {
+             email: registration.student.email,
+             name: registration.student.name,
+           },
+         ],
+         subject: `Registration Cancelled - ${registration.event.title}`,
+         htmlContent: `...your existing HTML...`,
+         textContent: `...your existing text...`,
+       }),
      });
 
-      if (error) {
-        console.error(error);
-
-        return res.status(500).json({
-          success: false,
-          message: "Failed to send OTP email",
-        });
-      }
-
+     if (!response.ok) {
+       return res.status(500).json({
+         success: false,
+         message: "Failed to send email",
+       });
+     }
     // =====================================================
     // SUCCESS RESPONSE
     // =====================================================
