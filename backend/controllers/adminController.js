@@ -20,15 +20,7 @@ const FRONTEND_URL = process.env.FRONTEND_URL;
 import { Resend } from "resend";
 
 
-const transporter = nodemailer.createTransport({
-  host: process.env.BREVO_HOST,
-  port: Number(process.env.BREVO_PORT),
-  secure: false,
-  auth: {
-    user: process.env.BREVO_LOGIN,
-    pass: process.env.BREVO_SMTP_KEY,
-  },
-});
+
 
 export const getAllStudents = async (req, res) => {
   try {
@@ -129,6 +121,16 @@ export const createStudent = async (req, res) => {
     }
 
     console.log("Sending welcome email to:", student.email);
+
+    const transporter = nodemailer.createTransport({
+      host: process.env.BREVO_HOST,
+      port: Number(process.env.BREVO_PORT),
+      secure: false,
+      auth: {
+        user: process.env.BREVO_LOGIN,
+        pass: process.env.BREVO_SMTP_KEY,
+      },
+    });
 
     try {
       const info = await transporter.sendMail({
