@@ -57,7 +57,9 @@ import RescheduleSession from "./Pages/Mentor/RescheduleSession/RescheduleSessio
 import MentorStudents from "./Pages/Mentor/MentorStudents/MentorStudents";
 import MentorStudentProfile from "./Pages/Mentor/MentorStudents/MentorStudentProfile";
 import MentorReviews from "./Pages/Mentor/MentorStudents/MentorReviews";
-
+import MentorSupport from "./Pages/Mentor/MentorContactAdmin/MentorSupport";
+import MentorSupportDetails from "./Pages/Mentor/MentorContactAdmin/MentorSupportDetails";
+import CreateMentorRequest from "./Pages/Mentor/MentorContactAdmin/CreateMentorRequest";
 
 
 // Admin related pages
@@ -92,8 +94,9 @@ import StudentDetails from "./Pages/Admin/Users/UserDetails";
 import EditStudent from "./Pages/Admin/Users/EditUser";
 import EditMentor from "./Pages/Admin/Mentors/EditMentor";
 import BookingDetails from "./Pages/Admin/Bookings/BookingDetails";
-
-
+import AdminMentorRequest from "./Pages/Admin/AdminContactWIthMentor/AdminMentorRequests";
+import AdminMentorChatDetails from "./Pages/Admin/AdminContactWIthMentor/AdminMentorChatDetails";
+import CreateMentorChat from "./Pages/Admin/AdminContactWIthMentor/CreateMentorChat";
 
 // protected Route
 import ProtectedRoute from "./components/Auth/ProtectedRoute";
@@ -193,6 +196,15 @@ function App() {
             element={<MentorStudentProfile />}
           />
           <Route path="/mentor/reviews" element={<MentorReviews />} />
+          <Route path="/mentor/admin-chat" element={<MentorSupport />} />
+          <Route
+            path="/mentor/admin-chat/:id"
+            element={<MentorSupportDetails />}
+          />
+          <Route
+            path="/mentor/create-request"
+            element={<CreateMentorRequest />}
+          />
         </Route>
       </Route>
 
@@ -246,6 +258,15 @@ function App() {
           <Route path="/admin/students/:id/edit" element={<EditStudent />} />
           <Route path="/admin/mentors/:id/edit" element={<EditMentor />} />
           <Route path="/admin/bookings/:id" element={<BookingDetails />} />
+          <Route path="/admin/mentor-chats" element={<AdminMentorRequest />} />
+          <Route
+            path="/admin/mentor-chats/:id"
+            element={<AdminMentorChatDetails />}
+          />
+          <Route
+            path="/admin/mentor-chat/create"
+            element={<CreateMentorChat />}
+          />
         </Route>
       </Route>
     </Routes>

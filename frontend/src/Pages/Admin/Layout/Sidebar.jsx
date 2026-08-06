@@ -16,6 +16,7 @@ import {
   X,
   HelpCircle,
   Star,
+  MessageCircle,
 } from "lucide-react";
 import { useAuth } from "../../../context/AuthContext";
 import { useState } from "react";
@@ -36,6 +37,11 @@ const menu = [
     name: "Mentors",
     path: "/admin/mentors",
     icon: UserCheck,
+  },
+  {
+    name: "Mentor Chats",
+    path: "/admin/mentor-chats",
+    icon: MessageCircle,
   },
   {
     name: "Bookings",

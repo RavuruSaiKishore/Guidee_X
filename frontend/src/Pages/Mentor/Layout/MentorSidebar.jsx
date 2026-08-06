@@ -16,6 +16,7 @@ import {
   CalendarX2,
   CalendarCheck2,
   RefreshCw,
+  MessageCircle,
 } from "lucide-react";
 import { useAuth } from "../../../context/AuthContext";
 
@@ -51,10 +52,15 @@ const menu = [
     path: "/mentor/students",
     icon: Users,
   },
-   {
+  {
     name: "My Reviews",
     path: "/mentor/reviews",
     icon: MessageSquare,
+  },
+  {
+    name: "Admin Chat",
+    path: "/mentor/admin-chat",
+    icon: MessageCircle,
   },
 ];
 

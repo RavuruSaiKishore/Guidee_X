@@ -1,4 +1,3 @@
-
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
@@ -22,8 +21,7 @@ import resourceRoutes from "./routes/resourceRoutes.js";
 import rescheduleRoutes from "./routes/rescheduleRoutes.js";
 import mentorStudentRoutes from "./routes/mentorStudentRoutes.js";
 import mentorReviewRoutes from "./routes/mentorReviewRoutes.js";
-
-
+import mentorContactRoutes from "./routes/mentorContactRoutes.js";
 
 dotenv.config();
 
@@ -37,7 +35,6 @@ app.use(cors());
 app.use(express.json());
 
 app.use("/uploads", express.static("uploads"));
-
 
 // ROUTES
 app.use("/api/auth", authRoutes);
@@ -58,6 +55,7 @@ app.use("/api/resources", resourceRoutes);
 app.use("/api/reschedule", rescheduleRoutes);
 app.use("/api/mentorStudent", mentorStudentRoutes);
 app.use("/api/mentorReview", mentorReviewRoutes);
+app.use("/api/mentor-contact", mentorContactRoutes);
 
 // SERVER
 const PORT = process.env.PORT || 8080;
