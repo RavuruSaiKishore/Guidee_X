@@ -39,6 +39,9 @@ const EventDetails = () => {
   // =====================================================
 
   const [event, setEvent] = useState(null);
+  const [cancelLoading, setCancelLoading] = useState(false);
+
+  const [showCancelModal, setShowCancelModal] = useState(false);
 
   const [loading, setLoading] = useState(true);
 
@@ -664,12 +667,70 @@ const EventDetails = () => {
       // OPEN CONGRATULATIONS MODAL
 
       setShowCongratulationsModal(true);
+      toast.success("Registered successfully");
     } catch (error) {
       console.error("Register Event Error:", error);
 
       toast.error(error.message || "Failed to register for the event");
     } finally {
       setRegistrationLoading(false);
+    }
+  };
+
+  const cancelRegistration = async () => {
+    try {
+      const token = getUserToken();
+
+      if (!token) {
+        toast.error("Please login again");
+        return;
+      }
+
+      if (!registration?._id) {
+        toast.error("Registration details not found");
+        return;
+      }
+
+      setCancelLoading(true);
+
+      const response = await fetch(
+        `${API_BASE_URL}/api/event-registration/cancel/${event._id}`,
+        {
+          method: "PUT",
+
+          headers: {
+            "Content-Type": "application/json",
+
+            Authorization: `Bearer ${token}`,
+          },
+
+          body: JSON.stringify({
+            registrationId: registration._id,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      console.log("Cancel Registration Response:", data);
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to cancel registration");
+      }
+
+      setIsRegistered(false);
+
+      setRegistration(null);
+
+      setShowCancelModal(false);
+
+      toast.success("Registration cancelled successfully");
+    } catch (error) {
+      console.error("Cancel Registration Error:", error);
+
+      toast.error(error.message || "Failed to cancel registration");
+    } finally {
+      setCancelLoading(false);
     }
   };
 
@@ -911,6 +972,46 @@ const EventDetails = () => {
                   )}
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showCancelModal && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/60 px-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl">
+            <h2 className="text-xl font-bold text-gray-900">
+              Cancel Registration?
+            </h2>
+
+            <p className="mt-3 text-sm leading-6 text-gray-500">
+              Are you sure you want to cancel your registration for this event?
+              You will lose your reserved spot.
+            </p>
+
+            <div className="mt-6 grid grid-cols-2 gap-3">
+              <button
+                onClick={() => setShowCancelModal(false)}
+                disabled={cancelLoading}
+                className="rounded-xl border border-gray-200 px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+              >
+                No, Keep It
+              </button>
+
+              <button
+                onClick={cancelRegistration}
+                disabled={cancelLoading}
+                className="flex items-center justify-center gap-2 rounded-xl bg-red-600 px-4 py-3 text-sm font-bold text-white hover:bg-red-700 disabled:opacity-50"
+              >
+                {cancelLoading ? (
+                  <>
+                    <Loader2 size={17} className="animate-spin" />
+                    Cancelling
+                  </>
+                ) : (
+                  "Yes, Cancel"
+                )}
+              </button>
             </div>
           </div>
         </div>
@@ -1560,6 +1661,12 @@ const EventDetails = () => {
                         {formatShortDate(registration.registeredAt)}
                       </p>
                     )}
+                    <button
+                      onClick={() => setShowCancelModal(true)}
+                      className="mt-5 w-full rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-bold text-red-600 transition hover:bg-red-100"
+                    >
+                      Cancel Registration
+                    </button>
                   </div>
                 )}
 

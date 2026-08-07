@@ -29,9 +29,14 @@ const menu = [
     end: true,
   },
   {
-    name: "Users",
+    name: "Students",
     path: "/admin/users",
     icon: Users,
+  },
+  {
+    name: "Student Chats",
+    path: "/admin/contact-requests",
+    icon: MessageSquareMore,
   },
   {
     name: "Mentors",
@@ -67,11 +72,6 @@ const menu = [
     name: "Mentor Requests",
     path: "/admin/mentor-requests",
     icon: ClipboardCheck,
-  },
-  {
-    name: "Contact Requests",
-    path: "/admin/contact-requests",
-    icon: MessageSquareMore,
   },
   {
     name: "FAQ'S",

@@ -669,6 +669,17 @@ export const cancelEventRegistration = async (req, res) => {
     const studentId = req.user.id;
 
     // ==========================================
+    // VALIDATE REGISTRATION ID
+    // ==========================================
+
+    if (!registrationId) {
+      return res.status(400).json({
+        success: false,
+        message: "Registration ID is required",
+      });
+    }
+
+    // ==========================================
     // FIND REGISTRATION
     // ==========================================
 
@@ -676,7 +687,9 @@ export const cancelEventRegistration = async (req, res) => {
       _id: registrationId,
       event: eventId,
       student: studentId,
-    });
+    })
+      .populate("student")
+      .populate("event");
 
     if (!registration) {
       return res.status(404).json({
@@ -710,13 +723,7 @@ export const cancelEventRegistration = async (req, res) => {
     }
 
     // ==========================================
-    // CURRENT TIME
-    // ==========================================
-
-    const now = new Date();
-
-    // ==========================================
-    // CHECK EVENT STATUS
+    // EVENT STATUS CHECK
     // ==========================================
 
     if (event.status === "Cancelled") {
@@ -729,20 +736,22 @@ export const cancelEventRegistration = async (req, res) => {
     if (event.status === "Live") {
       return res.status(400).json({
         success: false,
-        message: "You cannot cancel registration after the event has started",
+        message: "You cannot cancel registration after event started",
       });
     }
 
     if (event.status === "Completed") {
       return res.status(400).json({
         success: false,
-        message: "You cannot cancel registration after the event has ended",
+        message: "You cannot cancel registration after event ended",
       });
     }
 
     // ==========================================
-    // CHECK REGISTRATION DEADLINE
+    // REGISTRATION DEADLINE CHECK
     // ==========================================
+
+    const now = new Date();
 
     if (
       event.registrationDeadline &&
@@ -755,210 +764,214 @@ export const cancelEventRegistration = async (req, res) => {
     }
 
     // ==========================================
+    // PAYMENT CHECK
+    // ==========================================
+
+    /*
+       If payment is completed,
+       integrate Razorpay refund here.
+
+       Example:
+
+       if(registration.paymentStatus==="Paid"){
+            refundPayment();
+       }
+
+    */
+
+    // ==========================================
     // CANCEL REGISTRATION
     // ==========================================
 
     registration.status = "Cancelled";
 
-    // Reset attendance-related information
     registration.attended = false;
+
     registration.joinedAt = null;
 
     await registration.save();
 
-    // ==========================
-    // SEND EMAIL USING BREVO API
-    // ==========================
+    // ==========================================
+    // SEND CANCELLATION EMAIL
+    // ==========================================
 
-    const response = await axios.post(
-      "https://api.brevo.com/v3/smtp/email",
-      {
-        sender: {
-          name: "GuideX",
-          email: "ravurusaikishore@gmail.com",
-        },
-        to: [
-          {
-            email: registration.student.email,
-            name: registration.student.name,
+    try {
+      await axios.post(
+        "https://api.brevo.com/v3/smtp/email",
+
+        {
+          sender: {
+            name: "GuideX",
+            email: "ravurusaikishore@gmail.com",
           },
-        ],
-        subject: `Registration Cancelled - ${registration.event.title}`,
 
-        textContent: `Hello ${registration.student.name},
+          to: [
+            {
+              email: registration.student.email,
+              name: `${registration.student.firstName || ""} ${
+                registration.student.lastName || ""
+              }`.trim(),
+            },
+          ],
 
-Your registration for the following event has been cancelled successfully.
+          subject: `Registration Cancelled - ${registration.event.title}`,
 
-Event Details
+          textContent: `Hello ${registration.student.firstName},
+
+Your registration for the following GuideX event has been cancelled successfully.
+
+Event:
 
 Title: ${registration.event.title}
+
 Speaker: ${registration.event.speaker}
-Date: ${new Date(registration.event.startDateTime).toLocaleString()}
-End Time: ${new Date(registration.event.endDateTime).toLocaleString()}
 
-We're sorry you won't be able to attend.
+Date:
+${new Date(registration.event.startDateTime).toLocaleString()}
 
-If registration is still open, you can register again anytime before the registration deadline.
 
 Regards,
 GuideX Team`,
 
-        htmlContent: `
-    <div style="
-      max-width:600px;
-      margin:30px auto;
-      padding:30px;
-      font-family:Arial,sans-serif;
-      background:#ffffff;
-      border-radius:12px;
-      border:1px solid #e5e7eb;
-    ">
+          htmlContent: `
 
-      <div style="text-align:center;">
-        <h1 style="color:#dc2626;margin-bottom:5px;">
-          GuideX
-        </h1>
+<div style="
+max-width:600px;
+margin:auto;
+padding:30px;
+font-family:Arial;
+border:1px solid #ddd;
+border-radius:12px;
+">
 
-        <p style="color:#6b7280;">
-          Learn. Connect. Grow.
-        </p>
-      </div>
+<h1 style="color:#dc2626;text-align:center;">
+GuideX
+</h1>
 
-      <h2 style="color:#dc2626;">
-        Registration Cancelled
-      </h2>
 
-      <p>
-        Hello
-        <strong>${registration.student.name}</strong>,
-      </p>
+<h2 style="color:#dc2626;">
+Registration Cancelled
+</h2>
 
-      <p>
-        Your registration has been cancelled successfully for the following event.
-      </p>
 
-      <table
-        style="
-          width:100%;
-          border-collapse:collapse;
-          margin-top:20px;
-        "
-      >
+<p>
+Hello
+<strong>
+${registration.student.firstName}
+</strong>
+</p>
 
-        <tr>
-          <td style="padding:10px;font-weight:bold;">
-            Event
-          </td>
 
-          <td style="padding:10px;">
-            ${registration.event.title}
-          </td>
-        </tr>
+<p>
+Your registration has been cancelled successfully.
+</p>
 
-        <tr style="background:#f9fafb;">
-          <td style="padding:10px;font-weight:bold;">
-            Speaker
-          </td>
 
-          <td style="padding:10px;">
-            ${registration.event.speaker}
-          </td>
-        </tr>
 
-        <tr>
-          <td style="padding:10px;font-weight:bold;">
-            Role
-          </td>
+<table style="
+width:100%;
+border-collapse:collapse;
+">
 
-          <td style="padding:10px;">
-            ${registration.event.speakerRole || "N/A"}
-          </td>
-        </tr>
+<tr>
+<td>
+<strong>Event</strong>
+</td>
 
-        <tr style="background:#f9fafb;">
-          <td style="padding:10px;font-weight:bold;">
-            Company
-          </td>
+<td>
+${registration.event.title}
+</td>
 
-          <td style="padding:10px;">
-            ${registration.event.speakerCompany || "N/A"}
-          </td>
-        </tr>
+</tr>
 
-        <tr>
-          <td style="padding:10px;font-weight:bold;">
-            Starts
-          </td>
 
-          <td style="padding:10px;">
-            ${new Date(registration.event.startDateTime).toLocaleString()}
-          </td>
-        </tr>
+<tr>
 
-        <tr style="background:#f9fafb;">
-          <td style="padding:10px;font-weight:bold;">
-            Ends
-          </td>
+<td>
+<strong>Speaker</strong>
+</td>
 
-          <td style="padding:10px;">
-            ${new Date(registration.event.endDateTime).toLocaleString()}
-          </td>
-        </tr>
+<td>
+${registration.event.speaker || "N/A"}
+</td>
 
-      </table>
+</tr>
 
-      <div style="
-        background:#fef2f2;
-        border-left:4px solid #dc2626;
-        padding:15px;
-        margin-top:25px;
-        border-radius:6px;
-      ">
-        <strong>Your registration has been cancelled.</strong>
 
-        <p style="margin-top:8px;">
-          If registration is still open, you're welcome to register again anytime before the deadline.
-        </p>
-      </div>
 
-      <p style="margin-top:25px;">
-        We hope to see you at another GuideX event soon.
-      </p>
+<tr>
 
-      <p>
-        Regards,<br>
-        <strong>GuideX Team</strong>
-      </p>
+<td>
+<strong>Date</strong>
+</td>
 
-      <hr>
 
-      <div style="text-align:center;">
-        <small>
-          © ${new Date().getFullYear()} GuideX
-        </small>
-      </div>
+<td>
+${new Date(registration.event.startDateTime).toLocaleString()}
+</td>
 
-    </div>
-    `,
-      },
-      {
-        headers: {
-          accept: "application/json",
-          "api-key": process.env.BREVO_API_KEY,
-          "content-type": "application/json",
+
+</tr>
+
+
+</table>
+
+
+
+<div style="
+margin-top:20px;
+padding:15px;
+background:#fef2f2;
+border-left:4px solid #dc2626;
+">
+
+Your registration has been cancelled.
+
+</div>
+
+
+
+<p>
+Regards,
+<br/>
+<strong>
+GuideX Team
+</strong>
+</p>
+
+
+</div>
+
+`,
         },
-      }
-    );
 
-    if (response.status !== 201) {
-      return res.status(500).json({
-        success: false,
-        message: "Failed to send cancellation email",
-      });
+        {
+          headers: {
+            accept: "application/json",
+
+            "api-key": process.env.BREVO_API_KEY,
+
+            "content-type": "application/json",
+          },
+        }
+      );
+
+      console.log("Cancellation email sent successfully");
+    } catch (emailError) {
+      console.error("Cancellation email failed:", emailError.message);
+
+      // Do not fail cancellation
     }
+
+    // ==========================================
+    // RESPONSE
+    // ==========================================
+
     return res.status(200).json({
       success: true,
+
       message: "Registration cancelled successfully",
+
       registration,
     });
   } catch (error) {
@@ -966,7 +979,9 @@ GuideX Team`,
 
     return res.status(500).json({
       success: false,
+
       message: "Failed to cancel event registration",
+
       error: error.message,
     });
   }
