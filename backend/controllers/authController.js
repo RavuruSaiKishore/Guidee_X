@@ -8,6 +8,8 @@ import nodemailer from "nodemailer";
 import createAuditLog from "../utils/createAuditLog.js";
 import { Resend } from "resend";
 import axios from "axios";
+import { sendSecurityEmail } from "../utils/sendSecurityEmail.js";
+import { isStrongPassword } from "../utils/validatePassword.js";
 
 
 export const registerUser = async (req, res) => {
@@ -18,6 +20,22 @@ export const registerUser = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: "All required fields must be filled",
+      });
+    }
+
+    if (!password) {
+      return res.status(400).json({
+        success: false,
+        message: "Please enter a password",
+      });
+    }
+
+    // Enforce password strength check
+    if (!isStrongPassword(password)) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special symbol.",
       });
     }
 
@@ -169,10 +187,10 @@ GuideX Team`,
       });
     }
 
-    return res.status(200).json({
-      success: true,
-      message: "OTP sent successfully",
-    });
+    // return res.status(200).json({
+    //   success: true,
+    //   message: "OTP sent successfully",
+    // });
   } catch (error) {
     console.error(error);
 
@@ -457,10 +475,23 @@ The GuideX Team`,
   }
 };
 
-// verify the password
 export const verifyForgotOtpAndResetPassword = async (req, res) => {
   try {
     const { email, otp, newPassword } = req.body;
+
+    // Inside verifyForgotOtpAndResetPassword:
+    if (!newPassword) {
+      return res.status(400).json({ message: "Please enter new password" });
+    }
+
+    // Enforce password strength check
+    if (!isStrongPassword(newPassword)) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special symbol.",
+      });
+    }
 
     const record = await OTP.findOne({ email });
 
@@ -480,11 +511,33 @@ export const verifyForgotOtpAndResetPassword = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
 
-    await User.findOneAndUpdate({ email }, { password: hashedPassword });
+    const user = await User.findOneAndUpdate(
+      { email },
+      {
+        password: hashedPassword,
+        $inc: { tokenVersion: 1 },
+        loginAttempts: 0,
+        lockCount: 0,
+        lockUntil: null,
+      },
+      { new: true }
+    ).select("-password");
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Send Security Alert Email for Password Change
+    const clientIp =
+      req.headers["x-forwarded-for"] || req.socket.remoteAddress || req.ip;
+    sendSecurityEmail({
+      email: user.email,
+      firstName: user.firstName,
+      alertType: "password_reset",
+      ipAddress: clientIp,
+    });
 
     // Audit logging system
-    const user = await User.findOne({ email }).select("-password");
-
     await createAuditLog({
       req,
       user: {
@@ -493,7 +546,8 @@ export const verifyForgotOtpAndResetPassword = async (req, res) => {
       },
       action: "Reset Password",
       module: "Authentication",
-      description: "Student reset account password.",
+      description:
+        "Student reset account password and active sessions were terminated.",
       targetId: user._id,
       targetType: "Student",
     });
@@ -506,7 +560,6 @@ export const verifyForgotOtpAndResetPassword = async (req, res) => {
   }
 };
 
-// Login code
 export const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -527,25 +580,102 @@ export const loginUser = async (req, res) => {
       });
     }
 
-    const isMatch = await bcrypt.compare(password, user.password);
-
-    if (!isMatch) {
-      return res.status(401).json({
+    // 1. Check if account is currently locked
+    const now = new Date();
+    if (user.lockUntil && user.lockUntil > now) {
+      const remainingTimeMinutes = Math.ceil(
+        (user.lockUntil - now) / (1000 * 60)
+      );
+      return res.status(423).json({
         success: false,
-        message: "Invalid credentials",
+        message: `Account is temporarily locked. Try again in ${remainingTimeMinutes} minute(s).`,
+        lockUntil: user.lockUntil,
       });
     }
 
+    // 2. Check Password
+    const isMatch = await bcrypt.compare(password, user.password);
+
+    if (!isMatch) {
+      user.loginAttempts = (user.loginAttempts || 0) + 1;
+
+      // Trigger lockout if attempts reach 5
+      if (user.loginAttempts >= 5) {
+        user.lockCount = (user.lockCount || 0) + 1;
+        user.loginAttempts = 0; // Reset attempts for the next cycle
+
+        // Exponential Backoff calculation
+        let lockoutDurationMs = 1 * 60 * 1000; // Default: 1 minute
+        if (user.lockCount === 2) {
+          lockoutDurationMs = 5 * 60 * 1000; // 5 minutes
+        } else if (user.lockCount === 3) {
+          lockoutDurationMs = 30 * 60 * 1000; // 30 minutes
+        } else if (user.lockCount >= 4) {
+          lockoutDurationMs = 24 * 60 * 60 * 1000; // 24 hours
+        }
+
+        user.lockUntil = new Date(Date.now() + lockoutDurationMs);
+        await user.save();
+
+        const displayTime =
+          user.lockCount === 1
+            ? "1 minute"
+            : user.lockCount === 2
+            ? "5 minutes"
+            : user.lockCount === 3
+            ? "30 minutes"
+            : "24 hours";
+
+        return res.status(423).json({
+          success: false,
+          message: `Too many failed attempts. Account locked for ${displayTime}.`,
+          lockUntil: user.lockUntil,
+        });
+      }
+
+      await user.save();
+
+      const attemptsRemaining = 5 - user.loginAttempts;
+      return res.status(401).json({
+        success: false,
+        message: "Invalid credentials",
+        attemptsRemaining,
+      });
+    }
+
+    // Extract client IP address safely
+    const clientIp =
+      req.headers["x-forwarded-for"] || req.socket.remoteAddress || req.ip;
+
+    // Check if it's a new IP address / device
+    const isNewIp = user.lastIp && user.lastIp !== clientIp;
+
+    if (isNewIp) {
+      sendSecurityEmail({
+        email: user.email,
+        firstName: user.firstName,
+        alertType: "new_device",
+        ipAddress: clientIp,
+      });
+    }
+
+    // 3. Successful login - Reset all lockout trackers & update session tracking
+    user.loginAttempts = 0;
+    user.lockCount = 0;
+    user.lockUntil = null;
+    user.tokenVersion = (user.tokenVersion || 0) + 1;
     user.lastLogin = new Date();
+    user.lastIp = clientIp;
     user.isActive = true;
     await user.save();
 
-    const token = generateToken(user._id, user.role);
+    // Pass the new tokenVersion into your token generator
+    const token = generateToken(user._id, user.role, user.tokenVersion);
 
     // Fetch complete user without password
     const loggedInUser = await User.findById(user._id).select("-password");
 
-    //Audit logging System
+    // Audit logging System
     await createAuditLog({
       req,
       user: {
@@ -559,10 +689,21 @@ export const loginUser = async (req, res) => {
       targetType: "Student",
     });
 
+    // Determine redirect path securely on the backend
+    let redirectTo = "/";
+    if (user.role === "admin") {
+      redirectTo = "/admin";
+    } else if (user.role === "mentor") {
+      redirectTo = "/mentor";
+    } else {
+      redirectTo = "/"; // default student route
+    }
+
     res.status(200).json({
       success: true,
       message: "Login successful",
       token,
+      redirectTo, // <--- Send the navigation path from the backend
       user: loggedInUser,
     });
   } catch (error) {

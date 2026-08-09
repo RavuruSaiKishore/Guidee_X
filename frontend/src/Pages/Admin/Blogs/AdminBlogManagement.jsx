@@ -358,9 +358,6 @@ const AdminBlogManagement = () => {
     }
   };
 
-
-  
-
   // ==========================================
   // FORMAT DATE
   // ==========================================
@@ -412,18 +409,18 @@ const AdminBlogManagement = () => {
   };
 
   // ==========================================
-  // BLOG CARD
+  // HORIZONTAL BLOG CARD
   // ==========================================
 
   const BlogCard = ({ blog }) => {
     return (
       <div
         onClick={() => navigate(`/admin/blogs/${blog._id}`)}
-        className="group bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-0.5 hover:border-gray-200 transition-all duration-300 cursor-pointer flex flex-col"
+        className="group bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-0.5 hover:border-gray-200 transition-all duration-300 cursor-pointer flex flex-col md:flex-row"
       >
         {/* COVER IMAGE */}
 
-        <div className="relative h-44 xs:h-48 sm:h-52 bg-gray-100 overflow-hidden">
+        <div className="relative w-full md:w-72 lg:w-80 h-48 md:h-auto bg-gray-100 overflow-hidden shrink-0">
           {blog.coverImage ? (
             <img
               src={`${API_BASE_URL}${blog.coverImage}`}
@@ -431,115 +428,115 @@ const AdminBlogManagement = () => {
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-indigo-50 to-violet-50">
+            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-indigo-50 to-violet-50 min-h-[180px]">
               <FileText size={34} className="sm:hidden text-indigo-300" />
 
               <FileText size={40} className="hidden sm:block text-indigo-300" />
             </div>
           )}
 
-          <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/25 to-transparent pointer-events-none" />
+          <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/25 to-transparent pointer-events-none md:hidden" />
 
-          {/* FEATURED */}
+          {/* FEATURED BADGE */}
 
           {blog.featured && (
-            <div className="absolute top-3 left-3 sm:top-4 sm:left-4 flex items-center gap-1 bg-white/95 backdrop-blur-sm text-amber-600 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-bold shadow-sm ring-1 ring-black/5">
-              <Star
-                size={11}
-                className="sm:hidden fill-amber-500 text-amber-500"
-              />
-              <Star
-                size={13}
-                className="hidden sm:block fill-amber-500 text-amber-500"
-              />
+            <div className="absolute top-3 left-3 flex items-center gap-1 bg-white/95 backdrop-blur-sm text-amber-600 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-bold shadow-sm ring-1 ring-black/5">
+              <Star size={11} className="fill-amber-500 text-amber-500" />
               Featured
             </div>
           )}
-
-          {/* STATUS */}
-
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              handleToggleStatus(blog);
-            }}
-            disabled={actionLoading === blog._id}
-            className={`absolute top-3 right-3 sm:top-4 sm:right-4 flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-bold shadow-sm ring-1 transition disabled:opacity-70 ${
-              blog.status === "Published"
-                ? "bg-emerald-500 text-white ring-emerald-600/20"
-                : "bg-amber-400 text-amber-950 ring-amber-500/20"
-            }`}
-          >
-            {actionLoading === blog._id ? (
-              <Loader2 size={12} className="animate-spin" />
-            ) : blog.status === "Published" ? (
-              <CheckCircle size={12} />
-            ) : (
-              <Clock3 size={12} />
-            )}
-
-            <span className="hidden xs:inline">
-              {actionLoading === blog._id ? "Updating..." : blog.status}
-            </span>
-
-            <span className="xs:hidden">
-              {blog.status === "Published" ? "Live" : "Draft"}
-            </span>
-          </button>
         </div>
 
         {/* CONTENT */}
 
-        <div className="p-4 sm:p-5 flex flex-col flex-1">
-          {/* CATEGORY + FEATURED */}
+        <div className="p-4 sm:p-5 lg:p-6 flex flex-col flex-1 min-w-0">
+          {/* TOP ROW: CATEGORY, STATUS, FEATURED BUTTON */}
 
           <div className="flex items-center justify-between gap-3 mb-3">
-            <span className="px-2.5 sm:px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 text-[10px] sm:text-xs font-bold tracking-wide truncate max-w-[calc(100%-50px)]">
-              {blog.category}
-            </span>
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="px-2.5 sm:px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 text-[10px] sm:text-xs font-bold tracking-wide">
+                {blog.category}
+              </span>
 
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                handleToggleFeatured(blog);
-              }}
-              disabled={actionLoading === blog._id}
-              title={
-                blog.featured ? "Remove from featured" : "Mark as featured"
-              }
-              className={`w-8 h-8 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center transition disabled:opacity-50 shrink-0 ${
-                blog.featured
-                  ? "bg-amber-50 text-amber-500"
-                  : "bg-gray-50 text-gray-400 hover:bg-amber-50 hover:text-amber-500"
-              }`}
-            >
-              {actionLoading === blog._id ? (
-                <Loader2 size={16} className="animate-spin" />
-              ) : (
-                <Star
-                  size={17}
-                  className={blog.featured ? "fill-amber-500" : ""}
-                />
+              {blog.featured && (
+                <span className="hidden md:inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-50 text-amber-600 text-[10px] sm:text-xs font-bold">
+                  <Star size={11} className="fill-amber-500 text-amber-500" />
+                  Featured
+                </span>
               )}
-            </button>
+            </div>
+
+            <div className="flex items-center gap-2">
+              {/* TOGGLE STATUS BUTTON */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleToggleStatus(blog);
+                }}
+                disabled={actionLoading === blog._id}
+                className={`flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-bold shadow-sm ring-1 transition disabled:opacity-70 ${
+                  blog.status === "Published"
+                    ? "bg-emerald-500 text-white ring-emerald-600/20"
+                    : "bg-amber-400 text-amber-950 ring-amber-500/20"
+                }`}
+              >
+                {actionLoading === blog._id ? (
+                  <Loader2 size={12} className="animate-spin" />
+                ) : blog.status === "Published" ? (
+                  <CheckCircle size={12} />
+                ) : (
+                  <Clock3 size={12} />
+                )}
+
+                <span>
+                  {actionLoading === blog._id ? "Updating..." : blog.status}
+                </span>
+              </button>
+
+              {/* TOGGLE FEATURED BUTTON */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleToggleFeatured(blog);
+                }}
+                disabled={actionLoading === blog._id}
+                title={
+                  blog.featured ? "Remove from featured" : "Mark as featured"
+                }
+                className={`w-8 h-8 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center transition disabled:opacity-50 shrink-0 ${
+                  blog.featured
+                    ? "bg-amber-50 text-amber-500"
+                    : "bg-gray-50 text-gray-400 hover:bg-amber-50 hover:text-amber-500"
+                }`}
+              >
+                {actionLoading === blog._id ? (
+                  <Loader2 size={16} className="animate-spin" />
+                ) : (
+                  <Star
+                    size={17}
+                    className={blog.featured ? "fill-amber-500" : ""}
+                  />
+                )}
+              </button>
+            </div>
           </div>
 
           {/* TITLE */}
 
-          <h3 className="text-base sm:text-lg font-bold text-gray-900 leading-snug line-clamp-2 min-h-[48px] sm:min-h-[56px] group-hover:text-indigo-700 transition-colors">
+          <h3 className="text-base sm:text-lg font-bold text-gray-900 leading-snug group-hover:text-indigo-700 transition-colors">
             {blog.title}
           </h3>
 
           {/* EXCERPT */}
 
-          <p className="text-sm text-gray-500 mt-2 leading-relaxed line-clamp-3 min-h-[60px]">
+          <p className="text-sm text-gray-500 mt-2 leading-relaxed line-clamp-2">
             {blog.excerpt}
           </p>
 
           {/* TAGS */}
 
           {blog.tags?.length > 0 && (
-            <div className="flex items-center gap-x-2.5 gap-y-1.5 mt-4 flex-wrap">
+            <div className="flex items-center gap-x-2.5 gap-y-1.5 mt-3 flex-wrap">
               <Tag size={13} className="text-gray-300 shrink-0" />
 
               {blog.tags.slice(0, 4).map((tag, index) => (
@@ -557,75 +554,78 @@ const AdminBlogManagement = () => {
 
           {/* DIVIDER */}
 
-          <div className="border-t border-gray-100 my-4 sm:my-5" />
+          <div className="border-t border-gray-100 my-3.5 sm:my-4" />
 
-          {/* AUTHOR */}
+          {/* FOOTER: AUTHOR, VIEWS, ACTIONS */}
 
-          <div className="flex items-center gap-2.5 sm:gap-3">
-            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-indigo-100 flex items-center justify-center shrink-0">
-              <User size={15} className="sm:hidden text-indigo-600" />
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-indigo-100 flex items-center justify-center shrink-0">
+                <User size={15} className="sm:hidden text-indigo-600" />
 
-              <User size={17} className="hidden sm:block text-indigo-600" />
+                <User size={17} className="hidden sm:block text-indigo-600" />
+              </div>
+
+              <div className="min-w-0">
+                <p className="text-xs sm:text-sm font-semibold text-gray-800 truncate">
+                  {blog.authorName || "GuideX Team"}
+                </p>
+
+                <p className="text-[10px] sm:text-xs text-gray-400">
+                  {blog.publishedAt
+                    ? formatDate(blog.publishedAt)
+                    : `Created ${formatDate(blog.createdAt)}`}
+                </p>
+              </div>
+
+              <div className="hidden sm:flex items-center gap-1 text-gray-400 text-xs sm:text-sm ml-4 shrink-0">
+                <Eye size={16} />
+                {blog.views || 0} views
+              </div>
             </div>
 
-            <div className="flex-1 min-w-0">
-              <p className="text-xs sm:text-sm font-semibold text-gray-800 truncate">
-                {blog.authorName || "GuideX Team"}
-              </p>
+            {/* ACTIONS */}
 
-              <p className="text-[10px] sm:text-xs text-gray-400">
-                {blog.publishedAt
-                  ? formatDate(blog.publishedAt)
-                  : `Created ${formatDate(blog.createdAt)}`}
-              </p>
+            <div className="flex items-center gap-2 justify-end">
+              <div className="sm:hidden flex items-center gap-1 text-gray-400 text-xs mr-auto">
+                <Eye size={14} />
+                {blog.views || 0} views
+              </div>
+
+              {/* EDIT */}
+
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+
+                  navigate(`/admin/blogs/edit/${blog._id}`);
+                }}
+                className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-indigo-50 text-indigo-600 font-semibold text-xs sm:text-sm hover:bg-indigo-600 hover:text-white transition-colors"
+              >
+                <Edit3 size={15} />
+                Edit
+              </button>
+
+              {/* DELETE */}
+
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+
+                  setSelectedBlog(blog);
+                  setShowDeleteModal(true);
+                }}
+                disabled={actionLoading === blog._id}
+                title="Delete blog"
+                className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-red-50 text-red-600 flex items-center justify-center hover:bg-red-600 hover:text-white transition-colors disabled:opacity-50 shrink-0"
+              >
+                {actionLoading === blog._id ? (
+                  <Loader2 size={16} className="animate-spin" />
+                ) : (
+                  <Trash2 size={16} />
+                )}
+              </button>
             </div>
-
-            {/* VIEWS */}
-
-            <div className="flex items-center gap-1 text-gray-400 text-xs sm:text-sm shrink-0">
-              <Eye size={14} className="sm:hidden" />
-              <Eye size={16} className="hidden sm:block" />
-
-              {blog.views || 0}
-            </div>
-          </div>
-
-          {/* ACTIONS */}
-
-          <div className="flex gap-2 mt-4 sm:mt-5">
-            {/* EDIT */}
-
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-
-                navigate(`/admin/blogs/edit/${blog._id}`);
-              }}
-              className="flex-1 flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2.5 rounded-xl bg-indigo-50 text-indigo-600 font-semibold text-xs sm:text-sm hover:bg-indigo-600 hover:text-white transition-colors"
-            >
-              <Edit3 size={15} />
-              Edit
-            </button>
-
-            {/* DELETE */}
-
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-
-                setSelectedBlog(blog);
-                setShowDeleteModal(true);
-              }}
-              disabled={actionLoading === blog._id}
-              title="Delete blog"
-              className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-red-50 text-red-600 flex items-center justify-center hover:bg-red-600 hover:text-white transition-colors disabled:opacity-50 shrink-0"
-            >
-              {actionLoading === blog._id ? (
-                <Loader2 size={16} className="animate-spin" />
-              ) : (
-                <Trash2 size={16} />
-              )}
-            </button>
           </div>
         </div>
       </div>
@@ -884,7 +884,7 @@ const AdminBlogManagement = () => {
         )}
 
         {/* ==========================================
-            BLOG LIST
+            BLOG LIST (HORIZONTAL CARDS)
         ========================================== */}
 
         {loading ? (
@@ -928,7 +928,7 @@ const AdminBlogManagement = () => {
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-5 lg:gap-6">
+          <div className="flex flex-col gap-4 sm:gap-5">
             {filteredBlogs.map((blog) => (
               <BlogCard key={blog._id} blog={blog} />
             ))}

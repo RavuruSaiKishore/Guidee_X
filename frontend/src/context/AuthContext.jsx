@@ -83,10 +83,12 @@ export const AuthProvider = ({ children }) => {
       });
 
       const data = await res.json();
-      console.log("Status:", res.status);
-      console.log("Response:", data);
 
+      // Catch session expiration from another device
       if (res.status === 401) {
+        if (data.sessionExpired) {
+          alert("Session expired because you logged in from another device."); // Or use a toast library if preferred
+        }
         logout();
         return;
       }
@@ -157,10 +159,20 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   };
 
-  // ================= INITIAL LOAD =================
+  // ================= INITIAL LOAD & BACKGROUND HEARTBEAT =================
 
   useEffect(() => {
     fetchUser();
+
+    // Optional Heartbeat: Checks session validity every 30 seconds automatically
+    const interval = setInterval(() => {
+      const { token: currentToken } = getToken();
+      if (currentToken) {
+        fetchUser();
+      }
+    }, 30000);
+
+    return () => clearInterval(interval);
   }, []);
 
   return (

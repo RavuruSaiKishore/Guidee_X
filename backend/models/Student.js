@@ -73,6 +73,33 @@ const userSchema = new mongoose.Schema(
       type: Date,
     },
 
+    lockUntil: {
+      type: Date,
+      default: null,
+    },
+
+    lockCount: {
+      type: Number,
+      required: true,
+      default: 0,
+    },
+
+    tokenVersion: {
+      type: Number,
+      default: 0,
+    },
+
+    lastIp: {
+      type: String,
+      default: "",
+    },
+
+    loginAttempts: {
+      type: Number,
+      required: true,
+      default: 0,
+    },
+
     learningStats: {
       xp: {
         type: Number,

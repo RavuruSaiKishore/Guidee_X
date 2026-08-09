@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Eye,
   EyeOff,
@@ -11,6 +11,7 @@ import {
   GraduationCap,
   CheckCircle2,
   Sparkles,
+  AlertCircle,
 } from "lucide-react";
 
 import { ToastContainer, toast } from "react-toastify";
@@ -53,6 +54,48 @@ const LoginPage = () => {
   const [resetEmail, setResetEmail] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
+
+  // Lockout & Attempts States
+  const [lockUntil, setLockUntil] = useState(null);
+  const [countdown, setCountdown] = useState(0);
+  const [attemptsRemaining, setAttemptsRemaining] = useState(null);
+
+  // ============================================================
+  // COUNTDOWN EFFECT FOR LOCKOUT
+  // ============================================================
+
+  useEffect(() => {
+    if (!lockUntil) return;
+
+    const interval = setInterval(() => {
+      const remaining = Math.max(
+        0,
+        Math.floor((new Date(lockUntil) - new Date()) / 1000)
+      );
+      setCountdown(remaining);
+
+      if (remaining <= 0) {
+        setLockUntil(null);
+        setAttemptsRemaining(null);
+        clearInterval(interval);
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [lockUntil]);
+
+  // Replace your old formatTime function with this one to handle hours, minutes, and seconds:
+
+  const formatTime = (seconds) => {
+    const hours = Math.floor(seconds / 3600);
+    const mins = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+
+    if (hours > 0) {
+      return `${hours}h ${mins}m ${secs}s`;
+    }
+    return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
+  };
 
   // ============================================================
   // FORM INPUT
@@ -184,6 +227,10 @@ const LoginPage = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
 
+    if (lockUntil !== null) {
+      return toast.error("Account is temporarily locked. Please wait.");
+    }
+
     if (!formData.email.trim()) {
       return toast.error("Please enter your email");
     }
@@ -208,24 +255,38 @@ const LoginPage = () => {
 
       const data = await res.json();
 
-      if (!res.ok) {
-        toast.error(data.message || "Invalid email or password");
+      // Handle account locked response (HTTP 423)
+      if (res.status === 423) {
+        setLockUntil(data.lockUntil);
+        setAttemptsRemaining(null);
         return;
       }
+
+      // Handle invalid credentials response
+      if (!res.ok) {
+        setAttemptsRemaining((prev) => {
+          if (data.attemptsRemaining !== undefined) {
+            return data.attemptsRemaining;
+          }
+          // Fallback decrement if backend doesn't supply it directly
+          return prev === null ? 4 : Math.max(0, prev - 1);
+        });
+        return;
+      }
+
+      // Successful login - Reset tracking states
+      setAttemptsRemaining(null);
+      setLockUntil(null);
 
       login(data.token, data.user);
 
       toast.success("Login successful!");
 
       setTimeout(() => {
-        if (data.user.role === "admin") {
-          navigate("/admin", { replace: true });
-        } else if (data.user.role === "mentor") {
-          navigate("/mentor", { replace: true });
-        } else {
-          navigate("/", { replace: true });
-        }
+        // Use the route explicitly provided by the backend
+        navigate(data.redirectTo || "/", { replace: true });
       }, 500);
+      
     } catch (error) {
       console.error(error);
       toast.error("Unable to login");
@@ -471,6 +532,30 @@ const LoginPage = () => {
                 </div>
 
                 <form onSubmit={handleLogin} className="space-y-5">
+                  {/* LOCKOUT WARNING BANNER */}
+                  {lockUntil !== null && (
+                    <div className="p-4 bg-red-50 border border-red-200 text-red-600 text-sm rounded-2xl text-center font-semibold animate-pulse">
+                      Account locked due to multiple failed attempts. Try again
+                      in{" "}
+                      <span className="font-bold underline">
+                        {formatTime(countdown)}
+                      </span>
+                      .
+                    </div>
+                  )}
+
+                  {/* REMAINING ATTEMPTS BANNER */}
+                  {lockUntil === null && attemptsRemaining !== null && (
+                    <div className="p-3 bg-amber-50 border border-amber-200 text-amber-700 text-xs rounded-xl flex items-center gap-2">
+                      <AlertCircle size={16} className="shrink-0" />
+                      <span>
+                        Invalid credentials. You have{" "}
+                        <strong>{attemptsRemaining}</strong> attempt(s)
+                        remaining before lockout.
+                      </span>
+                    </div>
+                  )}
+
                   {/* EMAIL */}
 
                   <div className="relative">
@@ -485,7 +570,8 @@ const LoginPage = () => {
                       value={formData.email}
                       onChange={handleInputChange}
                       placeholder="Enter your email"
-                      className={`${inputClass} pl-12`}
+                      disabled={lockUntil !== null}
+                      className={`${inputClass} pl-12 disabled:bg-gray-200 disabled:cursor-not-allowed`}
                     />
                   </div>
 
@@ -503,11 +589,13 @@ const LoginPage = () => {
                       value={formData.password}
                       onChange={handleInputChange}
                       placeholder="Enter your password"
-                      className={`${inputClass} pl-12 pr-12`}
+                      disabled={lockUntil !== null}
+                      className={`${inputClass} pl-12 pr-12 disabled:bg-gray-200 disabled:cursor-not-allowed`}
                     />
 
                     <button
                       type="button"
+                      disabled={lockUntil !== null}
                       onClick={() => setShowPassword(!showPassword)}
                       className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-blue-600"
                     >
@@ -527,12 +615,16 @@ const LoginPage = () => {
 
                   <button
                     type="submit"
-                    disabled={loading}
-                    className="w-full h-14 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 text-white font-bold flex items-center justify-center gap-3 disabled:opacity-60"
+                    disabled={loading || lockUntil !== null}
+                    className="w-full h-14 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 text-white font-bold flex items-center justify-center gap-3 disabled:opacity-60 disabled:cursor-not-allowed"
                   >
-                    {loading ? "Signing in..." : "Sign In"}
+                    {loading
+                      ? "Signing in..."
+                      : lockUntil !== null
+                      ? `Locked (${formatTime(countdown)})`
+                      : "Sign In"}
 
-                    {!loading && <ArrowRight size={19} />}
+                    {!loading && lockUntil === null && <ArrowRight size={19} />}
                   </button>
                 </form>
 

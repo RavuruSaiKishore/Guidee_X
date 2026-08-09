@@ -1,4 +1,6 @@
 import Contact from "../models/Contact.js";
+import createAuditLog from "../utils/createAuditLog.js";
+
 
 // Create Contact Message
 export const createContact = async (req, res) => {
@@ -43,31 +45,33 @@ export const createContact = async (req, res) => {
     }
 
     // Otherwise create new ticket
-  contact = await Contact.create({
-    name,
-    email,
-    phone,
+    contact = await Contact.create({
+      name,
+      email,
+      phone,
 
-    studentId,
+      studentId,
 
-    category,
+      category,
 
-    subject,
+      subject,
 
-    message,
+      message,
 
-    status: "Pending",
+      status: "Pending",
 
-    lastMessageAt: new Date(),
+      lastMessageAt: new Date(),
 
-    conversation: [
-      {
-        sender: "Student",
-        message,
-        sentAt: new Date(),
-      },
-    ],
-  });
+      conversation: [
+        {
+          sender: "Student",
+          message,
+          sentAt: new Date(),
+        },
+      ],
+    });
+
+   
 
     res.status(201).json({
       success: true,
@@ -146,8 +150,6 @@ export const getSingleRequest = async (req, res) => {
   }
 };
 
-
-
 // ====================================================
 // Student Reply
 // ====================================================
@@ -183,14 +185,10 @@ export const replyToRequest = async (req, res) => {
     }
 
     // Don't allow reply after resolved
-    if (
-      ticket.status === "Resolved" ||
-      ticket.status === "Closed"
-    ) {
+    if (ticket.status === "Resolved" || ticket.status === "Closed") {
       return res.status(400).json({
         success: false,
-        message:
-          "This support request has already been resolved.",
+        message: "This support request has already been resolved.",
       });
     }
 
@@ -204,6 +202,7 @@ export const replyToRequest = async (req, res) => {
 
     await ticket.save();
 
+     
     res.status(200).json({
       success: true,
       message: "Reply sent successfully.",

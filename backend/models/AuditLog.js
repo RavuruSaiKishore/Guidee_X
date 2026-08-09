@@ -47,6 +47,7 @@ const auditLogSchema = new mongoose.Schema(
         "Payment",
         "Review",
         "Profile",
+        "StudentContactAdmin",
       ],
       required: true,
     },
