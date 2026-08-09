@@ -97,6 +97,8 @@ import BookingDetails from "./Pages/Admin/Bookings/BookingDetails";
 import AdminMentorRequest from "./Pages/Admin/AdminContactWIthMentor/AdminMentorRequests";
 import AdminMentorChatDetails from "./Pages/Admin/AdminContactWIthMentor/AdminMentorChatDetails";
 import CreateMentorChat from "./Pages/Admin/AdminContactWIthMentor/CreateMentorChat";
+import ResourceInteractions from "./Pages/Admin/Resources/ResourceInteractions";
+import AdminRegistrationDetails from "./Pages/Admin/Events/EventStudentRegDetails";
 
 // protected Route
 import ProtectedRoute from "./components/Auth/ProtectedRoute";
@@ -254,6 +256,10 @@ function App() {
             path="/admin/careerResources/details/:id"
             element={<AdminResourceDetails />}
           />
+          <Route
+            path="/admin/careerResources/:id/interactions"
+            element={<ResourceInteractions />}
+          />
           <Route path="/admin/students/:id" element={<StudentDetails />} />
           <Route path="/admin/students/:id/edit" element={<EditStudent />} />
           <Route path="/admin/mentors/:id/edit" element={<EditMentor />} />
@@ -266,6 +272,10 @@ function App() {
           <Route
             path="/admin/mentor-chat/create"
             element={<CreateMentorChat />}
+          />
+          <Route
+            path="/admin/events/details/:eventId/registrations"
+            element={<AdminRegistrationDetails />}
           />
         </Route>
       </Route>

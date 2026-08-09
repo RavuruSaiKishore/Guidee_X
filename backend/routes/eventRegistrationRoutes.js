@@ -6,6 +6,7 @@ import {
   cancelEventRegistration,
   getMyEventRegistrations,
   getMyEventRegistrationDetails,
+  getRegistrationDetailsById,
 } from "../controllers/eventRegistrationController.js";
 
 import { protect } from "../middleware/authMiddleware.js";
@@ -24,6 +25,7 @@ router.get("/my-registrations", protect, getMyEventRegistrations);
 
 router.put("/cancel/:eventId", protect, cancelEventRegistration);
 
+router.get("/registrations/:eventId", protect, getRegistrationDetailsById);
 
 
 export default router;

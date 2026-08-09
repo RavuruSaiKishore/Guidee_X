@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-
 import {
   ArrowLeft,
   Save,
@@ -7,476 +6,426 @@ import {
   Clock3,
   UserRound,
   Image as ImageIcon,
-  Briefcase,
-  Building2,
   FileText,
   X,
   Upload,
+  Layers,
+  Video,
+  Users,
+  Plus,
+  Trash2,
+  Tag,
+  DollarSign,
+  Globe,
+  Sparkles,
+  CheckCircle2,
+  ShieldAlert,
 } from "lucide-react";
-
 import { useNavigate, useParams } from "react-router-dom";
-
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 const CreateEvent = () => {
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
-
   const navigate = useNavigate();
   const { id } = useParams();
-
-  // =====================================================
-  // EDIT MODE
-  // =====================================================
 
   const isEditMode = Boolean(id);
 
   // =====================================================
-  // INITIAL FORM DATA
+  // DOMAINS ENUM (Matches Mongoose Schema)
   // =====================================================
+  const DOMAINS = [
+    "Software Engineering",
+    "Data Science & AI",
+    "Product Management",
+    "UI/UX Design",
+    "Cybersecurity",
+    "DevOps & Cloud",
+    "Career Guidance & Resume",
+    "Study Abroad",
+    "Research & Academia",
+    "Other",
+  ];
 
+  // =====================================================
+  // INITIAL FORM STATE (Contains ALL Mongoose Fields)
+  // =====================================================
   const initialFormData = {
-    // Event Basic Information
     title: "",
+    slug: "",
+    shortSummary: "",
     description: "",
-
-    // Event Banner
+    domain: "Software Engineering",
+    tags: "",
     bannerImage: null,
 
-    // Event Date & Time
+    createdByAdmin: "Guideex Admin",
+
+    speakers: [
+      {
+        name: "",
+        title: "",
+        organization: "",
+        bio: "",
+        linkedinUrl: "",
+        profileImage: null,
+        previewUrl: "",
+        existingImage: "",
+      },
+    ],
+
+    experienceLevel: "All Levels",
+    prerequisites: "",
+
+    eventType: "Guest Lecture",
+    meetingUrl: "",
+    recordingUrl: "",
+
     startDateTime: "",
     endDateTime: "",
-
-    // Speaker Information
-    speaker: "",
-    speakerImage: null,
-    speakerRole: "",
-    speakerCompany: "",
-    speakerBio: "",
-    speakerExperience: "",
-
-    // Registration
     registrationDeadline: "",
-  };
 
-  // =====================================================
-  // STATE
-  // =====================================================
+    maxSeats: 100,
+    registeredStudentsCount: 0,
+    isPaid: false,
+    ticketPrice: 0,
+
+    status: "Draft",
+    isFeatured: false,
+  };
 
   const [formData, setFormData] = useState(initialFormData);
-
   const [loading, setLoading] = useState(isEditMode);
-
   const [saving, setSaving] = useState(false);
+  const [autoSlug, setAutoSlug] = useState(true);
 
-  // Preview URLs
+  // Banner Preview
   const [bannerPreview, setBannerPreview] = useState("");
-
-  const [speakerPreview, setSpeakerPreview] = useState("");
-
-  // Existing image paths
-  // Used when editing and no new image is selected
   const [existingBannerImage, setExistingBannerImage] = useState("");
 
-  const [existingSpeakerImage, setExistingSpeakerImage] = useState("");
-
-  // =====================================================
-  // TOKEN
-  // =====================================================
-
-  const getAdminToken = () => {
-    return localStorage.getItem("AdminToken");
-  };
-
-  // =====================================================
-  // IMAGE URL HELPER
-  // =====================================================
+  const getAdminToken = () => localStorage.getItem("AdminToken");
 
   const getImageUrl = (imagePath) => {
-    if (!imagePath) {
-      return "";
-    }
-
-    // Already complete URL
+    if (!imagePath) return "";
     if (imagePath.startsWith("http://") || imagePath.startsWith("https://")) {
       return imagePath;
     }
-
     const cleanPath = imagePath.replace(/^\/+/, "");
-
     const cleanBaseUrl = API_BASE_URL?.replace(/\/+$/, "");
-
-    if (!cleanBaseUrl) {
-      return `/${cleanPath}`;
-    }
-
-    return `${cleanBaseUrl}/${cleanPath}`;
+    return cleanBaseUrl ? `${cleanBaseUrl}/${cleanPath}` : `/${cleanPath}`;
   };
 
-  // =====================================================
-  // FORMAT DATE FOR DATETIME-LOCAL
-  // =====================================================
-
   const formatDateTimeLocal = (dateValue) => {
-    if (!dateValue) {
-      return "";
-    }
-
+    if (!dateValue) return "";
     const date = new Date(dateValue);
+    if (isNaN(date.getTime())) return "";
 
-    if (isNaN(date.getTime())) {
-      return "";
-    }
-
-    // Convert to local date/time for datetime-local input
     const year = date.getFullYear();
-
     const month = String(date.getMonth() + 1).padStart(2, "0");
-
     const day = String(date.getDate()).padStart(2, "0");
-
     const hours = String(date.getHours()).padStart(2, "0");
-
     const minutes = String(date.getMinutes()).padStart(2, "0");
 
     return `${year}-${month}-${day}T${hours}:${minutes}`;
   };
 
   // =====================================================
-  // FETCH SINGLE EVENT FOR EDIT
+  // FETCH EVENT DETAILS FOR EDIT
   // =====================================================
-
   const fetchEvent = async () => {
-    if (!id) {
-      return;
-    }
+    if (!id) return;
 
     try {
       setLoading(true);
-
       const token = getAdminToken();
 
       const response = await fetch(
         `${API_BASE_URL}/api/events/eventDetails/${id}`,
         {
           method: "GET",
-
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
 
       const data = await response.json();
-
-      console.log("EVENT DETAILS RESPONSE:", data);
-
       if (!response.ok) {
         throw new Error(data.message || "Failed to load event");
       }
 
-      // Handle different backend response structures
       const event = data.event || data.data || data;
-
-      console.log("EVENT FOR EDIT:", event);
-
-      // =====================================================
-      // SET FORM DATA
-      // =====================================================
 
       setFormData({
         title: event.title || "",
-
+        slug: event.slug || "",
+        shortSummary: event.shortSummary || "",
         description: event.description || "",
-
-        // New image is null
-        // Existing image is stored separately
+        domain: event.domain || "Software Engineering",
+        tags: Array.isArray(event.tags) ? event.tags.join(", ") : "",
         bannerImage: null,
 
-        // Schema field:
-        // startDateTime
+        createdByAdmin: event.createdByAdmin || "Guideex Admin",
+
+        speakers:
+          event.speakers && event.speakers.length > 0
+            ? event.speakers.map((spk) => ({
+                name: spk.name || "",
+                title: spk.title || "",
+                organization: spk.organization || "",
+                bio: spk.bio || "",
+                linkedinUrl: spk.linkedinUrl || "",
+                profileImage: null,
+                previewUrl: spk.profileImage
+                  ? getImageUrl(spk.profileImage)
+                  : "",
+                existingImage: spk.profileImage || "",
+              }))
+            : [
+                {
+                  name: "",
+                  title: "",
+                  organization: "",
+                  bio: "",
+                  linkedinUrl: "",
+                  profileImage: null,
+                  previewUrl: "",
+                  existingImage: "",
+                },
+              ],
+
+        experienceLevel: event.targetAudience?.experienceLevel || "All Levels",
+        prerequisites: Array.isArray(event.targetAudience?.prerequisites)
+          ? event.targetAudience.prerequisites.join(", ")
+          : "",
+
+        eventType: event.eventType || "Guest Lecture",
+        meetingUrl: event.meetingUrl || "",
+        recordingUrl: event.recordingUrl || "",
+
         startDateTime: formatDateTimeLocal(event.startDateTime),
-
-        // Schema field:
-        // endDateTime
         endDateTime: formatDateTimeLocal(event.endDateTime),
-
-        // Speaker
-        speaker: event.speaker || "",
-
-        // New image is null
-        // Existing image is stored separately
-        speakerImage: null,
-
-        speakerRole: event.speakerRole || "",
-
-        speakerCompany: event.speakerCompany || "",
-
-        speakerBio: event.speakerBio || "",
-
-        speakerExperience: event.speakerExperience || "",
-
-        // Schema field:
-        // registrationDeadline
         registrationDeadline: formatDateTimeLocal(event.registrationDeadline),
-      });
 
-      // =====================================================
-      // EXISTING BANNER IMAGE
-      // =====================================================
+        maxSeats: event.maxSeats ?? 100,
+        registeredStudentsCount: event.registeredStudentsCount ?? 0,
+        isPaid: Boolean(event.isPaid),
+        ticketPrice: event.ticketPrice ?? 0,
+
+        status: event.status || "Draft",
+        isFeatured: Boolean(event.isFeatured),
+      });
 
       if (event.bannerImage) {
         setExistingBannerImage(event.bannerImage);
-
         setBannerPreview(getImageUrl(event.bannerImage));
-      } else {
-        setExistingBannerImage("");
-
-        setBannerPreview("");
       }
-
-      // =====================================================
-      // EXISTING SPEAKER IMAGE
-      // =====================================================
-
-      if (event.speakerImage) {
-        setExistingSpeakerImage(event.speakerImage);
-
-        setSpeakerPreview(getImageUrl(event.speakerImage));
-      } else {
-        setExistingSpeakerImage("");
-
-        setSpeakerPreview("");
-      }
+      setAutoSlug(false);
     } catch (error) {
       console.error("Fetch Event Error:", error);
-
       toast.error(error.message || "Failed to load event");
-
-      setTimeout(() => {
-        navigate("/admin/events");
-      }, 1500);
+      setTimeout(() => navigate("/admin/events"), 1500);
     } finally {
       setLoading(false);
     }
   };
 
-  // =====================================================
-  // LOAD EVENT IN EDIT MODE
-  // =====================================================
-
   useEffect(() => {
-    if (isEditMode) {
-      fetchEvent();
-    }
+    if (isEditMode) fetchEvent();
   }, [id]);
 
   // =====================================================
-  // HANDLE INPUT CHANGE
+  // AUTO GENERATE SLUG FROM TITLE
   // =====================================================
+  const handleTitleChange = (e) => {
+    const val = e.target.value;
+    setFormData((prev) => {
+      const updated = { ...prev, title: val };
+      if (autoSlug) {
+        updated.slug = val
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/(^-|-$)+/g, "");
+      }
+      return updated;
+    });
+  };
 
   const handleChange = (e) => {
-    const { name, value, files } = e.target;
-
-    // =====================================================
-    // BANNER IMAGE
-    // =====================================================
-
-    if (name === "bannerImage") {
-      const file = files?.[0];
-
-      if (!file) {
-        return;
-      }
-
-      // Validate file type
-      const allowedTypes = [
-        "image/png",
-        "image/jpeg",
-        "image/jpg",
-        "image/webp",
-      ];
-
-      if (!allowedTypes.includes(file.type)) {
-        toast.error("Please upload JPG, JPEG, PNG, or WEBP image");
-
-        return;
-      }
-
-      // Revoke old temporary preview
-      if (bannerPreview && bannerPreview.startsWith("blob:")) {
-        URL.revokeObjectURL(bannerPreview);
-      }
-
-      const previewUrl = URL.createObjectURL(file);
-
-      setFormData((prev) => ({
-        ...prev,
-
-        bannerImage: file,
-      }));
-
-      setBannerPreview(previewUrl);
-
-      return;
-    }
-
-    // =====================================================
-    // SPEAKER IMAGE
-    // =====================================================
-
-    if (name === "speakerImage") {
-      const file = files?.[0];
-
-      if (!file) {
-        return;
-      }
-
-      // Validate file type
-      const allowedTypes = [
-        "image/png",
-        "image/jpeg",
-        "image/jpg",
-        "image/webp",
-      ];
-
-      if (!allowedTypes.includes(file.type)) {
-        toast.error("Please upload JPG, JPEG, PNG, or WEBP image");
-
-        return;
-      }
-
-      // Revoke old temporary preview
-      if (speakerPreview && speakerPreview.startsWith("blob:")) {
-        URL.revokeObjectURL(speakerPreview);
-      }
-
-      const previewUrl = URL.createObjectURL(file);
-
-      setFormData((prev) => ({
-        ...prev,
-
-        speakerImage: file,
-      }));
-
-      setSpeakerPreview(previewUrl);
-
-      return;
-    }
-
-    // =====================================================
-    // NORMAL INPUT
-    // =====================================================
-
+    const { name, value, type, checked } = e.target;
     setFormData((prev) => ({
       ...prev,
-
-      [name]: value,
+      [name]: type === "checkbox" ? checked : value,
     }));
   };
 
   // =====================================================
-  // REMOVE BANNER
+  // BANNER IMAGE HANDLERS
   // =====================================================
+  const handleBannerChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const allowed = ["image/png", "image/jpeg", "image/jpg", "image/webp"];
+    if (!allowed.includes(file.type)) {
+      toast.error("Upload a PNG, JPG, or WEBP image.");
+      return;
+    }
+
+    if (bannerPreview && bannerPreview.startsWith("blob:")) {
+      URL.revokeObjectURL(bannerPreview);
+    }
+
+    setFormData((prev) => ({ ...prev, bannerImage: file }));
+    setBannerPreview(URL.createObjectURL(file));
+  };
 
   const removeBanner = () => {
     if (bannerPreview && bannerPreview.startsWith("blob:")) {
       URL.revokeObjectURL(bannerPreview);
     }
-
     setBannerPreview("");
-
     setExistingBannerImage("");
-
-    setFormData((prev) => ({
-      ...prev,
-
-      bannerImage: null,
-    }));
+    setFormData((prev) => ({ ...prev, bannerImage: null }));
   };
 
   // =====================================================
-  // REMOVE SPEAKER IMAGE
+  // DYNAMIC SPEAKERS HANDLERS
   // =====================================================
+  const handleSpeakerChange = (idx, field, val) => {
+    setFormData((prev) => {
+      const updated = [...prev.speakers];
+      updated[idx][field] = val;
+      return { ...prev, speakers: updated };
+    });
+  };
 
-  const removeSpeakerImage = () => {
-    if (speakerPreview && speakerPreview.startsWith("blob:")) {
-      URL.revokeObjectURL(speakerPreview);
+  const handleSpeakerImageChange = (idx, file) => {
+    if (!file) return;
+    const allowed = ["image/png", "image/jpeg", "image/jpg", "image/webp"];
+    if (!allowed.includes(file.type)) {
+      toast.error("Upload a PNG, JPG, or WEBP photo.");
+      return;
     }
 
-    setSpeakerPreview("");
+    setFormData((prev) => {
+      const updated = [...prev.speakers];
+      if (
+        updated[idx].previewUrl &&
+        updated[idx].previewUrl.startsWith("blob:")
+      ) {
+        URL.revokeObjectURL(updated[idx].previewUrl);
+      }
+      updated[idx].profileImage = file;
+      updated[idx].previewUrl = URL.createObjectURL(file);
+      return { ...prev, speakers: updated };
+    });
+  };
 
-    setExistingSpeakerImage("");
+  const removeSpeakerImage = (idx) => {
+    setFormData((prev) => {
+      const updated = [...prev.speakers];
+      if (
+        updated[idx].previewUrl &&
+        updated[idx].previewUrl.startsWith("blob:")
+      ) {
+        URL.revokeObjectURL(updated[idx].previewUrl);
+      }
+      updated[idx].profileImage = null;
+      updated[idx].previewUrl = "";
+      updated[idx].existingImage = "";
+      return { ...prev, speakers: updated };
+    });
+  };
 
+  const addSpeaker = () => {
     setFormData((prev) => ({
       ...prev,
+      speakers: [
+        ...prev.speakers,
+        {
+          name: "",
+          title: "",
+          organization: "",
+          bio: "",
+          linkedinUrl: "",
+          profileImage: null,
+          previewUrl: "",
+          existingImage: "",
+        },
+      ],
+    }));
+  };
 
-      speakerImage: null,
+  const removeSpeaker = (idx) => {
+    if (formData.speakers.length === 1) {
+      toast.error("At least one guest speaker is required.");
+      return;
+    }
+    setFormData((prev) => ({
+      ...prev,
+      speakers: prev.speakers.filter((_, i) => i !== idx),
     }));
   };
 
   // =====================================================
-  // VALIDATE FORM
+  // FORM VALIDATION
   // =====================================================
-
   const validateForm = () => {
-    // Required fields
+    if (!formData.title.trim()) {
+      toast.error("Event title is required.");
+      return false;
+    }
+    if (!formData.description.trim()) {
+      toast.error("Event description is required.");
+      return false;
+    }
+    if (!formData.domain) {
+      toast.error("Domain field is required.");
+      return false;
+    }
+    if (!formData.startDateTime) {
+      toast.error("Start Date/Time is required.");
+      return false;
+    }
+    if (!formData.endDateTime) {
+      toast.error("End Date/Time is required.");
+      return false;
+    }
+    if (!formData.registrationDeadline) {
+      toast.error("Registration deadline is required.");
+      return false;
+    }
+
+    for (let i = 0; i < formData.speakers.length; i++) {
+      const s = formData.speakers[i];
+      if (!s.name.trim() || !s.title.trim() || !s.organization.trim()) {
+        toast.error(
+          `Speaker #${i + 1} requires Name, Title, and Organization.`
+        );
+        return false;
+      }
+    }
+
+    const start = new Date(formData.startDateTime);
+    const end = new Date(formData.endDateTime);
+    const deadline = new Date(formData.registrationDeadline);
+
     if (
-      !formData.title.trim() ||
-      !formData.description.trim() ||
-      !formData.startDateTime ||
-      !formData.endDateTime ||
-      !formData.speaker.trim() ||
-      !formData.registrationDeadline
+      isNaN(start.getTime()) ||
+      isNaN(end.getTime()) ||
+      isNaN(deadline.getTime())
     ) {
-      toast.error("Please fill all required fields");
-
+      toast.error("Please enter valid dates.");
       return false;
     }
 
-    // =====================================================
-    // CREATE DATE OBJECTS
-    // =====================================================
-
-    const eventStartDate = new Date(formData.startDateTime);
-
-    const eventEndDate = new Date(formData.endDateTime);
-
-    const registrationDeadlineDate = new Date(formData.registrationDeadline);
-
-    // =====================================================
-    // CHECK VALID DATES
-    // =====================================================
-
-    if (
-      isNaN(eventStartDate.getTime()) ||
-      isNaN(eventEndDate.getTime()) ||
-      isNaN(registrationDeadlineDate.getTime())
-    ) {
-      toast.error("Please enter valid date and time");
-
+    if (deadline >= start) {
+      toast.error("Registration deadline must be before event start time.");
       return false;
     }
 
-    // =====================================================
-    // REGISTRATION DEADLINE
-    // MUST BE BEFORE EVENT START
-    // =====================================================
-
-    if (registrationDeadlineDate >= eventStartDate) {
-      toast.error("Registration deadline must be before the event starts");
-
-      return false;
-    }
-
-    // =====================================================
-    // EVENT END
-    // MUST BE AFTER EVENT START
-    // =====================================================
-
-    if (eventEndDate <= eventStartDate) {
-      toast.error("Event end time must be after the event start time");
-
+    if (end <= start) {
+      toast.error("Event end time must be after start time.");
       return false;
     }
 
@@ -486,752 +435,839 @@ const CreateEvent = () => {
   // =====================================================
   // SUBMIT FORM
   // =====================================================
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    // =====================================================
-    // VALIDATE
-    // =====================================================
-
-    if (!validateForm()) {
-      return;
-    }
+    if (!validateForm()) return;
 
     try {
       setSaving(true);
-
       const token = getAdminToken();
-
-      // =====================================================
-      // API URL
-      // =====================================================
-
       const url = isEditMode
         ? `${API_BASE_URL}/api/events/update/${id}`
         : `${API_BASE_URL}/api/events/create`;
 
-      // =====================================================
-      // HTTP METHOD
-      // =====================================================
-
       const method = isEditMode ? "PUT" : "POST";
-
-      // =====================================================
-      // CREATE FORM DATA
-      // =====================================================
-
       const data = new FormData();
 
-      // =====================================================
-      // EVENT BASIC INFORMATION
-      // =====================================================
-
+      // Basic Information
       data.append("title", formData.title.trim());
-
+      data.append("slug", formData.slug.trim());
+      data.append("shortSummary", formData.shortSummary.trim());
       data.append("description", formData.description.trim());
+      data.append("domain", formData.domain);
+      data.append("eventType", formData.eventType);
+      data.append("meetingUrl", formData.meetingUrl.trim());
+      data.append("recordingUrl", formData.recordingUrl.trim());
+      data.append("createdByAdmin", formData.createdByAdmin.trim());
 
-      // =====================================================
-      // EVENT DATE & TIME
-      // Matches Event Schema
-      // =====================================================
+      // Parse tags
+      const tagArray = formData.tags
+        .split(",")
+        .map((t) => t.trim())
+        .filter(Boolean);
+      data.append("tags", JSON.stringify(tagArray));
 
+      // Target Audience Object
+      const targetAudienceObj = {
+        experienceLevel: formData.experienceLevel,
+        prerequisites: formData.prerequisites
+          .split(",")
+          .map((p) => p.trim())
+          .filter(Boolean),
+      };
+      data.append("targetAudience", JSON.stringify(targetAudienceObj));
+
+      // Schedule & Timings
       data.append("startDateTime", formData.startDateTime);
-
       data.append("endDateTime", formData.endDateTime);
-
-      // =====================================================
-      // SPEAKER INFORMATION
-      // =====================================================
-
-      data.append("speaker", formData.speaker.trim());
-
-      data.append("speakerRole", formData.speakerRole.trim());
-
-      data.append("speakerCompany", formData.speakerCompany.trim());
-
-      data.append("speakerBio", formData.speakerBio.trim());
-
-      data.append("speakerExperience", formData.speakerExperience.trim());
-
-      // =====================================================
-      // REGISTRATION DEADLINE
-      // =====================================================
-
       data.append("registrationDeadline", formData.registrationDeadline);
 
-      // =====================================================
-      // BANNER IMAGE
-      //
-      // Only send when a new image is selected
-      // =====================================================
+      // Seats & Ticket Pricing
+      data.append("maxSeats", Number(formData.maxSeats));
+      data.append(
+        "registeredStudentsCount",
+        Number(formData.registeredStudentsCount)
+      );
+      data.append("isPaid", formData.isPaid);
+      data.append(
+        "ticketPrice",
+        formData.isPaid ? Number(formData.ticketPrice) : 0
+      );
 
+      // Status & Featured
+      data.append("status", formData.status);
+      data.append("isFeatured", formData.isFeatured);
+
+      // Banner Image
       if (formData.bannerImage instanceof File) {
         data.append("bannerImage", formData.bannerImage);
-      }
-
-      // =====================================================
-      // SPEAKER IMAGE
-      //
-      // Only send when a new image is selected
-      // =====================================================
-
-      if (formData.speakerImage instanceof File) {
-        data.append("speakerImage", formData.speakerImage);
-      }
-
-      // =====================================================
-      // EXISTING IMAGES
-      //
-      // Send these during edit if they were not removed
-      // and no new file was selected.
-      // =====================================================
-
-      if (
-        isEditMode &&
-        existingBannerImage &&
-        !(formData.bannerImage instanceof File)
-      ) {
+      } else if (isEditMode && existingBannerImage) {
         data.append("existingBannerImage", existingBannerImage);
       }
 
-      if (
-        isEditMode &&
-        existingSpeakerImage &&
-        !(formData.speakerImage instanceof File)
-      ) {
-        data.append("existingSpeakerImage", existingSpeakerImage);
-      }
+      // Speakers Data Array
+      const speakersTextData = formData.speakers.map((spk) => ({
+        name: spk.name.trim(),
+        title: spk.title.trim(),
+        organization: spk.organization.trim(),
+        bio: spk.bio.trim(),
+        linkedinUrl: spk.linkedinUrl.trim(),
+        existingImage: spk.existingImage || "",
+      }));
+      data.append("speakers", JSON.stringify(speakersTextData));
 
-      // =====================================================
-      // IMPORTANT
-      //
-      // STATUS IS NOT SENT FROM FRONTEND.
-      //
-      // Backend should automatically calculate:
-      //
-      // Upcoming
-      // Registration Closed
-      // Live
-      // Completed
-      // Cancelled
-      //
-      // This prevents admins from manually setting an
-      // incorrect status.
-      // =====================================================
-
-      // =====================================================
-      // DEBUG FORM DATA
-      // =====================================================
-
-      for (const [key, value] of data.entries()) {
-        console.log("FORM DATA:", key, value);
-      }
-
-      // =====================================================
-      // API REQUEST
-      // =====================================================
+      // Append individual speaker image files
+      formData.speakers.forEach((spk) => {
+        if (spk.profileImage instanceof File) {
+          data.append("speakerImages", spk.profileImage);
+        }
+      });
 
       const response = await fetch(url, {
         method,
-
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-
+        headers: { Authorization: `Bearer ${token}` },
         body: data,
       });
 
       const result = await response.json();
-
-      console.log("SAVE EVENT RESPONSE:", result);
-
       if (!response.ok) {
         throw new Error(result.message || "Failed to save event");
       }
 
-      // =====================================================
-      // SUCCESS MESSAGE
-      // =====================================================
-
       toast.success(
-        isEditMode ? "Event updated successfully" : "Event created successfully"
+        isEditMode
+          ? "Event updated successfully!"
+          : "Event created successfully!"
       );
-
-      // =====================================================
-      // NAVIGATE BACK
-      // =====================================================
-
-      setTimeout(() => {
-        navigate("/admin/events");
-      }, 1000);
+      setTimeout(() => navigate("/admin/events"), 1000);
     } catch (error) {
       console.error("Save Event Error:", error);
-
       toast.error(error.message || "Failed to save event");
     } finally {
       setSaving(false);
     }
   };
 
-  // =====================================================
-  // CANCEL
-  // =====================================================
-
-  const handleCancel = () => {
-    navigate("/admin/events");
-  };
-
-  // =====================================================
-  // CLEANUP BLOB URLS
-  // =====================================================
-
-  useEffect(() => {
-    return () => {
-      if (bannerPreview && bannerPreview.startsWith("blob:")) {
-        URL.revokeObjectURL(bannerPreview);
-      }
-
-      if (speakerPreview && speakerPreview.startsWith("blob:")) {
-        URL.revokeObjectURL(speakerPreview);
-      }
-    };
-  }, []);
-
-  // =====================================================
-  // LOADING SCREEN
-  // =====================================================
-
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#f8fafc]">
+      <div className="min-h-screen bg-[#f8fafc] p-8">
         <ToastContainer position="top-right" autoClose={3000} theme="light" />
-
-        <div className="mx-auto max-w-[1000px] p-4 sm:p-6 lg:p-8">
-          <div className="animate-pulse">
-            <div className="h-8 w-56 rounded-lg bg-gray-200" />
-
-            <div className="mt-3 h-4 w-80 rounded bg-gray-200" />
-
-            <div className="mt-8 h-[700px] rounded-2xl bg-white" />
-          </div>
+        <div className="mx-auto max-w-[1000px] animate-pulse">
+          <div className="h-8 w-56 rounded-lg bg-gray-200" />
+          <div className="mt-8 h-[700px] rounded-2xl bg-white" />
         </div>
       </div>
     );
   }
 
-  // =====================================================
-  // RETURN
-  // =====================================================
-
   return (
-    <div className="min-h-screen bg-[#f8fafc]">
+    <div className="min-h-screen bg-[#f8fafc] pb-12">
       <ToastContainer position="top-right" autoClose={3000} theme="light" />
 
       <div className="mx-auto max-w-[1000px] p-4 sm:p-6 lg:p-8">
-        {/* =====================================================
-            TOP HEADER
-        ====================================================== */}
-
+        {/* TOP HEADER */}
         <div className="mb-8">
           <button
             type="button"
-            onClick={handleCancel}
+            onClick={() => navigate("/admin/events")}
             className="mb-5 flex items-center gap-2 text-sm font-semibold text-gray-500 transition hover:text-indigo-600"
           >
-            <ArrowLeft size={18} />
-            Back to Events
+            <ArrowLeft size={18} /> Back to Events
           </button>
 
           <div>
             <div className="mb-2 flex items-center gap-2 text-sm font-medium text-indigo-600">
               <CalendarDays size={17} />
-
-              <span>Events</span>
-
+              <span>Guideex Events</span>
               <span className="text-gray-300">/</span>
-
               <span className="text-gray-500">
                 {isEditMode ? "Edit Event" : "Create Event"}
               </span>
             </div>
-
             <h1 className="text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">
-              {isEditMode ? "Edit Event" : "Create New Event"}
+              {isEditMode ? "Edit Event Details" : "Create New Guest Event"}
             </h1>
-
             <p className="mt-2 text-sm leading-6 text-gray-500">
-              {isEditMode
-                ? "Update the event details and speaker information."
-                : "Create a new webinar, workshop, mentoring session, or event for GuideX students."}
+              Configure guest lectures, workshops, masterclasses, and field
+              webinars for Guideex students.
             </p>
           </div>
         </div>
 
-        {/* =====================================================
-            FORM CARD
-        ====================================================== */}
-
+        {/* FORM */}
         <form
           onSubmit={handleSubmit}
-          className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm"
+          className="space-y-8 overflow-hidden rounded-2xl border border-gray-200 bg-white p-6 shadow-sm sm:p-8"
         >
-          {/* =====================================================
-              EVENT INFORMATION
-          ====================================================== */}
-
-          <div className="border-b border-gray-100 p-5 sm:p-7">
-            <div className="mb-6 flex items-center gap-3">
+          {/* SECTION 1: BASIC INFO, SLUG & DOMAIN */}
+          <div className="space-y-5 border-b border-gray-100 pb-8">
+            <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
                 <FileText size={20} />
               </div>
-
               <div>
-                <h2 className="font-bold text-gray-900">Event Information</h2>
-
-                <p className="mt-1 text-xs text-gray-500">
-                  Add the basic details of your event.
+                <h2 className="font-bold text-gray-900">
+                  Event Details & Domain
+                </h2>
+                <p className="text-xs text-gray-500">
+                  Basic event identification, slug, and category.
                 </p>
               </div>
             </div>
 
-            <div className="space-y-5">
-              {/* EVENT TITLE */}
+            {/* Title */}
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-gray-700">
+                Event Title *
+              </label>
+              <input
+                type="text"
+                name="title"
+                value={formData.title}
+                onChange={handleTitleChange}
+                placeholder="e.g. Masterclass: System Design and Microservices in 2026"
+                className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-800 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-50"
+              />
+            </div>
+
+            {/* Slug */}
+            <div>
+              <div className="mb-2 flex items-center justify-between">
+                <label className="block text-sm font-semibold text-gray-700">
+                  URL Slug
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setAutoSlug(!autoSlug)}
+                  className="flex items-center gap-1 text-xs font-semibold text-indigo-600 hover:underline"
+                >
+                  <Sparkles size={13} />
+                  {autoSlug ? "Manual Edit" : "Auto Generate"}
+                </button>
+              </div>
+              <div className="relative">
+                <Globe
+                  size={17}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
+                />
+                <input
+                  type="text"
+                  name="slug"
+                  value={formData.slug}
+                  onChange={handleChange}
+                  readOnly={autoSlug}
+                  placeholder="masterclass-system-design-2026"
+                  className={`w-full rounded-xl border border-gray-200 py-3 pl-11 pr-4 text-sm outline-none ${
+                    autoSlug
+                      ? "bg-gray-100 text-gray-500 cursor-not-allowed"
+                      : "bg-gray-50 text-gray-800 focus:border-indigo-500 focus:bg-white"
+                  }`}
+                />
+              </div>
+            </div>
+
+            {/* Domain & Event Type */}
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-gray-700">
+                  Domain Field *
+                </label>
+                <div className="relative">
+                  <Layers
+                    size={18}
+                    className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
+                  />
+                  <select
+                    name="domain"
+                    value={formData.domain}
+                    onChange={handleChange}
+                    className="w-full rounded-xl border border-gray-200 bg-gray-50 py-3 pl-11 pr-4 text-sm text-gray-800 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-50"
+                  >
+                    {DOMAINS.map((domain) => (
+                      <option key={domain} value={domain}>
+                        {domain}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
 
               <div>
                 <label className="mb-2 block text-sm font-semibold text-gray-700">
-                  Event Title *
+                  Format / Event Type
                 </label>
+                <select
+                  name="eventType"
+                  value={formData.eventType}
+                  onChange={handleChange}
+                  className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-800 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-50"
+                >
+                  <option value="Guest Lecture">Guest Lecture</option>
+                  <option value="Masterclass">Masterclass</option>
+                  <option value="Panel Discussion">Panel Discussion</option>
+                  <option value="Workshop">Workshop</option>
+                </select>
+              </div>
+            </div>
 
+            {/* Created By Admin */}
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-gray-700">
+                Created By (Admin Name)
+              </label>
+              <input
+                type="text"
+                name="createdByAdmin"
+                value={formData.createdByAdmin}
+                onChange={handleChange}
+                placeholder="e.g. Guideex Admin"
+                className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-800 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-50"
+              />
+            </div>
+
+            {/* Short Summary */}
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-gray-700">
+                Short Summary (Card Preview - max 300 chars)
+              </label>
+              <input
+                type="text"
+                name="shortSummary"
+                value={formData.shortSummary}
+                onChange={handleChange}
+                maxLength={300}
+                placeholder="A quick 1-2 sentence overview shown on event cards..."
+                className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-800 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-50"
+              />
+            </div>
+
+            {/* Description */}
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-gray-700">
+                Full Description *
+              </label>
+              <textarea
+                name="description"
+                value={formData.description}
+                onChange={handleChange}
+                rows={5}
+                placeholder="Full event overview, key learning takeaways, agenda, and outcomes..."
+                className="w-full resize-none rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm leading-6 text-gray-800 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-50"
+              />
+            </div>
+
+            {/* Tags & Prerequisites */}
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-gray-700">
+                  Tags (Comma-separated)
+                </label>
+                <div className="relative">
+                  <Tag
+                    size={17}
+                    className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
+                  />
+                  <input
+                    type="text"
+                    name="tags"
+                    value={formData.tags}
+                    onChange={handleChange}
+                    placeholder="react, system-design, ai"
+                    className="w-full rounded-xl border border-gray-200 bg-gray-50 py-3 pl-11 pr-4 text-sm text-gray-800 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-50"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-gray-700">
+                  Prerequisites (Comma-separated)
+                </label>
                 <input
                   type="text"
-                  name="title"
-                  value={formData.title}
+                  name="prerequisites"
+                  value={formData.prerequisites}
                   onChange={handleChange}
-                  placeholder="e.g. Building Your Career in Artificial Intelligence"
+                  placeholder="Basic JavaScript, Knowledge of SQL"
                   className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-800 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-50"
                 />
               </div>
+            </div>
 
-              {/* DESCRIPTION */}
+            {/* Experience Level */}
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-gray-700">
+                Target Audience Experience Level
+              </label>
+              <select
+                name="experienceLevel"
+                value={formData.experienceLevel}
+                onChange={handleChange}
+                className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-800 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-50"
+              >
+                <option value="All Levels">All Levels</option>
+                <option value="Beginner">Beginner</option>
+                <option value="Intermediate">Intermediate</option>
+                <option value="Advanced">Advanced</option>
+              </select>
+            </div>
+
+            {/* Banner Image */}
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-gray-700">
+                Event Banner Image
+              </label>
+              <div className="overflow-hidden rounded-2xl border-2 border-dashed border-gray-200 bg-gray-50">
+                {bannerPreview ? (
+                  <div className="relative">
+                    <img
+                      src={bannerPreview}
+                      alt="Banner Preview"
+                      className="h-56 w-full object-cover"
+                    />
+                    <button
+                      type="button"
+                      onClick={removeBanner}
+                      className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-lg bg-white text-gray-600 shadow-lg transition hover:bg-red-50 hover:text-red-600"
+                    >
+                      <X size={18} />
+                    </button>
+                  </div>
+                ) : (
+                  <label className="flex cursor-pointer flex-col items-center justify-center p-8 text-center transition hover:bg-indigo-50">
+                    <ImageIcon size={32} className="text-indigo-600" />
+                    <p className="mt-2 text-sm font-bold text-gray-700">
+                      Upload Event Banner
+                    </p>
+                    <p className="text-xs text-gray-500">PNG, JPG, or WEBP</p>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleBannerChange}
+                      className="hidden"
+                    />
+                  </label>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* SECTION 2: GUEST SPEAKERS */}
+          <div className="space-y-6 border-b border-gray-100 pb-8">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
+                  <UserRound size={20} />
+                </div>
+                <div>
+                  <h2 className="font-bold text-gray-900">
+                    Guest Speakers / Faculty
+                  </h2>
+                  <p className="text-xs text-gray-500">
+                    External experts delivering the lecture or masterclass.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={addSpeaker}
+                className="flex items-center gap-1.5 rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 text-xs font-semibold text-indigo-600 transition hover:bg-indigo-100"
+              >
+                <Plus size={16} /> Add Speaker
+              </button>
+            </div>
+
+            {formData.speakers.map((speaker, idx) => (
+              <div
+                key={idx}
+                className="relative space-y-4 rounded-2xl border border-gray-200 bg-gray-50/50 p-5"
+              >
+                <div className="flex items-center justify-between border-b border-gray-200/60 pb-3">
+                  <span className="text-xs font-bold uppercase tracking-wider text-indigo-600">
+                    Speaker #{idx + 1}
+                  </span>
+                  {formData.speakers.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => removeSpeaker(idx)}
+                      className="flex items-center gap-1 text-xs font-medium text-red-500 hover:text-red-700"
+                    >
+                      <Trash2 size={15} /> Remove
+                    </button>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                  <div>
+                    <label className="mb-1 block text-xs font-semibold text-gray-700">
+                      Speaker Name *
+                    </label>
+                    <input
+                      type="text"
+                      value={speaker.name}
+                      onChange={(e) =>
+                        handleSpeakerChange(idx, "name", e.target.value)
+                      }
+                      placeholder="e.g. Dr. Aris Thorne"
+                      className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-indigo-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="mb-1 block text-xs font-semibold text-gray-700">
+                      Title / Designation *
+                    </label>
+                    <input
+                      type="text"
+                      value={speaker.title}
+                      onChange={(e) =>
+                        handleSpeakerChange(idx, "title", e.target.value)
+                      }
+                      placeholder="e.g. Senior AI Researcher"
+                      className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-indigo-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="mb-1 block text-xs font-semibold text-gray-700">
+                      Organization / University *
+                    </label>
+                    <input
+                      type="text"
+                      value={speaker.organization}
+                      onChange={(e) =>
+                        handleSpeakerChange(idx, "organization", e.target.value)
+                      }
+                      placeholder="e.g. Google / Stanford"
+                      className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-indigo-500"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  <div>
+                    <label className="mb-1 block text-xs font-semibold text-gray-700">
+                      LinkedIn URL
+                    </label>
+                    <input
+                      type="text"
+                      value={speaker.linkedinUrl}
+                      onChange={(e) =>
+                        handleSpeakerChange(idx, "linkedinUrl", e.target.value)
+                      }
+                      placeholder="https://linkedin.com/in/username"
+                      className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-indigo-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="mb-1 block text-xs font-semibold text-gray-700">
+                      Bio
+                    </label>
+                    <input
+                      type="text"
+                      value={speaker.bio}
+                      onChange={(e) =>
+                        handleSpeakerChange(idx, "bio", e.target.value)
+                      }
+                      placeholder="Short professional biography..."
+                      className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-indigo-500"
+                    />
+                  </div>
+                </div>
+
+                {/* Speaker Photo */}
+                <div>
+                  <label className="mb-1 block text-xs font-semibold text-gray-700">
+                    Profile Image
+                  </label>
+                  <div className="flex items-center gap-4">
+                    {speaker.previewUrl ? (
+                      <div className="relative">
+                        <img
+                          src={speaker.previewUrl}
+                          alt="Speaker"
+                          className="h-14 w-14 rounded-full object-cover ring-2 ring-indigo-100"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeSpeakerImage(idx)}
+                          className="absolute -right-1 -top-1 rounded-full bg-red-500 p-1 text-white hover:bg-red-600"
+                        >
+                          <X size={12} />
+                        </button>
+                      </div>
+                    ) : (
+                      <label className="flex cursor-pointer items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-xs font-semibold text-gray-600 transition hover:bg-indigo-50 hover:text-indigo-600">
+                        <Upload size={14} /> Upload Speaker Photo
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) =>
+                            handleSpeakerImageChange(idx, e.target.files?.[0])
+                          }
+                          className="hidden"
+                        />
+                      </label>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* SECTION 3: SCHEDULE, TIMINGS & MEETING ROOMS */}
+          <div className="space-y-5 border-b border-gray-100 pb-8">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
+                <Clock3 size={20} />
+              </div>
+              <div>
+                <h2 className="font-bold text-gray-900">
+                  Schedule & Virtual Links
+                </h2>
+                <p className="text-xs text-gray-500">
+                  Event date, registration deadline, live meeting, and recording
+                  links.
+                </p>
+              </div>
+            </div>
+
+            {/* Links */}
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-gray-700">
+                  Live Meeting URL (Google Meet / Zoom)
+                </label>
+                <div className="relative">
+                  <Video
+                    size={18}
+                    className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
+                  />
+                  <input
+                    type="url"
+                    name="meetingUrl"
+                    value={formData.meetingUrl}
+                    onChange={handleChange}
+                    placeholder="https://meet.google.com/xyz-abc-def"
+                    className="w-full rounded-xl border border-gray-200 bg-gray-50 py-3 pl-11 pr-4 text-sm text-gray-800 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-50"
+                  />
+                </div>
+              </div>
 
               <div>
                 <label className="mb-2 block text-sm font-semibold text-gray-700">
-                  Event Description *
+                  Post-Event Recording URL
                 </label>
-
-                <textarea
-                  name="description"
-                  value={formData.description}
+                <input
+                  type="url"
+                  name="recordingUrl"
+                  value={formData.recordingUrl}
                   onChange={handleChange}
-                  rows={6}
-                  placeholder="Describe what students will learn, who should attend, and what they can expect from this event..."
-                  className="w-full resize-none rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm leading-6 text-gray-800 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-50"
+                  placeholder="https://youtube.com/watch?v=xyz or Drive link"
+                  className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-800 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-50"
+                />
+              </div>
+            </div>
+
+            {/* Dates */}
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-gray-700">
+                  Start Date & Time *
+                </label>
+                <input
+                  type="datetime-local"
+                  name="startDateTime"
+                  value={formData.startDateTime}
+                  onChange={handleChange}
+                  className="w-full rounded-xl border border-gray-200 bg-gray-50 p-3 text-sm text-gray-800 outline-none focus:border-indigo-500 focus:bg-white"
                 />
               </div>
 
-              {/* BANNER IMAGE */}
-
               <div>
                 <label className="mb-2 block text-sm font-semibold text-gray-700">
-                  Event Banner Image
+                  End Date & Time *
                 </label>
-
-                <div className="overflow-hidden rounded-2xl border-2 border-dashed border-gray-200 bg-gray-50">
-                  {bannerPreview ? (
-                    <div className="relative">
-                      <img
-                        src={bannerPreview}
-                        alt="Event Banner Preview"
-                        className="h-64 w-full object-cover"
-                      />
-
-                      <div className="absolute right-4 top-4">
-                        <button
-                          type="button"
-                          onClick={removeBanner}
-                          className="flex h-9 w-9 items-center justify-center rounded-lg bg-white text-gray-600 shadow-lg transition hover:bg-red-50 hover:text-red-600"
-                        >
-                          <X size={18} />
-                        </button>
-                      </div>
-
-                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-5">
-                        <p className="text-sm font-semibold text-white">
-                          Event Banner
-                        </p>
-
-                        <p className="mt-1 text-xs text-white/80">
-                          Select another image to replace it.
-                        </p>
-                      </div>
-                    </div>
-                  ) : (
-                    <label className="flex cursor-pointer flex-col items-center justify-center px-5 py-12 text-center transition hover:bg-indigo-50">
-                      <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-100 text-indigo-600">
-                        <ImageIcon size={28} />
-                      </div>
-
-                      <p className="mt-4 text-sm font-bold text-gray-700">
-                        Upload Event Banner
-                      </p>
-
-                      <p className="mt-1 max-w-md text-xs leading-5 text-gray-500">
-                        Upload a JPG, JPEG, PNG, or WEBP image.
-                      </p>
-
-                      <div className="mt-4 flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2.5 text-xs font-semibold text-white">
-                        <Upload size={15} />
-                        Choose Image
-                      </div>
-
-                      <input
-                        type="file"
-                        name="bannerImage"
-                        accept="image/png,image/jpeg,image/jpg,image/webp"
-                        onChange={handleChange}
-                        className="hidden"
-                      />
-                    </label>
-                  )}
-                </div>
+                <input
+                  type="datetime-local"
+                  name="endDateTime"
+                  value={formData.endDateTime}
+                  onChange={handleChange}
+                  className="w-full rounded-xl border border-gray-200 bg-gray-50 p-3 text-sm text-gray-800 outline-none focus:border-indigo-500 focus:bg-white"
+                />
               </div>
-
-              {/* EVENT START & END */}
-
-              <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-                {/* EVENT START */}
-
-                <div>
-                  <label className="mb-2 block text-sm font-semibold text-gray-700">
-                    Event Start Date & Time *
-                  </label>
-
-                  <div className="relative">
-                    <CalendarDays
-                      size={18}
-                      className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
-                    />
-
-                    <input
-                      type="datetime-local"
-                      name="startDateTime"
-                      value={formData.startDateTime}
-                      onChange={handleChange}
-                      className="w-full rounded-xl border border-gray-200 bg-gray-50 py-3 pl-11 pr-4 text-sm text-gray-800 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-50"
-                    />
-                  </div>
-
-                  <p className="mt-2 text-xs text-gray-500">
-                    When the event will start.
-                  </p>
-                </div>
-
-                {/* EVENT END */}
-
-                <div>
-                  <label className="mb-2 block text-sm font-semibold text-gray-700">
-                    Event End Date & Time *
-                  </label>
-
-                  <div className="relative">
-                    <Clock3
-                      size={18}
-                      className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
-                    />
-
-                    <input
-                      type="datetime-local"
-                      name="endDateTime"
-                      value={formData.endDateTime}
-                      onChange={handleChange}
-                      className="w-full rounded-xl border border-gray-200 bg-gray-50 py-3 pl-11 pr-4 text-sm text-gray-800 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-50"
-                    />
-                  </div>
-
-                  <p className="mt-2 text-xs text-gray-500">
-                    When the event will end.
-                  </p>
-                </div>
-              </div>
-
-              {/* REGISTRATION DEADLINE */}
 
               <div>
                 <label className="mb-2 block text-sm font-semibold text-gray-700">
                   Registration Deadline *
                 </label>
-
-                <div className="relative">
-                  <CalendarDays
-                    size={18}
-                    className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
-                  />
-
-                  <input
-                    type="datetime-local"
-                    name="registrationDeadline"
-                    value={formData.registrationDeadline}
-                    onChange={handleChange}
-                    className="w-full rounded-xl border border-gray-200 bg-gray-50 py-3 pl-11 pr-4 text-sm text-gray-800 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-50"
-                  />
-                </div>
-
-                <p className="mt-2 text-xs text-gray-500">
-                  Students cannot register after this time.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* =====================================================
-              SPEAKER INFORMATION
-          ====================================================== */}
-
-          <div className="border-b border-gray-100 p-5 sm:p-7">
-            <div className="mb-6 flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
-                <UserRound size={20} />
-              </div>
-
-              <div>
-                <h2 className="font-bold text-gray-900">Speaker Information</h2>
-
-                <p className="mt-1 text-xs text-gray-500">
-                  Add information about the event speaker.
-                </p>
-              </div>
-            </div>
-
-            <div className="space-y-5">
-              {/* SPEAKER NAME */}
-
-              <div>
-                <label className="mb-2 block text-sm font-semibold text-gray-700">
-                  Speaker Name *
-                </label>
-
                 <input
-                  type="text"
-                  name="speaker"
-                  value={formData.speaker}
+                  type="datetime-local"
+                  name="registrationDeadline"
+                  value={formData.registrationDeadline}
                   onChange={handleChange}
-                  placeholder="e.g. Rahul Sharma"
-                  className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-800 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-50"
-                />
-              </div>
-
-              {/* SPEAKER IMAGE */}
-
-              <div>
-                <label className="mb-2 block text-sm font-semibold text-gray-700">
-                  Speaker Profile Image
-                </label>
-
-                <div className="rounded-2xl border-2 border-dashed border-gray-200 bg-gray-50 p-6">
-                  <div className="flex flex-col items-center">
-                    {speakerPreview ? (
-                      <div className="relative">
-                        <img
-                          src={speakerPreview}
-                          alt="Speaker Preview"
-                          className="h-32 w-32 rounded-full object-cover ring-4 ring-indigo-50"
-                        />
-
-                        <button
-                          type="button"
-                          onClick={removeSpeakerImage}
-                          className="absolute -right-2 -top-2 flex h-8 w-8 items-center justify-center rounded-full bg-white text-gray-600 shadow-lg transition hover:bg-red-50 hover:text-red-600"
-                        >
-                          <X size={16} />
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="flex h-24 w-24 items-center justify-center rounded-full bg-indigo-100 text-indigo-600">
-                        <UserRound size={40} />
-                      </div>
-                    )}
-
-                    <label className="mt-5 flex cursor-pointer items-center gap-2 rounded-xl border border-gray-200 bg-white px-5 py-3 text-sm font-semibold text-gray-700 shadow-sm transition hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-600">
-                      <Upload size={17} />
-
-                      {speakerPreview
-                        ? "Change Speaker Image"
-                        : "Upload Speaker Image"}
-
-                      <input
-                        type="file"
-                        name="speakerImage"
-                        accept="image/png,image/jpeg,image/jpg,image/webp"
-                        onChange={handleChange}
-                        className="hidden"
-                      />
-                    </label>
-                  </div>
-                </div>
-              </div>
-
-              {/* ROLE + COMPANY */}
-
-              <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-                {/* ROLE */}
-
-                <div>
-                  <label className="mb-2 block text-sm font-semibold text-gray-700">
-                    Speaker Role
-                  </label>
-
-                  <div className="relative">
-                    <Briefcase
-                      size={17}
-                      className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
-                    />
-
-                    <input
-                      type="text"
-                      name="speakerRole"
-                      value={formData.speakerRole}
-                      onChange={handleChange}
-                      placeholder="e.g. Senior Software Engineer"
-                      className="w-full rounded-xl border border-gray-200 bg-gray-50 py-3 pl-11 pr-4 text-sm text-gray-800 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-50"
-                    />
-                  </div>
-                </div>
-
-                {/* COMPANY */}
-
-                <div>
-                  <label className="mb-2 block text-sm font-semibold text-gray-700">
-                    Speaker Company
-                  </label>
-
-                  <div className="relative">
-                    <Building2
-                      size={17}
-                      className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
-                    />
-
-                    <input
-                      type="text"
-                      name="speakerCompany"
-                      value={formData.speakerCompany}
-                      onChange={handleChange}
-                      placeholder="e.g. Google"
-                      className="w-full rounded-xl border border-gray-200 bg-gray-50 py-3 pl-11 pr-4 text-sm text-gray-800 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-50"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* BIO */}
-
-              <div>
-                <label className="mb-2 block text-sm font-semibold text-gray-700">
-                  Speaker Bio
-                </label>
-
-                <textarea
-                  name="speakerBio"
-                  value={formData.speakerBio}
-                  onChange={handleChange}
-                  rows={5}
-                  placeholder="Write a short professional biography of the speaker..."
-                  className="w-full resize-none rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm leading-6 text-gray-800 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-50"
-                />
-              </div>
-
-              {/* EXPERIENCE */}
-
-              <div>
-                <label className="mb-2 block text-sm font-semibold text-gray-700">
-                  Speaker Experience
-                </label>
-
-                <textarea
-                  name="speakerExperience"
-                  value={formData.speakerExperience}
-                  onChange={handleChange}
-                  rows={5}
-                  placeholder="Describe the speaker's professional experience, achievements, or expertise..."
-                  className="w-full resize-none rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm leading-6 text-gray-800 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-50"
+                  className="w-full rounded-xl border border-gray-200 bg-gray-50 p-3 text-sm text-gray-800 outline-none focus:border-indigo-500 focus:bg-white"
                 />
               </div>
             </div>
           </div>
 
-          {/* =====================================================
-              AUTOMATIC STATUS INFORMATION
-          ====================================================== */}
+          {/* SECTION 4: CAPACITY, REGISTRATIONS & TICKETING */}
+          <div className="space-y-5 border-b border-gray-100 pb-8">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
+                <Users size={20} />
+              </div>
+              <div>
+                <h2 className="font-bold text-gray-900">Capacity & Pricing</h2>
+                <p className="text-xs text-gray-500">
+                  Seat thresholds and ticket prices.
+                </p>
+              </div>
+            </div>
 
-          <div className="border-b border-gray-100 bg-indigo-50/50 p-5 sm:p-7">
-            <div className="flex items-start gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-100 text-indigo-600">
-                <Clock3 size={20} />
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-4">
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-gray-700">
+                  Max Seats Limit *
+                </label>
+                <input
+                  type="number"
+                  name="maxSeats"
+                  min={1}
+                  value={formData.maxSeats}
+                  onChange={handleChange}
+                  className="w-full rounded-xl border border-gray-200 bg-gray-50 p-3 text-sm text-gray-800 outline-none focus:border-indigo-500 focus:bg-white"
+                />
               </div>
 
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-gray-700">
+                  Current Registered Count
+                </label>
+                <input
+                  type="number"
+                  name="registeredStudentsCount"
+                  min={0}
+                  value={formData.registeredStudentsCount}
+                  onChange={handleChange}
+                  className="w-full rounded-xl border border-gray-200 bg-gray-50 p-3 text-sm text-gray-800 outline-none focus:border-indigo-500 focus:bg-white"
+                />
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-gray-700">
+                  Pricing Type
+                </label>
+                <select
+                  name="isPaid"
+                  value={formData.isPaid}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      isPaid: e.target.value === "true",
+                    }))
+                  }
+                  className="w-full rounded-xl border border-gray-200 bg-gray-50 p-3 text-sm text-gray-800 outline-none focus:border-indigo-500 focus:bg-white"
+                >
+                  <option value="false">Free Event</option>
+                  <option value="true">Paid Event</option>
+                </select>
+              </div>
+
+              {formData.isPaid && (
+                <div>
+                  <label className="mb-2 block text-sm font-semibold text-gray-700">
+                    Ticket Price ($)
+                  </label>
+                  <div className="relative">
+                    <DollarSign
+                      size={18}
+                      className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
+                    />
+                    <input
+                      type="number"
+                      name="ticketPrice"
+                      min={0}
+                      value={formData.ticketPrice}
+                      onChange={handleChange}
+                      className="w-full rounded-xl border border-gray-200 bg-gray-50 py-3 pl-11 pr-4 text-sm text-gray-800 outline-none focus:border-indigo-500 focus:bg-white"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* SECTION 5: PUBLISH STATUS & FEATURED TOGGLE */}
+          <div className="space-y-5">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
+                <CheckCircle2 size={20} />
+              </div>
               <div>
                 <h2 className="font-bold text-gray-900">
-                  Automatic Event Status
+                  Publish & Visibility
                 </h2>
-
-                <p className="mt-1 text-sm leading-6 text-gray-600">
-                  Event status is managed automatically based on the
-                  registration deadline, event start time, and event end time.
+                <p className="text-xs text-gray-500">
+                  Set publication status and feature flag.
                 </p>
+              </div>
+            </div>
 
-                <div className="mt-4 grid grid-cols-1 gap-2 text-xs text-gray-600 sm:grid-cols-2">
-                  <div className="rounded-lg bg-white px-3 py-2 border border-gray-100">
-                    <span className="font-semibold text-gray-800">
-                      Upcoming:
-                    </span>{" "}
-                    Before event starts
-                  </div>
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-gray-700">
+                  Publish Status
+                </label>
+                <select
+                  name="status"
+                  value={formData.status}
+                  onChange={handleChange}
+                  className="w-full rounded-xl border border-gray-200 bg-gray-50 p-3 text-sm text-gray-800 outline-none focus:border-indigo-500 focus:bg-white"
+                >
+                  <option value="Draft">Draft (Hidden from students)</option>
+                  <option value="Published">
+                    Published (Live for registration)
+                  </option>
+                  <option value="Cancelled">Cancelled</option>
+                </select>
+              </div>
 
-                  <div className="rounded-lg bg-white px-3 py-2 border border-gray-100">
-                    <span className="font-semibold text-gray-800">
-                      Registration Closed:
-                    </span>{" "}
-                    Deadline passed
-                  </div>
-
-                  <div className="rounded-lg bg-white px-3 py-2 border border-gray-100">
-                    <span className="font-semibold text-gray-800">Live:</span>{" "}
-                    Event is currently running
-                  </div>
-
-                  <div className="rounded-lg bg-white px-3 py-2 border border-gray-100">
-                    <span className="font-semibold text-gray-800">
-                      Completed:
-                    </span>{" "}
-                    Event end time passed
-                  </div>
-                </div>
+              <div className="flex items-center pt-6">
+                <label className="flex cursor-pointer items-center gap-3">
+                  <input
+                    type="checkbox"
+                    name="isFeatured"
+                    checked={formData.isFeatured}
+                    onChange={handleChange}
+                    className="h-5 w-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                  />
+                  <span className="text-sm font-semibold text-gray-800">
+                    Feature on Guideex Landing Page Carousel
+                  </span>
+                </label>
               </div>
             </div>
           </div>
 
-          {/* =====================================================
-              FOOTER
-          ====================================================== */}
-
-          <div className="flex flex-col-reverse gap-3 bg-gray-50 p-5 sm:flex-row sm:justify-end sm:p-7">
+          {/* FOOTER ACTIONS */}
+          <div className="flex flex-col-reverse gap-3 pt-6 sm:flex-row sm:justify-end">
             <button
               type="button"
-              onClick={handleCancel}
+              onClick={() => navigate("/admin/events")}
               disabled={saving}
-              className="flex items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-6 py-3 text-sm font-semibold text-gray-600 transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60"
+              className="flex items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-6 py-3 text-sm font-semibold text-gray-600 transition hover:bg-gray-100 disabled:opacity-60"
             >
-              <X size={17} />
-              Cancel
+              <X size={17} /> Cancel
             </button>
 
             <button
               type="submit"
               disabled={saving}
-              className="flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-7 py-3 text-sm font-semibold text-white shadow-lg shadow-indigo-100 transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
+              className="flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-7 py-3 text-sm font-semibold text-white shadow-lg shadow-indigo-100 transition hover:bg-indigo-700 disabled:opacity-60"
             >
               <Save size={17} />
-
               {saving
                 ? isEditMode
                   ? "Updating..."

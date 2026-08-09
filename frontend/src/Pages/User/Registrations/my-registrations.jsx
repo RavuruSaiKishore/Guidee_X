@@ -18,6 +18,8 @@ import {
   TicketCheck,
   CircleAlert,
   Sparkles,
+  DollarSign,
+  Building2,
 } from "lucide-react";
 
 import { ToastContainer, toast } from "react-toastify";
@@ -133,17 +135,13 @@ const MyRegistrations = () => {
   };
 
   // =========================================================
-  // DATE FORMAT
+  // DATE FORMATS
   // =========================================================
 
   const formatDate = (date) => {
     if (!date) return "N/A";
-
     const parsedDate = new Date(date);
-
-    if (isNaN(parsedDate.getTime())) {
-      return "N/A";
-    }
+    if (isNaN(parsedDate.getTime())) return "N/A";
 
     return parsedDate.toLocaleDateString("en-US", {
       day: "2-digit",
@@ -152,18 +150,10 @@ const MyRegistrations = () => {
     });
   };
 
-  // =========================================================
-  // DATE TIME FORMAT
-  // =========================================================
-
   const formatDateTime = (date) => {
     if (!date) return "N/A";
-
     const parsedDate = new Date(date);
-
-    if (isNaN(parsedDate.getTime())) {
-      return "N/A";
-    }
+    if (isNaN(parsedDate.getTime())) return "N/A";
 
     return parsedDate.toLocaleString("en-US", {
       day: "2-digit",
@@ -175,18 +165,10 @@ const MyRegistrations = () => {
     });
   };
 
-  // =========================================================
-  // TIME FORMAT
-  // =========================================================
-
   const formatTime = (date) => {
     if (!date) return "N/A";
-
     const parsedDate = new Date(date);
-
-    if (isNaN(parsedDate.getTime())) {
-      return "N/A";
-    }
+    if (isNaN(parsedDate.getTime())) return "N/A";
 
     return parsedDate.toLocaleTimeString("en-US", {
       hour: "2-digit",
@@ -195,205 +177,84 @@ const MyRegistrations = () => {
     });
   };
 
-  // =========================================================
-  // EVENT START
-  // =========================================================
-
   const getEventStart = (event) => {
-    return (
-      event?.startDateTime || event?.dateTime || event?.startTime || event?.date
-    );
+    return event?.startDateTime;
   };
-
-  // =========================================================
-  // EVENT END
-  // =========================================================
 
   const getEventEnd = (event) => {
-    return event?.endDateTime || event?.endTime;
+    return event?.endDateTime;
   };
-
-  // =========================================================
-  // EVENT STATUS
-  // =========================================================
-
-  const getCalculatedEventStatus = (event) => {
-    if (!event) return "Unknown";
-
-    if (event.status === "Cancelled") {
-      return "Cancelled";
-    }
-
-    const start = getEventStart(event);
-    const end = getEventEnd(event);
-
-    if (!start) {
-      return event.status || "Upcoming";
-    }
-
-    const startDate = new Date(start);
-
-    if (isNaN(startDate.getTime())) {
-      return event.status || "Upcoming";
-    }
-
-    const now = Date.now();
-
-    if (end) {
-      const endDate = new Date(end);
-
-      if (!isNaN(endDate.getTime())) {
-        if (now >= endDate.getTime()) {
-          return "Completed";
-        }
-
-        if (now >= startDate.getTime() && now < endDate.getTime()) {
-          return "Live";
-        }
-      }
-    }
-
-    if (now < startDate.getTime()) {
-      return "Upcoming";
-    }
-
-    if (event.status === "Live") {
-      return "Live";
-    }
-
-    if (event.status === "Completed") {
-      return "Completed";
-    }
-
-    return event.status || "Upcoming";
-  };
-
-  // =========================================================
-  // UPCOMING
-  // =========================================================
-
-  const isUpcoming = (event) => {
-    return getCalculatedEventStatus(event) === "Upcoming";
-  };
-
-  // =========================================================
-  // LIVE
-  // =========================================================
-
-  const isLive = (event) => {
-    return getCalculatedEventStatus(event) === "Live";
-  };
-
-  // =========================================================
-  // ENDED
-  // =========================================================
-
-  const isEnded = (event) => {
-    return getCalculatedEventStatus(event) === "Completed";
-  };
-
-  // =========================================================
-  // CAN JOIN EVENT
-  // =========================================================
 
   const canJoinEvent = (registration) => {
     const event = getEvent(registration);
-
     if (!event) return false;
 
     if (
       registration.status === "Cancelled" ||
-      registration.status === "cancelled"
+      registration.status === "cancelled" ||
+      event.status === "Cancelled"
     ) {
       return false;
     }
 
-    if (event.status === "Cancelled") {
-      return false;
-    }
-
     const start = getEventStart(event);
-
     if (!start) return false;
 
     const eventStart = new Date(start);
-
-    if (isNaN(eventStart.getTime())) {
-      return false;
-    }
+    if (isNaN(eventStart.getTime())) return false;
 
     const joinTime = eventStart.getTime() - 10 * 60 * 1000;
-
     const now = Date.now();
 
-    if (isLive(event)) {
-      return true;
-    }
-
-    if (isEnded(event)) {
-      return false;
-    }
+    if (event.computedStatus === "Live Now") return true;
+    if (event.computedStatus === "Completed") return false;
 
     return now >= joinTime;
   };
 
   // =========================================================
-  // EVENT STATUS STYLE
+  // STYLES
   // =========================================================
 
   const getStatusStyle = (status) => {
     switch (status) {
       case "Upcoming":
         return "bg-violet-500/90 text-white border-white/30";
-
-      case "Live":
+      case "Live Now":
         return "bg-teal-500/90 text-white border-white/30";
-
       case "Completed":
         return "bg-slate-700/90 text-white border-white/30";
-
       case "Cancelled":
         return "bg-rose-500/90 text-white border-white/30";
-
       case "Registration Closed":
         return "bg-amber-500/90 text-white border-white/30";
-
+      case "Housefull":
+        return "bg-orange-500/90 text-white border-white/30";
       default:
         return "bg-white/90 text-slate-700 border-white/30";
     }
   };
 
-  // =========================================================
-  // REGISTRATION STATUS STYLE
-  // =========================================================
-
   const getRegistrationStatusStyle = (status) => {
     switch (status) {
       case "Registered":
         return "bg-teal-50 text-teal-700 border-teal-200";
-
       case "Cancelled":
         return "bg-rose-50 text-rose-700 border-rose-200";
-
       default:
         return "bg-slate-50 text-slate-700 border-slate-200";
     }
   };
 
-  // =========================================================
-  // ATTENDANCE STYLE
-  // =========================================================
-
   const getAttendanceStyle = (attended) => {
     if (attended) {
       return "bg-teal-50 text-teal-700 border-teal-200";
     }
-
     return "bg-amber-50 text-amber-700 border-amber-200";
   };
 
   // =========================================================
-  // FILTER
+  // FILTERING & STATS
   // =========================================================
 
   const filteredRegistrations = useMemo(() => {
@@ -401,20 +262,18 @@ const MyRegistrations = () => {
 
     return registrations.filter((registration) => {
       const event = getEvent(registration);
-
       const title = event?.title?.toLowerCase() || "";
       const description = event?.description?.toLowerCase() || "";
-      const speaker = event?.speaker?.toLowerCase() || "";
-      const company = event?.speakerCompany?.toLowerCase() || "";
-
-      const eventStatus = getCalculatedEventStatus(event);
+      const speakerName = event?.speakerName?.toLowerCase() || "";
+      const speakerOrg = event?.speakerOrganization?.toLowerCase() || "";
+      const eventStatus = event?.computedStatus || "Upcoming";
 
       const matchesSearch =
         !search ||
         title.includes(search) ||
         description.includes(search) ||
-        speaker.includes(search) ||
-        company.includes(search);
+        speakerName.includes(search) ||
+        speakerOrg.includes(search);
 
       const matchesStatus =
         selectedStatus === "All" || eventStatus === selectedStatus;
@@ -429,437 +288,348 @@ const MyRegistrations = () => {
     });
   }, [registrations, searchTerm, selectedStatus, selectedAttendance]);
 
-  // =========================================================
-  // STATISTICS
-  // =========================================================
-
   const statistics = useMemo(() => {
     const total = registrations.length;
+    const now = Date.now();
 
-    const upcoming = registrations.filter((registration) =>
-      isUpcoming(getEvent(registration))
-    ).length;
+    const upcoming = registrations.filter((r) => {
+      const event = getEvent(r);
+      const startTime = event?.startDateTime
+        ? new Date(event.startDateTime).getTime()
+        : 0;
+      return (
+        r.status === "Registered" &&
+        startTime > now &&
+        event?.status !== "Cancelled"
+      );
+    }).length;
 
-    const live = registrations.filter((registration) =>
-      isLive(getEvent(registration))
-    ).length;
+    const live = registrations.filter((r) => {
+      const event = getEvent(r);
+      const startTime = event?.startDateTime
+        ? new Date(event.startDateTime).getTime()
+        : 0;
+      const endTime = event?.endDateTime
+        ? new Date(event.endDateTime).getTime()
+        : 0;
+      return r.status === "Registered" && now >= startTime && now <= endTime;
+    }).length;
 
-    const completed = registrations.filter((registration) =>
-      isEnded(getEvent(registration))
-    ).length;
+    const completed = registrations.filter((r) => {
+      const event = getEvent(r);
+      const endTime = event?.endDateTime
+        ? new Date(event.endDateTime).getTime()
+        : 0;
+      return (
+        r.status === "Registered" &&
+        (now > endTime || event?.status === "Completed")
+      );
+    }).length;
 
-    const attended = registrations.filter(
-      (registration) => registration.attended === true
-    ).length;
+    const attended = registrations.filter((r) => r.attended === true).length;
 
-    return {
-      total,
-      upcoming,
-      live,
-      completed,
-      attended,
-    };
+    return { total, upcoming, live, completed, attended };
   }, [registrations]);
 
-  // =========================================================
-  // VIEW EVENT
-  // =========================================================
-
   const handleViewEvent = (registration) => {
-    if (!registration?._id) {
+    // Use the registration document _id instead of the event._id
+    const registrationId = registration._id || registration.registrationId;
+
+    if (!registrationId) {
       toast.error("Registration information is unavailable");
       return;
     }
 
-    navigate(`/my-registrations/${registration._id}`);
+    // Route to your registration details page
+    navigate(`/my-registrations/${registrationId}`);
   };
-
-  // =========================================================
-  // JOIN EVENT
-  // =========================================================
-
   const handleJoinEvent = (registration) => {
     const event = getEvent(registration);
-
     if (!canJoinEvent(registration)) {
       toast.info(
         "The event meeting will be available 10 minutes before the event."
       );
-
       return;
     }
 
-    if (registration.meetingLink) {
-      window.open(registration.meetingLink, "_blank", "noopener,noreferrer");
-
-      return;
-    }
-
-    if (event.meetingLink) {
-      window.open(event.meetingLink, "_blank", "noopener,noreferrer");
-
-      return;
-    }
-
-    if (event._id) {
-      navigate(`/events/${event._id}/meeting`);
+    const activeLink = registration.meetingLink || event.meetingUrl;
+    if (activeLink) {
+      window.open(activeLink, "_blank", "noopener,noreferrer");
       return;
     }
 
     toast.error("Meeting link is not available");
   };
 
-  // =========================================================
-  // LOADING
-  // =========================================================
-
   if (loading) {
     return (
       <div className="fixed inset-0 flex min-h-screen flex-col items-center justify-center bg-slate-50 px-4">
         <div className="relative">
           <div className="h-16 w-16 rounded-full border-4 border-violet-100" />
-
           <div className="absolute inset-0 h-16 w-16 animate-spin rounded-full border-4 border-transparent border-t-violet-600" />
         </div>
-
         <p className="mt-6 text-center text-lg font-semibold text-slate-700">
-          Loading your registration's data...
-        </p>
-
-        <p className="mt-1 text-center text-sm text-slate-400">
-          Please wait while we fetch the registrations data.
+          Loading your registrations data...
         </p>
       </div>
     );
   }
 
-  // =========================================================
-  // MAIN UI
-  // =========================================================
-
   return (
     <div className="min-h-screen bg-slate-50">
       <ToastContainer position="top-right" autoClose={3000} theme="light" />
 
-      <div className="mx-auto max-w-7xl px-4 pb-20 pt-32 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl px-4 pb-20 pt-28 sm:px-6 lg:px-8">
         {/* =====================================================
-            HEADER
+            HEADER WITH BACKGROUND COLOR 
         ===================================================== */}
+        <div className="rounded-3xl bg-gradient-to-r from-violet-900 via-indigo-900 to-slate-900 px-6 py-8 sm:px-10 sm:py-10 text-white shadow-xl">
+          <button
+            onClick={() => navigate(-1)}
+            className="mb-6 flex items-center gap-2 text-xs font-semibold text-violet-200 transition hover:text-white"
+          >
+            <ArrowLeft size={16} />
+            Back
+          </button>
 
-        <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
-          <div>
-            <button
-              onClick={() => navigate(-1)}
-              className="mb-6 flex items-center gap-2 text-sm font-semibold text-slate-500 transition hover:text-violet-600"
-            >
-              <ArrowLeft size={17} />
-              Back
-            </button>
-
+          <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
             <div className="flex items-start gap-4">
-              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-600 via-purple-600 to-fuchsia-600 text-white shadow-lg shadow-violet-200">
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/15 text-white backdrop-blur-md shadow-inner">
                 <TicketCheck size={27} />
               </div>
 
               <div>
                 <div className="flex items-center gap-2">
-                  <Sparkles size={17} className="text-fuchsia-500" />
-
-                  <span className="text-sm font-bold uppercase tracking-wider text-violet-600">
-                    Your Events
+                  <Sparkles size={16} className="text-fuchsia-400" />
+                  <span className="text-xs font-bold uppercase tracking-wider text-violet-300">
+                    Your Events Hub
                   </span>
                 </div>
 
-                <h1 className="mt-2 text-3xl font-black tracking-tight text-slate-900 sm:text-4xl">
+                <h1 className="mt-1 text-2xl font-black tracking-tight text-white sm:text-4xl">
                   My Registrations
                 </h1>
 
-                <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500 sm:text-base">
-                  Keep track of all the events you've registered for and never
-                  miss an opportunity to learn, connect, and grow.
+                <p className="mt-1.5 max-w-xl text-xs leading-relaxed text-slate-300 sm:text-sm">
+                  Keep track of all your event bookings, join live rooms, and
+                  review participation statuses in one place.
                 </p>
               </div>
             </div>
-          </div>
 
-          <button
-            onClick={() => fetchMyRegistrations(true)}
-            disabled={refreshing}
-            className="flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-700 shadow-sm transition hover:border-violet-300 hover:text-violet-600 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            <RefreshCw size={17} className={refreshing ? "animate-spin" : ""} />
-            Refresh
-          </button>
+            <button
+              onClick={() => fetchMyRegistrations(true)}
+              disabled={refreshing}
+              className="flex items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-xs font-bold text-white backdrop-blur-md transition hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <RefreshCw
+                size={15}
+                className={refreshing ? "animate-spin" : ""}
+              />
+              Refresh
+            </button>
+          </div>
         </div>
 
-        {/* =====================================================
-            STATISTICS
-        ===================================================== */}
-
-        <div className="mt-10 grid grid-cols-2 gap-4 md:grid-cols-5">
-          {/* TOTAL */}
-
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-md">
+        {/* STATISTICS */}
+        <div className="mt-8 grid grid-cols-2 gap-4 md:grid-cols-5">
+          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
                   Registered
                 </p>
-
-                <p className="mt-2 text-3xl font-black text-slate-900">
+                <p className="mt-1 text-2xl font-black text-slate-900">
                   {statistics.total}
                 </p>
               </div>
-
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-violet-50 text-violet-600">
-                <TicketCheck size={21} />
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-50 text-violet-600">
+                <TicketCheck size={19} />
               </div>
             </div>
           </div>
 
-          {/* UPCOMING */}
-
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-md">
+          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
                   Upcoming
                 </p>
-
-                <p className="mt-2 text-3xl font-black text-slate-900">
+                <p className="mt-1 text-2xl font-black text-slate-900">
                   {statistics.upcoming}
                 </p>
               </div>
-
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-fuchsia-50 text-fuchsia-600">
-                <CalendarDays size={21} />
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-fuchsia-50 text-fuchsia-600">
+                <CalendarDays size={19} />
               </div>
             </div>
           </div>
 
-          {/* LIVE */}
-
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-md">
+          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
                   Live Now
                 </p>
-
-                <p className="mt-2 text-3xl font-black text-slate-900">
+                <p className="mt-1 text-2xl font-black text-slate-900">
                   {statistics.live}
                 </p>
               </div>
-
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-teal-50 text-teal-600">
-                <Video size={21} />
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-50 text-teal-600">
+                <Video size={19} />
               </div>
             </div>
           </div>
 
-          {/* COMPLETED */}
-
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-md">
+          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
                   Completed
                 </p>
-
-                <p className="mt-2 text-3xl font-black text-slate-900">
+                <p className="mt-1 text-2xl font-black text-slate-900">
                   {statistics.completed}
                 </p>
               </div>
-
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-100 text-slate-600">
-                <CheckCircle2 size={21} />
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-600">
+                <CheckCircle2 size={19} />
               </div>
             </div>
           </div>
 
-          {/* ATTENDED */}
-
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-md">
+          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
                   Attended
                 </p>
-
-                <p className="mt-2 text-3xl font-black text-slate-900">
+                <p className="mt-1 text-2xl font-black text-slate-900">
                   {statistics.attended}
                 </p>
               </div>
-
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
-                <Users size={21} />
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
+                <Users size={19} />
               </div>
             </div>
           </div>
         </div>
 
-        {/* =====================================================
-            FILTER BAR
-        ===================================================== */}
-
-        <div className="mt-10 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        {/* FILTER BAR */}
+        <div className="mt-8 rounded-2xl border border-slate-200 bg-white p-3.5 shadow-sm">
           <div className="flex flex-col gap-3 lg:flex-row">
             <div className="relative flex-1">
               <Search
-                size={18}
-                className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+                size={17}
+                className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
               />
-
               <input
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Search your registered events..."
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 py-3.5 pl-11 pr-4 text-sm font-medium text-slate-700 outline-none transition focus:border-violet-500 focus:bg-white focus:ring-4 focus:ring-violet-50"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-10 pr-4 text-xs font-medium text-slate-700 outline-none transition focus:border-violet-500 focus:bg-white focus:ring-4 focus:ring-violet-50"
               />
             </div>
 
             <select
               value={selectedStatus}
               onChange={(e) => setSelectedStatus(e.target.value)}
-              className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-sm font-semibold text-slate-700 outline-none transition focus:border-violet-500"
+              className="rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-xs font-semibold text-slate-700 outline-none transition focus:border-violet-500"
             >
-              <option value="All">All Event Status</option>
-
+              <option value="All">All Status</option>
               <option value="Upcoming">Upcoming</option>
-
-              <option value="Live">Live</option>
-
+              <option value="Live Now">Live Now</option>
               <option value="Completed">Completed</option>
-
               <option value="Cancelled">Cancelled</option>
-
-              <option value="Registration Closed">Registration Closed</option>
             </select>
 
             <select
               value={selectedAttendance}
               onChange={(e) => setSelectedAttendance(e.target.value)}
-              className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-sm font-semibold text-slate-700 outline-none transition focus:border-violet-500"
+              className="rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-xs font-semibold text-slate-700 outline-none transition focus:border-violet-500"
             >
               <option value="All">All Attendance</option>
-
               <option value="Attended">Attended</option>
-
               <option value="Not Attended">Not Attended</option>
             </select>
           </div>
         </div>
 
-        {/* =====================================================
-            SECTION HEADER
-        ===================================================== */}
-
-        <div className="mt-10 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <h2 className="text-2xl font-black text-slate-900">
-              Your Registered Events
-            </h2>
-
-            <p className="mt-1 text-sm text-slate-500">
-              Showing{" "}
-              <span className="font-bold text-violet-600">
-                {filteredRegistrations.length}
-              </span>{" "}
-              of {registrations.length} registrations
-            </p>
-          </div>
+        {/* SECTION HEADER */}
+        <div className="mt-8 flex items-center justify-between">
+          <h2 className="text-xl font-black text-slate-900">
+            Registered Events List
+          </h2>
+          <span className="text-xs font-medium text-slate-500">
+            Showing{" "}
+            <strong className="text-violet-600">
+              {filteredRegistrations.length}
+            </strong>{" "}
+            items
+          </span>
         </div>
 
-        {/* =====================================================
-            EMPTY STATE
-        ===================================================== */}
-
+        {/* EMPTY STATE */}
         {filteredRegistrations.length === 0 ? (
-          <div className="mt-8 rounded-3xl border border-slate-200 bg-white px-6 py-20 text-center shadow-sm">
-            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-violet-50 text-violet-500">
-              <CalendarDays size={36} />
+          <div className="mt-6 rounded-3xl border border-slate-200 bg-white px-6 py-16 text-center shadow-sm">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-violet-50 text-violet-500">
+              <CalendarDays size={30} />
             </div>
-
-            <h3 className="mt-6 text-2xl font-black text-slate-900">
+            <h3 className="mt-4 text-xl font-bold text-slate-900">
               No registrations found
             </h3>
-
-            <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-slate-500">
+            <p className="mx-auto mt-2 max-w-sm text-xs text-slate-500">
               You don't have any registered events matching your current search
               or filters.
             </p>
-
-            <button
-              onClick={() => navigate("/upComingEvents")}
-              className="mt-7 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 px-6 py-3.5 text-sm font-bold text-white shadow-lg shadow-violet-100 transition hover:-translate-y-0.5 hover:shadow-xl"
-            >
-              Explore Upcoming Events
-              <ArrowRight size={17} />
-            </button>
           </div>
         ) : (
           /* ===================================================
-             EVENT GRID
+             COMPACT HORIZONTAL CARDS LIST
           =================================================== */
-
-          <div className="mt-8 grid grid-cols-1 gap-7 md:grid-cols-2">
+          <div className="mt-6 space-y-4">
             {filteredRegistrations.map((registration) => {
               const event = getEvent(registration);
-
               const bannerUrl = getImageUrl(event?.bannerImage);
-
               const speakerImage = getImageUrl(event?.speakerImage);
-
               const eventStart = getEventStart(event);
-
               const eventEnd = getEventEnd(event);
-
-              const eventStatus = getCalculatedEventStatus(event);
-
-              const eventLive = isLive(event);
-
-              const eventCompleted = isEnded(event);
-
+              const eventStatus = event?.computedStatus || "Upcoming";
+              const eventLive = eventStatus === "Live Now";
+              const eventCompleted = eventStatus === "Completed";
               const joinAvailable = canJoinEvent(registration);
 
               return (
                 <article
                   key={registration._id}
-                  className="group overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1.5 hover:shadow-2xl"
+                  className="group flex flex-col lg:flex-row overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-all duration-200 hover:shadow-md"
                 >
-                  {/* =================================================
-                        BANNER
-                    ================================================= */}
-
-                  <div className="relative h-64 overflow-hidden">
+                  {/* LEFT: COMPACT BANNER IMAGE */}
+                  <div className="relative lg:w-72 h-48 lg:h-auto shrink-0 overflow-hidden bg-slate-900">
                     {bannerUrl ? (
                       <img
                         src={bannerUrl}
                         alt={event.title || "Registered event"}
-                        className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
+                        className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
                       />
                     ) : (
-                      <div className="flex h-full items-center justify-center bg-gradient-to-br from-violet-700 via-purple-700 to-fuchsia-700">
-                        <CalendarDays size={70} className="text-white/30" />
+                      <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-violet-700 via-purple-700 to-fuchsia-700">
+                        <CalendarDays size={45} className="text-white/30" />
                       </div>
                     )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent lg:hidden" />
 
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-
-                    {/* TOP BADGES */}
-
-                    <div className="absolute left-5 right-5 top-5 flex items-start justify-between gap-3">
+                    {/* BADGES ON BANNER */}
+                    <div className="absolute left-3 top-3 flex flex-wrap gap-1.5">
                       <span
-                        className={`rounded-full border px-3.5 py-1.5 text-xs font-bold shadow-lg backdrop-blur-md ${getStatusStyle(
+                        className={`rounded-full border px-2.5 py-0.5 text-[10px] font-bold shadow-sm backdrop-blur-md ${getStatusStyle(
                           eventStatus
                         )}`}
                       >
                         {eventStatus}
                       </span>
-
                       <span
-                        className={`rounded-full border px-3.5 py-1.5 text-xs font-bold shadow-lg ${getRegistrationStatusStyle(
+                        className={`rounded-full border px-2.5 py-0.5 text-[10px] font-bold shadow-sm ${getRegistrationStatusStyle(
                           registration.status
                         )}`}
                       >
@@ -867,250 +637,176 @@ const MyRegistrations = () => {
                       </span>
                     </div>
 
-                    {/* LIVE INDICATOR */}
-
                     {eventLive && (
-                      <div className="absolute left-5 top-16 flex items-center gap-2 rounded-full bg-teal-500 px-3 py-1.5 text-xs font-bold text-white shadow-lg">
-                        <span className="h-2 w-2 animate-pulse rounded-full bg-white" />
+                      <div className="absolute left-3 bottom-3 flex items-center gap-1.5 rounded-full bg-teal-500 px-2.5 py-0.5 text-[10px] font-bold text-white shadow-md">
+                        <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white" />
                         LIVE NOW
                       </div>
                     )}
-
-                    {/* TITLE */}
-
-                    <div className="absolute bottom-5 left-5 right-5">
-                      <h3 className="line-clamp-2 text-xl font-black leading-tight text-white sm:text-2xl">
-                        {event.title || "Event Title Unavailable"}
-                      </h3>
-                    </div>
                   </div>
 
-                  {/* =================================================
-                        CONTENT
-                    ================================================= */}
-
-                  <div className="p-5 sm:p-6">
-                    {/* DESCRIPTION */}
-
-                    <p className="line-clamp-2 text-sm leading-6 text-slate-500">
-                      {event.description || "No event description available."}
-                    </p>
-
-                    {/* EVENT META */}
-
-                    <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                      {/* DATE */}
-
-                      <div className="flex items-center gap-3 rounded-2xl bg-violet-50/70 p-3.5">
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-100 text-violet-600">
-                          <CalendarDays size={18} />
-                        </div>
-
-                        <div className="min-w-0">
-                          <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
-                            Date
-                          </p>
-
-                          <p className="mt-1 truncate text-sm font-bold text-slate-800">
-                            {formatDate(eventStart)}
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* TIME */}
-
-                      <div className="flex items-center gap-3 rounded-2xl bg-fuchsia-50/70 p-3.5">
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-fuchsia-100 text-fuchsia-600">
-                          <Clock3 size={18} />
-                        </div>
-
-                        <div className="min-w-0">
-                          <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
-                            Time
-                          </p>
-
-                          <p className="mt-1 truncate text-sm font-bold text-slate-800">
-                            {formatTime(eventStart)}
-
-                            {eventEnd && ` - ${formatTime(eventEnd)}`}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* SPEAKER */}
-
-                    <div className="mt-6 flex items-center gap-3 border-t border-slate-100 pt-5">
-                      {speakerImage ? (
-                        <img
-                          src={speakerImage}
-                          alt={event.speaker || "Speaker"}
-                          className="h-11 w-11 rounded-full object-cover ring-2 ring-violet-50"
-                        />
-                      ) : (
-                        <div className="flex h-11 w-11 items-center justify-center rounded-full bg-violet-50 text-violet-600">
-                          <UserRound size={20} />
-                        </div>
-                      )}
-
-                      <div className="min-w-0">
-                        <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
-                          Speaker
-                        </p>
-
-                        <p className="truncate text-sm font-bold text-slate-800">
-                          {event.speaker || "Speaker not specified"}
-                        </p>
-
-                        {(event.speakerRole || event.speakerCompany) && (
-                          <p className="mt-0.5 truncate text-xs text-slate-500">
-                            {event.speakerRole}
-
-                            {event.speakerRole && event.speakerCompany && " • "}
-
-                            {event.speakerCompany}
-                          </p>
+                  {/* RIGHT: COMPACT CONTENT BODY */}
+                  <div className="flex flex-1 flex-col justify-between p-5 sm:p-6">
+                    <div>
+                      {/* DOMAIN & PRICING TAGS */}
+                      <div className="mb-2 flex items-center gap-2">
+                        {event.domain && (
+                          <span className="rounded-full bg-violet-50 px-2.5 py-0.5 text-[11px] font-semibold text-violet-700">
+                            {event.domain}
+                          </span>
                         )}
+                        <span
+                          className={`rounded-full px-2.5 py-0.5 text-[11px] font-bold ${
+                            event.isPaid
+                              ? "bg-emerald-50 text-emerald-700"
+                              : "bg-blue-50 text-blue-700"
+                          }`}
+                        >
+                          {event.isPaid ? `₹${event.ticketPrice}` : "Free"}
+                        </span>
+                      </div>
+
+                      {/* TITLE */}
+                      <h3 className="text-lg font-black tracking-tight text-slate-900 sm:text-xl">
+                        {event.title || "Event Title Unavailable"}
+                      </h3>
+
+                      {/* DESCRIPTION */}
+                      <p className="mt-1.5 text-xs leading-relaxed text-slate-500 line-clamp-1">
+                        {event.description || "No event description available."}
+                      </p>
+
+                      {/* COMPACT SCHEDULE & SPEAKER GRID */}
+                      <div className="mt-4 grid grid-cols-1 gap-2.5 sm:grid-cols-3">
+                        {/* DATE */}
+                        <div className="flex items-center gap-2.5 rounded-xl bg-violet-50/50 p-2.5 border border-violet-100/40">
+                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-violet-100 text-violet-600">
+                            <CalendarDays size={15} />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+                              Date
+                            </p>
+                            <p className="truncate text-xs font-bold text-slate-800">
+                              {formatDate(eventStart)}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* TIME */}
+                        <div className="flex items-center gap-2.5 rounded-xl bg-fuchsia-50/50 p-2.5 border border-fuchsia-100/40">
+                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-fuchsia-100 text-fuchsia-600">
+                            <Clock3 size={15} />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+                              Time
+                            </p>
+                            <p className="truncate text-xs font-bold text-slate-800">
+                              {formatTime(eventStart)}
+                              {eventEnd && ` - ${formatTime(eventEnd)}`}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* SPEAKER */}
+                        <div className="flex items-center gap-2.5 rounded-xl bg-slate-50 p-2.5 border border-slate-100">
+                          {speakerImage ? (
+                            <img
+                              src={speakerImage}
+                              alt={event.speakerName}
+                              className="h-8 w-8 shrink-0 rounded-full object-cover ring-1 ring-violet-50"
+                            />
+                          ) : (
+                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-200 text-slate-700">
+                              <UserRound size={15} />
+                            </div>
+                          )}
+                          <div className="min-w-0">
+                            <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+                              Speaker
+                            </p>
+                            <p className="truncate text-xs font-bold text-slate-800">
+                              {event.speakerName || "Not specified"}
+                            </p>
+                          </div>
+                        </div>
                       </div>
                     </div>
 
-                    {/* REGISTRATION INFO */}
-
-                    <div className="mt-5 rounded-2xl border border-slate-100 bg-slate-50 p-4">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
-                            Registered On
-                          </p>
-
-                          <p className="mt-1 text-xs font-bold text-slate-700">
+                    {/* FOOTER METRICS & ACTIONS */}
+                    <div className="mt-5 flex flex-col gap-3 border-t border-slate-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
+                      {/* REGISTRATION & ATTENDANCE METRICS */}
+                      <div className="flex flex-wrap items-center gap-3 text-[11px] font-medium text-slate-500">
+                        <span>
+                          Registered:{" "}
+                          <strong className="text-slate-800">
                             {formatDateTime(registration.registeredAt)}
-                          </p>
-                        </div>
-
-                        <div>
-                          <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
-                            Attendance
-                          </p>
-
+                          </strong>
+                        </span>
+                        <span className="text-slate-300">|</span>
+                        <span>
+                          Attendance:{" "}
                           <span
-                            className={`mt-1.5 inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-bold ${getAttendanceStyle(
+                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full font-bold border ${getAttendanceStyle(
                               registration.attended
                             )}`}
                           >
                             {registration.attended ? (
                               <>
-                                <CheckCircle2 size={12} />
-                                Attended
+                                <CheckCircle2 size={12} /> Attended
                               </>
                             ) : (
                               <>
-                                <Clock size={12} />
-                                Not Attended
+                                <Clock size={12} /> Not Attended
                               </>
                             )}
                           </span>
-                        </div>
+                        </span>
                       </div>
-                    </div>
 
-                    {/* =================================================
-                          ACTIONS
-                      ================================================= */}
-
-                    <div className="mt-5 flex flex-col gap-3 sm:flex-row">
-                      {/* VIEW */}
-
-                      <button
-                        onClick={() => handleViewEvent(registration)}
-                        className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-700 transition hover:border-violet-200 hover:bg-violet-50 hover:text-violet-600"
-                      >
-                        <ExternalLink size={17} />
-                        View Event
-                      </button>
-
-                      {/* JOIN */}
-
-                      {joinAvailable && (
+                      {/* ACTION BUTTONS */}
+                      <div className="flex items-center gap-2">
                         <button
-                          onClick={() => handleJoinEvent(registration)}
-                          className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-600 px-4 py-3 text-sm font-bold text-white shadow-lg shadow-teal-100 transition hover:-translate-y-0.5 hover:shadow-xl"
+                          onClick={() => handleViewEvent(registration)}
+                          className="flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 transition hover:border-violet-300 hover:bg-violet-50 hover:text-violet-600"
                         >
-                          <Video size={17} />
-
-                          {eventLive ? "Join Live Event" : "Join Event"}
+                          <ExternalLink size={15} />
+                          View Event
                         </button>
-                      )}
+
+                        {joinAvailable && (
+                          <button
+                            onClick={() => handleJoinEvent(registration)}
+                            className="flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-600 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-teal-100 transition hover:-translate-y-0.5 hover:shadow-lg"
+                          >
+                            <Video size={15} />
+                            {eventLive ? "Join Live" : "Join Event"}
+                          </button>
+                        )}
+                      </div>
                     </div>
 
-                    {/* =================================================
-                          EVENT ENDED
-                      ================================================= */}
-
+                    {/* STATUS NOTICES */}
                     {eventCompleted && registration.status !== "Cancelled" && (
-                      <div className="mt-4 flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-3.5">
-                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-200 text-slate-600">
-                          <CheckCircle2 size={17} />
-                        </div>
-
-                        <div>
-                          <p className="text-xs font-bold text-slate-800">
-                            Event completed
-                          </p>
-
-                          <p className="mt-0.5 text-[11px] text-slate-500">
-                            Thank you for participating in this event.
-                          </p>
-                        </div>
+                      <div className="mt-3 flex items-center gap-2 text-[11px] text-slate-500 bg-slate-50 p-2 rounded-lg">
+                        <CheckCircle2 size={14} className="text-slate-600" />
+                        <span>
+                          Event completed. Thank you for participating!
+                        </span>
                       </div>
                     )}
-
-                    {/* =================================================
-                          CANCELLED
-                      ================================================= */}
-
-                    {(registration.status === "Cancelled" ||
-                      event.status === "Cancelled") && (
-                      <div className="mt-4 flex items-center gap-3 rounded-2xl border border-rose-100 bg-rose-50 p-3.5">
-                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-rose-100 text-rose-600">
-                          <XCircle size={17} />
-                        </div>
-
-                        <div>
-                          <p className="text-xs font-bold text-rose-700">
-                            Registration Cancelled
-                          </p>
-
-                          <p className="mt-0.5 text-[11px] text-rose-600">
-                            This registration is no longer active.
-                          </p>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* =================================================
-                          JOINING SOON
-                      ================================================= */}
 
                     {!eventCompleted &&
                       !eventLive &&
                       registration.status !== "Cancelled" &&
                       !joinAvailable && (
-                        <div className="mt-4 flex items-center gap-3 rounded-2xl border border-violet-100 bg-violet-50 p-3.5">
-                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-violet-100 text-violet-600">
-                            <CircleAlert size={17} />
-                          </div>
-
-                          <div>
-                            <p className="text-xs font-bold text-violet-700">
-                              Event starts soon
-                            </p>
-
-                            <p className="mt-0.5 text-[11px] text-violet-600">
-                              The meeting will be available 10 minutes before
-                              the event.
-                            </p>
-                          </div>
+                        <div className="mt-3 flex items-center gap-2 text-[11px] text-violet-700 bg-violet-50 p-2 rounded-lg">
+                          <CircleAlert size={14} className="text-violet-600" />
+                          <span>
+                            Meeting link unlocks 10 minutes prior to event
+                            start.
+                          </span>
                         </div>
                       )}
                   </div>

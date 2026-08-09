@@ -25,6 +25,11 @@ import {
   CalendarDays,
   Heart,
   Layers3,
+  Bookmark,
+  Star,
+  Lock,
+  Layers,
+  Sparkles,
 } from "lucide-react";
 
 import { toast } from "react-toastify";
@@ -32,7 +37,7 @@ import { toast } from "react-toastify";
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 // =====================================================
-// CONSTANTS
+// CONSTANTS & TAXONOMY
 // =====================================================
 
 const categories = [
@@ -41,12 +46,22 @@ const categories = [
   "Resume Templates",
   "Career Guidance",
   "Skill Development",
+  "System Design",
 ];
 
-const resourceTypes = ["PDF", "File", "External Link"];
+const resourceTypes = [
+  "PDF",
+  "File",
+  "External Link",
+  "Interactive Guide",
+  "Video Course",
+  "Template Pack",
+];
+
+const difficulties = ["Beginner", "Intermediate", "Advanced", "All Levels"];
 
 // =====================================================
-// GET ADMIN TOKEN
+// AUTH TOKEN HELPER
 // =====================================================
 
 const getToken = () => {
@@ -72,49 +87,74 @@ const formatDate = (date) => {
 };
 
 // =====================================================
-// CATEGORY ICON
+// IMAGE URL HELPER (FIXES BROKEN IMAGE PATHS)
+// =====================================================
+
+const getImageUrl = (imageObj) => {
+  if (!imageObj) return "";
+
+  const path = typeof imageObj === "string" ? imageObj : imageObj?.url;
+  if (!path || typeof path !== "string" || !path.trim()) return "";
+
+  // Already a full URL (Cloudinary, S3, Unsplash, external)
+  if (path.startsWith("http://") || path.startsWith("https://")) {
+    return path;
+  }
+
+  // Relative backend upload path
+  const backendBase = (API_BASE_URL || "http://localhost:5000").replace(
+    /\/api\/?$/,
+    ""
+  );
+  return `${backendBase.replace(/\/$/, "")}/${path.replace(/^\//, "")}`;
+};
+
+// =====================================================
+// CATEGORY ICON MAPPER
 // =====================================================
 
 const getCategoryIcon = (category) => {
   switch (category) {
     case "Interview Preparation":
       return Target;
-
     case "Coding Roadmaps":
       return Code2;
-
     case "Resume Templates":
       return FileText;
-
     case "Career Guidance":
       return BriefcaseBusiness;
-
     case "Skill Development":
       return Brain;
-
+    case "System Design":
+      return Layers;
     default:
       return BookOpen;
   }
 };
 
 // =====================================================
-// RESOURCE ICON
+// RESOURCE ICON MAPPER
 // =====================================================
 
 const getResourceIcon = (type) => {
-  if (type === "External Link") {
-    return LinkIcon;
+  switch (type) {
+    case "External Link":
+      return LinkIcon;
+    case "PDF":
+      return FileText;
+    case "Interactive Guide":
+      return Sparkles;
+    case "Video Course":
+      return Layers3;
+    case "Template Pack":
+      return File;
+    default:
+      return File;
   }
-
-  if (type === "PDF") {
-    return FileText;
-  }
-
-  return File;
 };
 
 // =====================================================
-// RESOURCE MANAGEMENT
+// MAIN COMPONENT
 // =====================================================
 
 const ResourceManagement = () => {
@@ -125,23 +165,24 @@ const ResourceManagement = () => {
   // =====================================================
 
   const [resources, setResources] = useState([]);
-
   const [loading, setLoading] = useState(true);
-
   const [refreshing, setRefreshing] = useState(false);
 
+  // Filters
   const [search, setSearch] = useState("");
-
   const [categoryFilter, setCategoryFilter] = useState("All");
-
   const [typeFilter, setTypeFilter] = useState("All");
-
   const [statusFilter, setStatusFilter] = useState("All");
+  const [difficultyFilter, setDifficultyFilter] = useState("All");
+
+  // Server Stats & Meta
+  const [serverStats, setServerStats] = useState({
+    totalPublished: 0,
+    totalDrafts: 0,
+  });
 
   const [deletingId, setDeletingId] = useState(null);
-
   const [error, setError] = useState("");
-
   const [success, setSuccess] = useState("");
 
   // =====================================================
@@ -169,17 +210,17 @@ const ResourceManagement = () => {
 
       const data = await response.json();
 
-      console.log("Resources API Response:", data);
-
       if (!response.ok) {
         throw new Error(data.message || "Failed to fetch resources");
       }
 
       setResources(data.resources || []);
-    } catch (error) {
-      console.error("Fetch resources error:", error);
-
-      setError(error.message || "Failed to load resources");
+      if (data.stats) {
+        setServerStats(data.stats);
+      }
+    } catch (err) {
+      console.error("Fetch resources error:", err);
+      setError(err.message || "Failed to load resources");
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -195,7 +236,7 @@ const ResourceManagement = () => {
   }, []);
 
   // =====================================================
-  // FILTER RESOURCES
+  // FILTER RESOURCES (CLIENT-SIDE)
   // =====================================================
 
   const filteredResources = useMemo(() => {
@@ -205,8 +246,10 @@ const ResourceManagement = () => {
       const matchesSearch =
         !searchValue ||
         resource.title?.toLowerCase().includes(searchValue) ||
+        resource.subtitle?.toLowerCase().includes(searchValue) ||
         resource.description?.toLowerCase().includes(searchValue) ||
-        resource.category?.toLowerCase().includes(searchValue);
+        resource.category?.toLowerCase().includes(searchValue) ||
+        resource.tags?.some((t) => t.toLowerCase().includes(searchValue));
 
       const matchesCategory =
         categoryFilter === "All" || resource.category === categoryFilter;
@@ -217,35 +260,56 @@ const ResourceManagement = () => {
       const matchesStatus =
         statusFilter === "All" || resource.status === statusFilter;
 
-      return matchesSearch && matchesCategory && matchesType && matchesStatus;
+      const matchesDifficulty =
+        difficultyFilter === "All" || resource.difficulty === difficultyFilter;
+
+      return (
+        matchesSearch &&
+        matchesCategory &&
+        matchesType &&
+        matchesStatus &&
+        matchesDifficulty
+      );
     });
-  }, [resources, search, categoryFilter, typeFilter, statusFilter]);
+  }, [
+    resources,
+    search,
+    categoryFilter,
+    typeFilter,
+    statusFilter,
+    difficultyFilter,
+  ]);
 
   // =====================================================
-  // STATISTICS
+  // METRICS & STATS COMPUTATION
   // =====================================================
 
   const stats = useMemo(() => {
-    const published = resources.filter(
-      (resource) => resource.status === "Published"
-    ).length;
+    const published =
+      serverStats.totalPublished ||
+      resources.filter((r) => r.status === "Published").length;
 
-    const drafts = resources.filter(
-      (resource) => resource.status === "Draft"
-    ).length;
+    const drafts =
+      serverStats.totalDrafts ||
+      resources.filter((r) => r.status === "Draft").length;
 
-    const downloads = resources.reduce(
-      (total, resource) => total + (resource.downloads || 0),
+    const views = resources.reduce(
+      (acc, r) => acc + (r.metrics?.viewsCount || r.views || 0),
       0
     );
 
-    const views = resources.reduce(
-      (total, resource) => total + (resource.views || 0),
+    const downloads = resources.reduce(
+      (acc, r) => acc + (r.metrics?.downloadsCount || r.downloads || 0),
       0
     );
 
     const likes = resources.reduce(
-      (total, resource) => total + (resource.likes || 0),
+      (acc, r) => acc + (r.metrics?.likesCount || r.likes || 0),
+      0
+    );
+
+    const saves = resources.reduce(
+      (acc, r) => acc + (r.metrics?.savesCount || 0),
       0
     );
 
@@ -253,11 +317,12 @@ const ResourceManagement = () => {
       total: resources.length,
       published,
       drafts,
-      downloads,
       views,
+      downloads,
       likes,
+      saves,
     };
-  }, [resources]);
+  }, [resources, serverStats]);
 
   // =====================================================
   // DELETE RESOURCE
@@ -268,13 +333,10 @@ const ResourceManagement = () => {
       "Are you sure you want to delete this resource?"
     );
 
-    if (!confirmed) {
-      return;
-    }
+    if (!confirmed) return;
 
     try {
       setDeletingId(id);
-
       setError("");
 
       const token = getToken();
@@ -296,7 +358,6 @@ const ResourceManagement = () => {
       }
 
       setSuccess("Resource deleted successfully");
-
       toast.success("Resource deleted successfully");
 
       await fetchResources();
@@ -304,19 +365,17 @@ const ResourceManagement = () => {
       setTimeout(() => {
         setSuccess("");
       }, 3000);
-    } catch (error) {
-      console.error("Delete resource error:", error);
-
-      setError(error.message || "Failed to delete resource");
-
-      toast.error(error.message || "Failed to delete resource");
+    } catch (err) {
+      console.error("Delete resource error:", err);
+      setError(err.message || "Failed to delete resource");
+      toast.error(err.message || "Failed to delete resource");
     } finally {
       setDeletingId(null);
     }
   };
 
   // =====================================================
-  // TOGGLE RESOURCE STATUS
+  // TOGGLE STATUS (PUBLISHED <-> DRAFT)
   // =====================================================
 
   const toggleStatus = async (resource) => {
@@ -343,61 +402,34 @@ const ResourceManagement = () => {
 
       const newStatus = resource.status === "Published" ? "Draft" : "Published";
 
-      toast.success(`Resource moved to ${newStatus}`);
-
-      setSuccess(
-        `Resource ${
-          resource.status === "Published" ? "moved to Draft" : "Published"
-        } successfully`
-      );
+      toast.success(`Resource status moved to ${newStatus}`);
+      setSuccess(`Resource status updated to ${newStatus}`);
 
       await fetchResources();
 
       setTimeout(() => {
         setSuccess("");
       }, 3000);
-    } catch (error) {
-      console.error("Toggle status error:", error);
-
-      setError(error.message || "Failed to update status");
-
-      toast.error(error.message || "Failed to update status");
+    } catch (err) {
+      console.error("Toggle status error:", err);
+      setError(err.message || "Failed to update status");
+      toast.error(err.message || "Failed to update status");
     }
   };
 
-  // =====================================================
-  // VIEW RESOURCE DETAILS
-  // =====================================================
-
+  // Navigation handlers
   const viewResource = (id) => {
-    if (!id) {
-      setError("Resource ID is not available");
-
-      return;
-    }
-
+    if (!id) return;
     navigate(`/admin/careerResources/details/${id}`);
   };
-
-  // =====================================================
-  // EDIT RESOURCE
-  // =====================================================
 
   const editResource = (id) => {
     navigate(`/admin/careerResources/edit/${id}`);
   };
 
-  // =====================================================
-  // ADD RESOURCE
-  // =====================================================
-
   const addResource = () => {
     navigate("/admin/careerResources/create");
   };
-
-  // =====================================================
-  // RENDER
-  // =====================================================
 
   return (
     <div className="min-h-screen bg-slate-50 p-4 sm:p-6 lg:p-8">
@@ -415,19 +447,18 @@ const ResourceManagement = () => {
 
               <div>
                 <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
-                  Career Resources
+                  Career Resources Studio
                 </h1>
 
                 <p className="mt-1 text-sm text-slate-500">
-                  Build and manage your student learning library.
+                  Manage interactive roadmaps, guides, templates, and learning
+                  bundles.
                 </p>
               </div>
             </div>
           </div>
 
           <div className="flex flex-wrap gap-3">
-            {/* REFRESH */}
-
             <button
               onClick={() => fetchResources(true)}
               disabled={refreshing}
@@ -440,8 +471,6 @@ const ResourceManagement = () => {
               Refresh
             </button>
 
-            {/* ADD */}
-
             <button
               onClick={addResource}
               className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 text-sm font-semibold text-white shadow-lg shadow-indigo-200 transition hover:bg-indigo-700"
@@ -452,85 +481,80 @@ const ResourceManagement = () => {
           </div>
         </div>
 
-        {/* ================================================= */}
-        {/* SUCCESS */}
-        {/* ================================================= */}
+        {/* NOTIFICATIONS */}
 
         {success && (
           <div className="mb-6 flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
             <CheckCircle2 size={18} />
-
             {success}
-
             <button onClick={() => setSuccess("")} className="ml-auto text-lg">
               ×
             </button>
           </div>
         )}
 
-        {/* ================================================= */}
-        {/* ERROR */}
-        {/* ================================================= */}
-
         {error && (
           <div className="mb-6 flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
             <AlertCircle size={18} />
-
             {error}
-
             <button onClick={() => setError("")} className="ml-auto text-lg">
               ×
             </button>
           </div>
         )}
 
-        {/* ================================================= */}
-        {/* STATISTICS */}
-        {/* ================================================= */}
+        {/* STATISTICS SUMMARY */}
 
-        <div className="mb-8 grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-5">
+        <div className="mb-8 grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-6">
           <StatCard
-            title="Total Resources"
+            title="Total Items"
             value={stats.total}
             icon={BookOpen}
-            description="All resources"
+            description="Catalog size"
           />
 
           <StatCard
             title="Published"
             value={stats.published}
             icon={CheckCircle2}
-            description="Visible to students"
+            description="Live on portal"
           />
 
           <StatCard
             title="Drafts"
             value={stats.drafts}
             icon={Clock3}
-            description="Not visible"
+            description="In development"
+          />
+
+          <StatCard
+            title="Views"
+            value={stats.views}
+            icon={Eye}
+            description="Total impressions"
           />
 
           <StatCard
             title="Downloads"
             value={stats.downloads}
             icon={Download}
-            description="Total downloads"
+            description="Asset downloads"
           />
 
           <StatCard
-            title="Total Views"
-            value={stats.views}
-            icon={Eye}
-            description="Resource views"
+            title="Bookmarks"
+            value={stats.saves}
+            icon={Bookmark}
+            description="Student saves"
           />
         </div>
 
         {/* ================================================= */}
-        {/* FILTERS */}
+        {/* CONTROLS & FILTERS */}
         {/* ================================================= */}
 
         <div className="mb-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-5">
             {/* SEARCH */}
 
             <div className="relative">
@@ -543,7 +567,7 @@ const ResourceManagement = () => {
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search resources..."
+                placeholder="Search title, tags, summary..."
                 className="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 pl-10 pr-4 text-sm outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-100"
               />
             </div>
@@ -556,10 +580,9 @@ const ResourceManagement = () => {
               className="h-11 rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm font-medium text-slate-700 outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100"
             >
               <option value="All">All Categories</option>
-
-              {categories.map((category) => (
-                <option key={category} value={category}>
-                  {category}
+              {categories.map((c) => (
+                <option key={c} value={c}>
+                  {c}
                 </option>
               ))}
             </select>
@@ -572,10 +595,24 @@ const ResourceManagement = () => {
               className="h-11 rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm font-medium text-slate-700 outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100"
             >
               <option value="All">All Types</option>
+              {resourceTypes.map((rt) => (
+                <option key={rt} value={rt}>
+                  {rt}
+                </option>
+              ))}
+            </select>
 
-              {resourceTypes.map((type) => (
-                <option key={type} value={type}>
-                  {type}
+            {/* DIFFICULTY */}
+
+            <select
+              value={difficultyFilter}
+              onChange={(e) => setDifficultyFilter(e.target.value)}
+              className="h-11 rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm font-medium text-slate-700 outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100"
+            >
+              <option value="All">All Difficulties</option>
+              {difficulties.map((diff) => (
+                <option key={diff} value={diff}>
+                  {diff}
                 </option>
               ))}
             </select>
@@ -587,39 +624,32 @@ const ResourceManagement = () => {
               onChange={(e) => setStatusFilter(e.target.value)}
               className="h-11 rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm font-medium text-slate-700 outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100"
             >
-              <option value="All">All Status</option>
-
+              <option value="All">All Statuses</option>
               <option value="Published">Published</option>
-
               <option value="Draft">Draft</option>
+              <option value="Archived">Archived</option>
             </select>
           </div>
         </div>
 
-        {/* ================================================= */}
-        {/* RESULTS HEADER */}
-        {/* ================================================= */}
+        {/* RESULTS BAR */}
 
         <div className="mb-4 flex items-center justify-between">
-          <div>
-            <p className="text-sm font-medium text-slate-500">
-              Showing{" "}
-              <span className="font-bold text-slate-900">
-                {filteredResources.length}
-              </span>{" "}
-              resources
-            </p>
-          </div>
+          <p className="text-sm font-medium text-slate-500">
+            Showing{" "}
+            <span className="font-bold text-slate-900">
+              {filteredResources.length}
+            </span>{" "}
+            resources
+          </p>
 
           <div className="hidden items-center gap-2 text-xs font-medium text-slate-400 sm:flex">
             <Layers3 size={15} />
-            Resource Library
+            Resource Repository
           </div>
         </div>
 
-        {/* ================================================= */}
-        {/* RESOURCE LIST */}
-        {/* ================================================= */}
+        {/* RESOURCE CARDS LIST */}
 
         {loading ? (
           <LoadingState />
@@ -655,9 +685,7 @@ function StatCard({ title, value, icon: Icon, description }) {
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-sm font-medium text-slate-500">{title}</p>
-
           <p className="mt-2 text-2xl font-bold text-slate-900">{value}</p>
-
           <p className="mt-1 text-xs text-slate-400">{description}</p>
         </div>
 
@@ -670,7 +698,7 @@ function StatCard({ title, value, icon: Icon, description }) {
 }
 
 // =====================================================
-// HORIZONTAL RESOURCE CARD
+// HORIZONTAL RESOURCE CARD (WITH SAFE IMAGE RENDER & FALLBACK)
 // =====================================================
 
 function ResourceHorizontalCard({
@@ -682,14 +710,21 @@ function ResourceHorizontalCard({
   deletingId,
 }) {
   const ResourceIcon = getResourceIcon(resource.resourceType);
-
   const CategoryIcon = getCategoryIcon(resource.category);
 
   const isDeleting = deletingId === resource._id;
 
-  // =====================================================
-  // MAIN CARD CLICK
-  // =====================================================
+  // Image load error fallback state
+  const [imageError, setImageError] = useState(false);
+
+  // Extract metrics safely
+  const views = resource.metrics?.viewsCount ?? resource.views ?? 0;
+  const downloads = resource.metrics?.downloadsCount ?? resource.downloads ?? 0;
+  const likes = resource.metrics?.likesCount ?? resource.likes ?? 0;
+  const saves = resource.metrics?.savesCount ?? 0;
+
+  // Extract cover thumbnail URL via helper
+  const coverUrl = getImageUrl(resource.thumbnail);
 
   const handleCardClick = () => {
     onView(resource._id);
@@ -698,43 +733,69 @@ function ResourceHorizontalCard({
   return (
     <div className="group overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition duration-300 hover:-translate-y-0.5 hover:border-indigo-200 hover:shadow-lg">
       <div className="flex flex-col lg:flex-row">
-        {/* ================================================= */}
-        {/* RESOURCE ICON SECTION */}
-        {/* ================================================= */}
+        {/* THUMBNAIL / ICON SECTION */}
 
         <div
           onClick={handleCardClick}
-          className="flex cursor-pointer items-center justify-center bg-gradient-to-br from-indigo-50 via-white to-purple-50 p-6 lg:w-40 lg:shrink-0"
+          className="relative flex cursor-pointer items-center justify-center overflow-hidden bg-gradient-to-br from-indigo-50 via-slate-50 to-purple-50 p-6 lg:w-44 lg:shrink-0"
         >
-          <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-white text-indigo-600 shadow-sm ring-1 ring-indigo-100 transition group-hover:scale-105">
-            <ResourceIcon size={34} />
+          {coverUrl && !imageError ? (
+            <img
+              src={coverUrl}
+              alt=""
+              onError={() => setImageError(true)}
+              className="h-24 w-full rounded-xl object-cover shadow-sm transition group-hover:scale-105 lg:h-28"
+            />
+          ) : (
+            <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-white text-indigo-600 shadow-sm ring-1 ring-indigo-100 transition group-hover:scale-105">
+              <ResourceIcon size={34} />
+            </div>
+          )}
+
+          {/* BADGES ON THUMBNAIL */}
+
+          <div className="absolute left-2 top-2 flex flex-col gap-1">
+            {resource.isFeatured && (
+              <span className="inline-flex items-center gap-1 rounded-md bg-amber-500/90 px-1.5 py-0.5 text-[10px] font-bold text-white shadow-sm backdrop-blur-sm">
+                <Star size={10} className="fill-white" />
+                Featured
+              </span>
+            )}
+
+            {resource.isPremium && (
+              <span className="inline-flex items-center gap-1 rounded-md bg-indigo-600/90 px-1.5 py-0.5 text-[10px] font-bold text-white shadow-sm backdrop-blur-sm">
+                <Lock size={10} />
+                Premium
+              </span>
+            )}
           </div>
         </div>
 
-        {/* ================================================= */}
-        {/* MAIN INFORMATION */}
-        {/* ================================================= */}
+        {/* CONTENT SECTION */}
 
         <div
           onClick={handleCardClick}
           className="flex-1 cursor-pointer p-5 lg:p-6"
         >
-          {/* TOP ROW */}
-
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div className="min-w-0">
-              {/* CATEGORY */}
+              {/* TAGS & CATEGORY */}
 
               <div className="mb-2 flex flex-wrap items-center gap-2">
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700">
                   <CategoryIcon size={13} />
-
                   {resource.category}
                 </span>
 
                 <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
                   {resource.resourceType}
                 </span>
+
+                {resource.difficulty && (
+                  <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+                    {resource.difficulty}
+                  </span>
+                )}
               </div>
 
               {/* TITLE */}
@@ -743,14 +804,14 @@ function ResourceHorizontalCard({
                 {resource.title}
               </h3>
 
-              {/* DESCRIPTION */}
+              {/* SUBTITLE OR DESCRIPTION */}
 
-              <p className="mt-2 line-clamp-2 max-w-3xl text-sm leading-6 text-slate-500">
-                {resource.description}
+              <p className="mt-1 line-clamp-2 max-w-3xl text-sm leading-6 text-slate-500">
+                {resource.subtitle || resource.description}
               </p>
             </div>
 
-            {/* STATUS */}
+            {/* STATUS BADGE */}
 
             <span
               className={`inline-flex w-fit shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold ${
@@ -764,12 +825,11 @@ function ResourceHorizontalCard({
               ) : (
                 <Clock3 size={14} />
               )}
-
               {resource.status}
             </span>
           </div>
 
-          {/* META INFORMATION */}
+          {/* METRICS & DATE ROW */}
 
           <div className="mt-5 flex flex-wrap items-center gap-x-6 gap-y-3 border-t border-slate-100 pt-4">
             <div className="flex items-center gap-2 text-xs font-medium text-slate-500">
@@ -782,67 +842,56 @@ function ResourceHorizontalCard({
 
             <div className="flex items-center gap-2 text-xs font-medium text-slate-500">
               <Eye size={15} className="text-blue-500" />
-              <span className="font-semibold text-slate-700">
-                {resource.views || 0}
-              </span>
+              <span className="font-semibold text-slate-700">{views}</span>
               Views
             </div>
 
             <div className="flex items-center gap-2 text-xs font-medium text-slate-500">
               <Download size={15} className="text-emerald-500" />
-              <span className="font-semibold text-slate-700">
-                {resource.downloads || 0}
-              </span>
+              <span className="font-semibold text-slate-700">{downloads}</span>
               Downloads
             </div>
 
             <div className="flex items-center gap-2 text-xs font-medium text-slate-500">
               <Heart size={15} className="text-rose-500" />
-              <span className="font-semibold text-slate-700">
-                {resource.likes || 0}
-              </span>
+              <span className="font-semibold text-slate-700">{likes}</span>
               Likes
             </div>
+
+            {saves > 0 && (
+              <div className="flex items-center gap-2 text-xs font-medium text-slate-500">
+                <Bookmark size={15} className="text-amber-500" />
+                <span className="font-semibold text-slate-700">{saves}</span>
+                Saves
+              </div>
+            )}
           </div>
         </div>
 
-        {/* ================================================= */}
-        {/* ACTION SECTION */}
-        {/* ================================================= */}
+        {/* ACTION BUTTONS */}
 
         <div
           onClick={(e) => e.stopPropagation()}
           className="flex flex-row items-center justify-between gap-2 border-t border-slate-100 bg-slate-50 p-4 lg:w-64 lg:shrink-0 lg:flex-col lg:items-stretch lg:justify-center lg:border-l lg:border-t-0"
         >
-          {/* VIEW DETAILS */}
-
           <button
             onClick={() => onView(resource._id)}
             className="flex h-8 flex-1 items-center justify-center gap-2 rounded-xl bg-indigo-600 px-3 text-xs font-bold text-white shadow-sm transition hover:bg-indigo-700 lg:w-full"
           >
             <ExternalLink size={14} />
-
             <span className="hidden sm:inline">View Details</span>
-
             <ChevronRight size={14} className="hidden lg:block" />
           </button>
 
-          {/* SECONDARY ACTIONS */}
-
           <div className="flex flex-1 gap-2 lg:w-full">
-            {/* EDIT */}
-
             <button
               onClick={() => onEdit(resource._id)}
               className="flex h-10 flex-1 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white text-slate-600 transition hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600"
               title="Edit Resource"
             >
               <Pencil size={15} />
-
               <span className="hidden xl:inline">Edit</span>
             </button>
-
-            {/* STATUS */}
 
             <button
               onClick={() => onToggleStatus(resource)}
@@ -858,13 +907,10 @@ function ResourceHorizontalCard({
               ) : (
                 <CheckCircle2 size={15} />
               )}
-
               <span className="hidden xl:inline">
                 {resource.status === "Published" ? "Draft" : "Publish"}
               </span>
             </button>
-
-            {/* DELETE */}
 
             <button
               onClick={() => onDelete(resource._id)}
@@ -877,7 +923,6 @@ function ResourceHorizontalCard({
               ) : (
                 <Trash2 size={15} />
               )}
-
               <span className="hidden xl:inline">Delete</span>
             </button>
           </div>
@@ -888,7 +933,7 @@ function ResourceHorizontalCard({
 }
 
 // =====================================================
-// LOADING STATE
+// LOADING & EMPTY STATES
 // =====================================================
 
 function LoadingState() {
@@ -900,10 +945,6 @@ function LoadingState() {
     </div>
   );
 }
-
-// =====================================================
-// EMPTY STATE
-// =====================================================
 
 function EmptyState({ onAdd }) {
   return (
@@ -917,8 +958,8 @@ function EmptyState({ onAdd }) {
       </h3>
 
       <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-500">
-        Add interview guides, coding roadmaps, resume templates, and career
-        resources to build your GuideX learning library.
+        Add interview guides, interactive roadmaps, system design blueprints,
+        and templates to build your learning studio.
       </p>
 
       <button

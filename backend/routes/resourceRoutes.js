@@ -12,6 +12,9 @@ import {
   toggleResourceLike,
   trackResourceView,
   getAdminResourceDetails,
+  getResourceInteractions,
+  submitResourceReview,
+  downloadResourceFile,
 } from "../controllers/ResourceController.js";
 
 import { protect } from "../middleware/authMiddleware.js";
@@ -27,16 +30,7 @@ const router = express.Router();
 router.post(
   "/create",
   protect,
-  upload.fields([
-    {
-      name: "file",
-      maxCount: 1,
-    },
-    {
-      name: "thumbnail",
-      maxCount: 1,
-    },
-  ]),
+  upload.any(), // Accepts thumbnail, bannerImage, and attachment_file_X dynamically
   createResource
 );
 
@@ -44,7 +38,12 @@ router.post(
 router.get("/admin/all", protect, getAllResourcesAdmin);
 
 // Update Resource
-router.put("/update/:id", protect, upload.single("file"), updateResource);
+router.put(
+  "/update/:id",
+  protect,
+  upload.any(), // Accepts thumbnail, bannerImage, and attachment_file_X dynamically
+  updateResource
+);
 
 router.get("/admin/:id", protect, AdmingetResourceById);
 
@@ -63,5 +62,11 @@ router.get("/published/:id", protect, getResourceById);
 router.post("/:id/view", protect, trackResourceView);
 
 router.post("/:id/like", protect, toggleResourceLike);
+
+router.get("/:id/interactions", protect, getResourceInteractions);
+
+router.post("/:id/review", protect, submitResourceReview);
+
+router.post("/:id/download", protect, downloadResourceFile);
 
 export default router;

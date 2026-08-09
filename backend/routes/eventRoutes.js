@@ -8,7 +8,7 @@ import {
   getUpcomingEvents,
   getEventById,
   completeEvent,
-  getEventDetails,
+  getEventDetailsById,
   updateEventStatus,
 } from "../controllers/eventController.js";
 import { upload } from "../middleware/upload.js";
@@ -22,19 +22,16 @@ router.post(
   protect,
   upload.fields([
     { name: "bannerImage", maxCount: 1 },
-    { name: "speakerImage", maxCount: 1 },
+    { name: "speakerImages", maxCount: 10 }, // Allows up to 10 speaker photos
   ]),
   createEvent
 );
+
 router.get("/upcomingEvents", protect, getUpcomingEvents);
 
 router.get("/all", protect, getAllEvents);
 
-router.get(
-  "/details/:id",
-  protect,
-  getEventDetails
-);
+router.get("/details/:id", protect, getEventDetailsById);
 
 router.put("/update-status/:id", protect, updateEventStatus);
 
@@ -48,7 +45,7 @@ router.put(
   protect,
   upload.fields([
     { name: "bannerImage", maxCount: 1 },
-    { name: "speakerImage", maxCount: 1 },
+    { name: "speakerImages", maxCount: 10 },
   ]),
   updateEvent
 );

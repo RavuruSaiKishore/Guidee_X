@@ -11,6 +11,7 @@ import {
   Users,
   Gift,
   BookOpen,
+  Info,
 } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
@@ -18,7 +19,6 @@ import { useAuth } from "../../../context/AuthContext";
 
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
-  ;
 
 const BookingPage = () => {
   const { mentorId } = useParams();
@@ -98,38 +98,38 @@ const BookingPage = () => {
       : `${API_BASE_URL}/${mentor.profileImage.replace(/^\/+/, "")}`
     : `https://ui-avatars.com/api/?name=${mentor.firstName}+${mentor.lastName}`;
 
- const calculateEndTime = (startTime, duration) => {
-   if (!startTime) return "";
+  const calculateEndTime = (startTime, duration) => {
+    if (!startTime) return "";
 
-   const [time, meridian] = startTime.trim().split(" ");
-   let [hours, minutes] = time.split(":").map(Number);
+    const [time, meridian] = startTime.trim().split(" ");
+    let [hours, minutes] = time.split(":").map(Number);
 
-   // Convert to 24-hour format
-   if (meridian.toLowerCase() === "pm" && hours !== 12) {
-     hours += 12;
-   }
+    // Convert to 24-hour format
+    if (meridian.toLowerCase() === "pm" && hours !== 12) {
+      hours += 12;
+    }
 
-   if (meridian.toLowerCase() === "am" && hours === 12) {
-     hours = 0;
-   }
+    if (meridian.toLowerCase() === "am" && hours === 12) {
+      hours = 0;
+    }
 
-   const date = new Date();
-   date.setHours(hours, minutes, 0, 0);
+    const date = new Date();
+    date.setHours(hours, minutes, 0, 0);
 
-   // Add duration
-   date.setMinutes(date.getMinutes() + duration);
+    // Add duration
+    date.setMinutes(date.getMinutes() + duration);
 
-   // Convert back to 12-hour format
-   let endHours = date.getHours();
-   const endMinutes = date.getMinutes();
+    // Convert back to 12-hour format
+    let endHours = date.getHours();
+    const endMinutes = date.getMinutes();
 
-   const endMeridian = endHours >= 12 ? "pm" : "am";
+    const endMeridian = endHours >= 12 ? "pm" : "am";
 
-   endHours = endHours % 12;
-   if (endHours === 0) endHours = 12;
+    endHours = endHours % 12;
+    if (endHours === 0) endHours = 12;
 
-   return `${endHours}:${String(endMinutes).padStart(2, "0")} ${endMeridian}`;
- };
+    return `${endHours}:${String(endMinutes).padStart(2, "0")} ${endMeridian}`;
+  };
 
   const endTime = calculateEndTime(booking.time, booking.duration);
 
@@ -272,7 +272,6 @@ const BookingPage = () => {
     )}`;
   };
 
-  
   const generateTimeSlots = (
     startTime,
     endTime,
@@ -326,10 +325,10 @@ const BookingPage = () => {
   const isAvailableDay =
     booking.date && mentor.availability?.availableDays.includes(selectedDay);
 
-    const sessionTypes =
-      typeof mentor.pricing?.sessionTypes === "string"
-        ? JSON.parse(mentor.pricing.sessionTypes)
-        : mentor.pricing?.sessionTypes || [];
+  const sessionTypes =
+    typeof mentor.pricing?.sessionTypes === "string"
+      ? JSON.parse(mentor.pricing.sessionTypes)
+      : mentor.pricing?.sessionTypes || [];
 
   return (
     <div className="min-h-screen bg-gray-100 py-10 mt-14">
@@ -779,6 +778,15 @@ const BookingPage = () => {
               >
                 Book Session
               </button>
+
+              {/* Reschedule Info Notice moved below the Book Session button */}
+              <div className="mt-4 flex items-start gap-2.5 bg-blue-50 border border-blue-200 rounded-xl p-3.5 text-xs text-blue-800">
+                <Info size={16} className="text-blue-600 shrink-0 mt-0.5" />
+                <p>
+                  Please note that session rescheduling options are managed
+                  exclusively by the mentor.
+                </p>
+              </div>
 
               <p className="text-center text-gray-500 text-sm mt-4">
                 Secure payments powered by Razorpay

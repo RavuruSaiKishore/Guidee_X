@@ -22,6 +22,7 @@ import rescheduleRoutes from "./routes/rescheduleRoutes.js";
 import mentorStudentRoutes from "./routes/mentorStudentRoutes.js";
 import mentorReviewRoutes from "./routes/mentorReviewRoutes.js";
 import mentorContactRoutes from "./routes/mentorContactRoutes.js";
+import eventPaymentRoutes from "./routes/eventPaymentRoutes.js";
 
 dotenv.config();
 
@@ -56,6 +57,8 @@ app.use("/api/reschedule", rescheduleRoutes);
 app.use("/api/mentorStudent", mentorStudentRoutes);
 app.use("/api/mentorReview", mentorReviewRoutes);
 app.use("/api/mentor-contact", mentorContactRoutes);
+app.use("/api/event-payment", eventPaymentRoutes);
+
 
 
 // SERVER

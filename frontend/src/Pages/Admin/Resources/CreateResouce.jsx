@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-
 import {
   ArrowLeft,
   Upload,
@@ -10,7 +9,6 @@ import {
   AlertCircle,
   RefreshCw,
   BookOpen,
-  ExternalLink,
   Image as ImageIcon,
   Video,
   Clock3,
@@ -20,7 +18,6 @@ import {
   Plus,
   X,
   Eye,
-  Globe2,
   Tag,
   Target,
   Lightbulb,
@@ -29,12 +26,21 @@ import {
   Search,
   Star,
   Trash2,
+  Layers,
+  Lock,
+  FileCode,
+  FolderArchive,
+  AlignLeft,
+  Globe,
+  PlayCircle,
 } from "lucide-react";
+import { toast } from "react-toastify";
+
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 // =====================================================
-// CONSTANTS
+// CONSTANTS & TAXONOMY
 // =====================================================
 
 const categories = [
@@ -43,11 +49,19 @@ const categories = [
   "Resume Templates",
   "Career Guidance",
   "Skill Development",
+  "System Design",
 ];
 
-const resourceTypes = ["PDF", "File", "External Link"];
+const resourceTypes = [
+  "PDF",
+  "File",
+  "External Link",
+  "Interactive Guide",
+  "Video Course",
+  "Template Pack",
+];
 
-const difficulties = ["Beginner", "Intermediate", "Advanced"];
+const difficulties = ["Beginner", "Intermediate", "Advanced", "All Levels"];
 
 const audienceOptions = [
   "College Students",
@@ -59,6 +73,8 @@ const audienceOptions = [
   "Students",
 ];
 
+const videoProviders = ["youtube", "vimeo", "cloudinary", "custom"];
+
 const getToken = () => {
   return (
     localStorage.getItem("AdminToken") ||
@@ -68,161 +84,221 @@ const getToken = () => {
 };
 
 // =====================================================
-// INITIAL FORM
+// INITIAL FORM STATE
 // =====================================================
 
 const initialForm = {
   title: "",
+  slug: "",
   subtitle: "",
   description: "",
+  bodyContent: "",
 
   category: "Interview Preparation",
-
+  subcategory: "",
   resourceType: "PDF",
-
   difficulty: "Beginner",
-
   estimatedDuration: "",
 
   targetAudience: [],
 
+  // Author
   authorName: "GuideX Career Team",
-
   authorRole: "Career & Learning Team",
+  authorBio: "",
 
+  // External Links & Primary Video
   externalUrl: "",
-
+  videoProvider: "youtube",
   videoUrl: "",
+  videoDurationInSeconds: 0,
 
+  // Publishing & Access
   status: "Draft",
-
   isFeatured: false,
+  isPremium: false,
 
+  // SEO
   seoTitle: "",
-
   seoDescription: "",
+  seoKeywords: [],
 
+  // Dynamic Array Fields
   whatYouWillLearn: [""],
-
   prerequisites: [""],
-
   keyTakeaways: [""],
-
   skills: [],
-
   tags: [],
 
-  file: null,
+  // Sub-document items
+  attachments: [], // Array of File objects / metadata
+  modules: [], // Step-by-step roadmap/chapters with full fields
 
+  // Cover / Banner Images
   thumbnail: null,
+  bannerImage: null,
 };
-
-// =====================================================
-// COMPONENT
-// =====================================================
 
 export default function CreateResource() {
   const navigate = useNavigate();
 
   const [form, setForm] = useState(initialForm);
-
   const [saving, setSaving] = useState(false);
-
   const [error, setError] = useState("");
 
-  const [success, setSuccess] = useState("");
-
+  // Previews
   const [thumbnailPreview, setThumbnailPreview] = useState("");
-
+  const [bannerPreview, setBannerPreview] = useState("");
   const [activePreview, setActivePreview] = useState(false);
 
+  // Chip Inputs
   const [skillInput, setSkillInput] = useState("");
-
   const [tagInput, setTagInput] = useState("");
 
   // =====================================================
-  // HANDLE NORMAL INPUT
+  // HANDLE INPUT CHANGES
   // =====================================================
 
   const handleChange = (e) => {
     const { name, value, files, type, checked } = e.target;
 
-    // FILE INPUT
-    if (name === "file") {
-      setForm((prev) => ({
-        ...prev,
-        file: files?.[0] || null,
-      }));
-
+    // FILE INPUT: THUMBNAIL
+    if (name === "thumbnail") {
+      const file = files?.[0] || null;
+      setForm((prev) => ({ ...prev, thumbnail: file }));
+      setThumbnailPreview(file ? URL.createObjectURL(file) : "");
       return;
     }
 
-    // THUMBNAIL INPUT
-    if (name === "thumbnail") {
+    // FILE INPUT: BANNER
+    if (name === "bannerImage") {
       const file = files?.[0] || null;
-
-      setForm((prev) => ({
-        ...prev,
-        thumbnail: file,
-      }));
-
-      if (file) {
-        setThumbnailPreview(URL.createObjectURL(file));
-      } else {
-        setThumbnailPreview("");
-      }
-
+      setForm((prev) => ({ ...prev, bannerImage: file }));
+      setBannerPreview(file ? URL.createObjectURL(file) : "");
       return;
     }
 
     // CHECKBOX
     if (type === "checkbox") {
-      setForm((prev) => ({
-        ...prev,
-        [name]: checked,
-      }));
-
+      setForm((prev) => ({ ...prev, [name]: checked }));
       return;
     }
 
-    // NORMAL INPUT
+    // NORMAL INPUT / SLUG AUTO-GEN
+    if (name === "title") {
+      const autoSlug = value
+        .toLowerCase()
+        .replace(/[^a-z0-9 ]/g, "")
+        .replace(/\s+/g, "-");
+
+      setForm((prev) => ({
+        ...prev,
+        title: value,
+        slug: autoSlug,
+      }));
+      return;
+    }
+
+    setForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // =====================================================
+  // MULTI-ATTACHMENT HANDLERS
+  // =====================================================
+
+  const handleFileUpload = (e) => {
+    const selectedFiles = Array.from(e.target.files || []);
+    if (!selectedFiles.length) return;
+
+    const newAttachments = selectedFiles.map((file) => {
+      let fileType = "other";
+      if (file.type.includes("pdf")) fileType = "pdf";
+      else if (
+        file.name.endsWith(".zip") ||
+        file.name.endsWith(".rar") ||
+        file.name.endsWith(".7z")
+      )
+        fileType = "zip";
+      else if (
+        file.type.includes("word") ||
+        file.name.endsWith(".doc") ||
+        file.name.endsWith(".docx")
+      )
+        fileType = "doc";
+      else if (file.type.includes("image")) fileType = "image";
+
+      return {
+        title: file.name.split(".")[0],
+        file,
+        fileType,
+        fileSize: file.size,
+      };
+    });
+
     setForm((prev) => ({
       ...prev,
-      [name]: value,
+      attachments: [...prev.attachments, ...newAttachments],
+    }));
+  };
+
+  const removeAttachment = (index) => {
+    setForm((prev) => ({
+      ...prev,
+      attachments: prev.attachments.filter((_, i) => i !== index),
     }));
   };
 
   // =====================================================
-  // DYNAMIC ARRAY INPUT
+  // MODULES / ROADMAP BUILDER HANDLERS (FULL FIELDS)
+  // =====================================================
+
+  const addModule = () => {
+    setForm((prev) => ({
+      ...prev,
+      modules: [
+        ...prev.modules,
+        {
+          title: "",
+          description: "",
+          content: "",
+          videoUrl: "",
+          durationInMinutes: 0,
+          isFreePreview: true,
+        },
+      ],
+    }));
+  };
+
+  const updateModule = (index, key, value) => {
+    setForm((prev) => {
+      const updated = [...prev.modules];
+      updated[index] = { ...updated[index], [key]: value };
+      return { ...prev, modules: updated };
+    });
+  };
+
+  const removeModule = (index) => {
+    setForm((prev) => ({
+      ...prev,
+      modules: prev.modules.filter((_, i) => i !== index),
+    }));
+  };
+
+  // =====================================================
+  // DYNAMIC ARRAY HELPERS
   // =====================================================
 
   const handleArrayChange = (field, index, value) => {
     setForm((prev) => {
       const updated = [...prev[field]];
-
       updated[index] = value;
-
-      return {
-        ...prev,
-        [field]: updated,
-      };
+      return { ...prev, [field]: updated };
     });
   };
 
-  // =====================================================
-  // ADD ARRAY ITEM
-  // =====================================================
-
   const addArrayItem = (field) => {
-    setForm((prev) => ({
-      ...prev,
-      [field]: [...prev[field], ""],
-    }));
+    setForm((prev) => ({ ...prev, [field]: [...prev[field], ""] }));
   };
-
-  // =====================================================
-  // REMOVE ARRAY ITEM
-  // =====================================================
 
   const removeArrayItem = (field, index) => {
     setForm((prev) => ({
@@ -230,10 +306,6 @@ export default function CreateResource() {
       [field]: prev[field].filter((_, i) => i !== index),
     }));
   };
-
-  // =====================================================
-  // TARGET AUDIENCE
-  // =====================================================
 
   const toggleAudience = (audience) => {
     setForm((prev) => ({
@@ -244,237 +316,160 @@ export default function CreateResource() {
     }));
   };
 
-  // =====================================================
-  // ADD SKILL
-  // =====================================================
-
-  const addSkill = () => {
-    const value = skillInput.trim();
-
-    if (!value) return;
-
-    if (form.skills.includes(value)) {
-      setSkillInput("");
-      return;
+  // Chip additions
+  const addChipItem = (field, inputValue, setInputValue) => {
+    const val = inputValue.trim();
+    if (!val) return;
+    if (!form[field].includes(val)) {
+      setForm((prev) => ({ ...prev, [field]: [...prev[field], val] }));
     }
-
-    setForm((prev) => ({
-      ...prev,
-      skills: [...prev.skills, value],
-    }));
-
-    setSkillInput("");
+    setInputValue("");
   };
 
-  // =====================================================
-  // REMOVE SKILL
-  // =====================================================
-
-  const removeSkill = (skill) => {
+  const removeChipItem = (field, val) => {
     setForm((prev) => ({
       ...prev,
-      skills: prev.skills.filter((item) => item !== skill),
+      [field]: prev[field].filter((item) => item !== val),
     }));
   };
 
   // =====================================================
-  // ADD TAG
-  // =====================================================
-
-  const addTag = () => {
-    const value = tagInput.trim().toLowerCase();
-
-    if (!value) return;
-
-    if (form.tags.includes(value)) {
-      setTagInput("");
-      return;
-    }
-
-    setForm((prev) => ({
-      ...prev,
-      tags: [...prev.tags, value],
-    }));
-
-    setTagInput("");
-  };
-
-  // =====================================================
-  // REMOVE TAG
-  // =====================================================
-
-  const removeTag = (tag) => {
-    setForm((prev) => ({
-      ...prev,
-      tags: prev.tags.filter((item) => item !== tag),
-    }));
-  };
-
-  // =====================================================
-  // VALIDATION
+  // FORM VALIDATION & SUBMISSION
   // =====================================================
 
   const validateForm = () => {
-    if (!form.title.trim()) {
-      throw new Error("Please enter a resource title");
-    }
-
-    if (!form.subtitle.trim()) {
+    if (!form.title.trim()) throw new Error("Please enter a resource title");
+    if (!form.subtitle.trim())
       throw new Error("Please enter a resource subtitle");
-    }
-
-    if (!form.description.trim()) {
+    if (!form.description.trim())
       throw new Error("Please enter a resource description");
-    }
-
-    if (!form.category) {
-      throw new Error("Please select a category");
-    }
-
-    if (!form.resourceType) {
-      throw new Error("Please select a resource type");
-    }
-
-    if (!form.estimatedDuration.trim()) {
-      throw new Error("Please enter the estimated learning duration");
-    }
-
-    if (form.targetAudience.length === 0) {
+    if (!form.category) throw new Error("Please select a category");
+    if (!form.resourceType) throw new Error("Please select a resource type");
+    if (!form.estimatedDuration.trim())
+      throw new Error("Please enter the estimated duration");
+    if (form.targetAudience.length === 0)
       throw new Error("Please select at least one target audience");
-    }
-
-    if (!form.authorName.trim()) {
-      throw new Error("Please enter the author name");
-    }
 
     const learningItems = form.whatYouWillLearn.filter(
       (item) => item.trim() !== ""
     );
-
-    if (learningItems.length === 0) {
+    if (learningItems.length === 0)
       throw new Error("Please add at least one learning outcome");
-    }
-
-    if (form.resourceType === "External Link" && !form.externalUrl.trim()) {
-      throw new Error("Please enter the external resource URL");
-    }
-
-    if (form.resourceType !== "External Link" && !form.file) {
-      throw new Error("Please upload a resource file");
-    }
   };
-
-  // =====================================================
-  // CREATE RESOURCE
-  // =====================================================
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
       setSaving(true);
-
       setError("");
 
-      setSuccess("");
-
-      // VALIDATE
       validateForm();
-
-      // =================================================
-      // FORM DATA
-      // =================================================
 
       const formData = new FormData();
 
-      // BASIC
+      // Basic Identification
       formData.append("title", form.title.trim());
-
+      formData.append("slug", form.slug.trim());
       formData.append("subtitle", form.subtitle.trim());
-
       formData.append("description", form.description.trim());
+      formData.append("bodyContent", form.bodyContent);
 
-      // CLASSIFICATION
+      // Taxonomy
       formData.append("category", form.category);
-
+      formData.append("subcategory", form.subcategory.trim());
       formData.append("resourceType", form.resourceType);
-
       formData.append("difficulty", form.difficulty);
-
       formData.append("estimatedDuration", form.estimatedDuration.trim());
 
-      // AUDIENCE
+      // Target Audience
       form.targetAudience.forEach((item) => {
         formData.append("targetAudience", item);
       });
 
-      // AUTHOR
-      formData.append("authorName", form.authorName.trim());
+      // Author Payload (nested JSON)
+      formData.append(
+        "author",
+        JSON.stringify({
+          name: form.authorName.trim(),
+          role: form.authorRole.trim(),
+          bio: form.authorBio.trim(),
+        })
+      );
 
-      formData.append("authorRole", form.authorRole.trim());
+      // Media & Links
+      formData.append("externalUrl", form.externalUrl.trim());
+      formData.append(
+        "primaryVideo",
+        JSON.stringify({
+          provider: form.videoProvider,
+          url: form.videoUrl.trim(),
+          durationInSeconds: Number(form.videoDurationInSeconds) || 0,
+        })
+      );
 
-      // CONTENT
+      // Educational Arrays
       formData.append(
         "whatYouWillLearn",
         JSON.stringify(
           form.whatYouWillLearn.filter((item) => item.trim() !== "")
         )
       );
-
       formData.append(
         "prerequisites",
         JSON.stringify(form.prerequisites.filter((item) => item.trim() !== ""))
       );
-
       formData.append(
         "keyTakeaways",
         JSON.stringify(form.keyTakeaways.filter((item) => item.trim() !== ""))
       );
-
-      // SKILLS
       formData.append("skills", JSON.stringify(form.skills));
-
-      // TAGS
       formData.append("tags", JSON.stringify(form.tags));
 
-      // LINKS
-      formData.append("externalUrl", form.externalUrl.trim());
+      // Structured Modules (Includes duration, description, content, videoUrl, isFreePreview)
+      formData.append("modules", JSON.stringify(form.modules));
 
-      formData.append("videoUrl", form.videoUrl.trim());
-
-      // STATUS
+      // Publishing & Access
       formData.append("status", form.status);
-
       formData.append("isFeatured", String(form.isFeatured));
+      formData.append("isPremium", String(form.isPremium));
 
-      // SEO
-      formData.append("seoTitle", form.seoTitle.trim());
+      // SEO Payload
+      formData.append(
+        "seo",
+        JSON.stringify({
+          title: form.seoTitle.trim() || form.title.trim(),
+          description: form.seoDescription.trim() || form.subtitle.trim(),
+          keywords: form.seoKeywords,
+        })
+      );
 
-      formData.append("seoDescription", form.seoDescription.trim());
+      // Binary Image Uploads
+      if (form.thumbnail) formData.append("thumbnail", form.thumbnail);
+      if (form.bannerImage) formData.append("bannerImage", form.bannerImage);
 
-      // FILE
-      if (form.file) {
-        formData.append("file", form.file);
-      }
+      // Attachment File Binaries & Metadata manifest
+      const attachmentManifest = [];
+      form.attachments.forEach((attachment, idx) => {
+        if (attachment.file) {
+          formData.append(`attachment_file_${idx}`, attachment.file);
+          attachmentManifest.push({
+            title: attachment.title,
+            fileType: attachment.fileType,
+            fileSize: attachment.fileSize,
+            fieldKey: `attachment_file_${idx}`,
+          });
+        }
+      });
+      formData.append("attachmentManifest", JSON.stringify(attachmentManifest));
 
-      // THUMBNAIL
-      if (form.thumbnail) {
-        formData.append("thumbnail", form.thumbnail);
-      }
-
-      // =================================================
-      // API REQUEST
-      // =================================================
-
+      // API Call
       const token = getToken();
-
       const response = await fetch(`${API_BASE_URL}/api/resources/create`, {
         method: "POST",
-
         headers: {
           Authorization: `Bearer ${token}`,
         },
-
         body: formData,
       });
 
@@ -484,43 +479,29 @@ export default function CreateResource() {
         throw new Error(data.message || "Failed to create resource");
       }
 
-      setSuccess("Resource created successfully");
-
+         toast.success("Resource Created successfully..!");
+      
       setTimeout(() => {
         navigate("/admin/careerResources");
       }, 1200);
-    } catch (error) {
-      console.error("Create resource error:", error);
-
-      setError(error.message || "Failed to create resource");
-
-      window.scrollTo({
-        top: 0,
-        behavior: "smooth",
-      });
+    } catch (err) {
+      console.error("Create resource error:", err);
+      toast.error("Failed to create resource");
+      window.scrollTo({ top: 0, behavior: "smooth" });
     } finally {
       setSaving(false);
     }
   };
 
-  // =====================================================
-  // PREVIEW
-  // =====================================================
-
-  const previewImage =
+  const previewCover =
     thumbnailPreview ||
     "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1200&q=80";
 
-  // =====================================================
-  // UI
-  // =====================================================
-
   return (
-    <div className="min-h-screen bg-[#f7f8fc]">
+    <div className="min-h-screen bg-[#f8fafc]">
       {/* ================================================= */}
-      {/* TOP HEADER */}
+      {/* TOP BAR HEADER */}
       {/* ================================================= */}
-
       <div className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur">
         <div className="mx-auto flex max-w-[1500px] items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-4">
@@ -537,15 +518,12 @@ export default function CreateResource() {
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-100 text-indigo-600">
                   <BookOpen size={17} />
                 </div>
-
                 <h1 className="text-lg font-bold text-slate-900">
-                  Create Resource
+                  Resource Creator
                 </h1>
               </div>
-
-              <p className="mt-1 hidden text-xs text-slate-500 sm:block">
-                Build and publish a valuable learning resource for GuideX
-                students.
+              <p className="mt-0.5 hidden text-xs text-slate-500 sm:block">
+                Build high-value career guides, courses, & material bundles.
               </p>
             </div>
           </div>
@@ -576,7 +554,7 @@ export default function CreateResource() {
                   <CheckCircle2 size={16} />
                   {form.status === "Published"
                     ? "Publish Resource"
-                    : "Save Resource"}
+                    : "Save Draft"}
                 </>
               )}
             </button>
@@ -585,30 +563,20 @@ export default function CreateResource() {
       </div>
 
       {/* ================================================= */}
-      {/* MAIN */}
+      {/* MAIN CONTAINER */}
       {/* ================================================= */}
-
       <main className="mx-auto max-w-[1500px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
-        {/* PAGE INTRO */}
-
         <div className="mb-8">
           <div className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-indigo-600">
             <Sparkles size={14} />
-            Resource Publishing Studio
+            Platform Resource Hub
           </div>
-
           <h2 className="text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">
-            Create something students will love
+            Design dynamic career content
           </h2>
-
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">
-            Add useful career and learning content with clear outcomes,
-            structured information, and a professional presentation.
-          </p>
         </div>
 
-        {/* SUCCESS */}
-
+        {/* NOTIFICATIONS */}
         {success && (
           <div className="mb-6 flex items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm font-semibold text-emerald-700">
             <CheckCircle2 size={19} />
@@ -616,536 +584,39 @@ export default function CreateResource() {
           </div>
         )}
 
-        {/* ERROR */}
-
         {error && (
           <div className="mb-6 flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm font-medium text-red-700">
             <AlertCircle size={19} className="mt-0.5 shrink-0" />
-
             <div>
-              <p className="font-bold">Unable to create resource</p>
-
+              <p className="font-bold">Error creating resource</p>
               <p className="mt-1">{error}</p>
             </div>
           </div>
         )}
 
         {/* ================================================= */}
-        {/* FORM */}
+        {/* FORM GRID */}
         {/* ================================================= */}
-
         <form
           id="resource-form"
           onSubmit={handleSubmit}
-          className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_360px]"
+          className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_380px]"
         >
-          {/* ================================================= */}
-          {/* LEFT COLUMN */}
-          {/* ================================================= */}
-
+          {/* LEFT COLUMN (Content & Structure) */}
           <div className="space-y-6">
-            {/* ================================================= */}
-            {/* BASIC INFORMATION */}
-            {/* ================================================= */}
-
+            {/* 1. BASIC IDENTIFICATION */}
             <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
               <div className="border-b border-slate-100 px-6 py-5 sm:px-8">
                 <div className="flex items-center gap-3">
                   <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-100 text-indigo-600">
                     <FileText size={19} />
                   </div>
-
                   <div>
                     <h3 className="font-bold text-slate-900">
-                      Basic Information
+                      Core Details & Routing
                     </h3>
-
-                    <p className="mt-1 text-xs text-slate-500">
-                      Introduce your resource to students.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-6 p-6 sm:p-8">
-                {/* TITLE */}
-
-                <div>
-                  <label className="mb-2 block text-sm font-bold text-slate-700">
-                    Resource Title
-                    <span className="ml-1 text-red-500">*</span>
-                  </label>
-
-                  <input
-                    type="text"
-                    name="title"
-                    value={form.title}
-                    onChange={handleChange}
-                    placeholder="Complete DSA Interview Preparation Guide"
-                    className="h-13 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-medium outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-100"
-                  />
-                </div>
-
-                {/* SUBTITLE */}
-
-                <div>
-                  <label className="mb-2 block text-sm font-bold text-slate-700">
-                    Short Subtitle
-                    <span className="ml-1 text-red-500">*</span>
-                  </label>
-
-                  <input
-                    type="text"
-                    name="subtitle"
-                    value={form.subtitle}
-                    onChange={handleChange}
-                    placeholder="Master data structures and algorithms with an interview-focused roadmap."
-                    className="h-13 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-100"
-                  />
-                </div>
-
-                {/* DESCRIPTION */}
-
-                <div>
-                  <div className="mb-2 flex items-center justify-between">
-                    <label className="block text-sm font-bold text-slate-700">
-                      Resource Description
-                      <span className="ml-1 text-red-500">*</span>
-                    </label>
-
-                    <span className="text-xs text-slate-400">
-                      {form.description.length} characters
-                    </span>
-                  </div>
-
-                  <textarea
-                    name="description"
-                    value={form.description}
-                    onChange={handleChange}
-                    rows={7}
-                    placeholder="Describe what this resource covers, who it is for, and why students should use it..."
-                    className="w-full resize-none rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm leading-7 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-100"
-                  />
-                </div>
-              </div>
-            </section>
-
-            {/* ================================================= */}
-            {/* LEARNING OUTCOMES */}
-            {/* ================================================= */}
-
-            <section className="rounded-3xl border border-slate-200 bg-white shadow-sm">
-              <div className="border-b border-slate-100 px-6 py-5 sm:px-8">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600">
-                    <GraduationCap size={19} />
-                  </div>
-
-                  <div>
-                    <h3 className="font-bold text-slate-900">
-                      Learning Outcomes
-                    </h3>
-
-                    <p className="mt-1 text-xs text-slate-500">
-                      Tell students exactly what they will gain.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-7 p-6 sm:p-8">
-                {/* WHAT YOU WILL LEARN */}
-
-                <DynamicList
-                  title="What You'll Learn"
-                  description="Add the main skills or concepts students will learn."
-                  icon={<ListChecks size={17} />}
-                  field="whatYouWillLearn"
-                  items={form.whatYouWillLearn}
-                  placeholder="Example: Solve common DSA interview problems"
-                  handleArrayChange={handleArrayChange}
-                  addArrayItem={addArrayItem}
-                  removeArrayItem={removeArrayItem}
-                />
-
-                {/* PREREQUISITES */}
-
-                <DynamicList
-                  title="Prerequisites"
-                  description="What should students know before starting?"
-                  icon={<Target size={17} />}
-                  field="prerequisites"
-                  items={form.prerequisites}
-                  placeholder="Example: Basic knowledge of programming"
-                  handleArrayChange={handleArrayChange}
-                  addArrayItem={addArrayItem}
-                  removeArrayItem={removeArrayItem}
-                />
-
-                {/* TAKEAWAYS */}
-
-                <DynamicList
-                  title="Key Takeaways"
-                  description="Highlight the most valuable outcomes."
-                  icon={<Lightbulb size={17} />}
-                  field="keyTakeaways"
-                  items={form.keyTakeaways}
-                  placeholder="Example: Build confidence for technical interviews"
-                  handleArrayChange={handleArrayChange}
-                  addArrayItem={addArrayItem}
-                  removeArrayItem={removeArrayItem}
-                />
-              </div>
-            </section>
-
-            {/* ================================================= */}
-            {/* RESOURCE CONTENT */}
-            {/* ================================================= */}
-
-            <section className="rounded-3xl border border-slate-200 bg-white shadow-sm">
-              <div className="border-b border-slate-100 px-6 py-5 sm:px-8">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-100 text-violet-600">
-                    <Upload size={19} />
-                  </div>
-
-                  <div>
-                    <h3 className="font-bold text-slate-900">
-                      Resource Content
-                    </h3>
-
-                    <p className="mt-1 text-xs text-slate-500">
-                      Upload the actual learning material.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-6 p-6 sm:p-8">
-                {/* RESOURCE TYPE */}
-
-                <div>
-                  <label className="mb-3 block text-sm font-bold text-slate-700">
-                    Resource Type
-                  </label>
-
-                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                    {resourceTypes.map((type) => {
-                      const selected = form.resourceType === type;
-
-                      return (
-                        <label
-                          key={type}
-                          className={`cursor-pointer rounded-2xl border p-4 transition ${
-                            selected
-                              ? "border-indigo-400 bg-indigo-50 ring-2 ring-indigo-100"
-                              : "border-slate-200 hover:border-slate-300"
-                          }`}
-                        >
-                          <input
-                            type="radio"
-                            name="resourceType"
-                            value={type}
-                            checked={selected}
-                            onChange={handleChange}
-                            className="sr-only"
-                          />
-
-                          <div className="flex items-center gap-3">
-                            {type === "PDF" && (
-                              <FileText
-                                size={20}
-                                className={
-                                  selected
-                                    ? "text-indigo-600"
-                                    : "text-slate-400"
-                                }
-                              />
-                            )}
-
-                            {type === "File" && (
-                              <Upload
-                                size={20}
-                                className={
-                                  selected
-                                    ? "text-indigo-600"
-                                    : "text-slate-400"
-                                }
-                              />
-                            )}
-
-                            {type === "External Link" && (
-                              <LinkIcon
-                                size={20}
-                                className={
-                                  selected
-                                    ? "text-indigo-600"
-                                    : "text-slate-400"
-                                }
-                              />
-                            )}
-
-                            <span className="text-sm font-bold text-slate-800">
-                              {type}
-                            </span>
-                          </div>
-                        </label>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* FILE */}
-
-                {form.resourceType !== "External Link" && (
-                  <div>
-                    <label className="mb-3 block text-sm font-bold text-slate-700">
-                      Upload Resource File
-                      <span className="ml-1 text-red-500">*</span>
-                    </label>
-
-                    <label className="group flex cursor-pointer flex-col items-center justify-center rounded-3xl border-2 border-dashed border-slate-200 bg-slate-50 px-6 py-12 text-center transition hover:border-indigo-300 hover:bg-indigo-50/40">
-                      <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-white text-indigo-600 shadow-sm ring-1 ring-slate-100 transition group-hover:scale-105">
-                        <Upload size={25} />
-                      </div>
-
-                      <p className="text-sm font-bold text-slate-800">
-                        {form.file
-                          ? form.file.name
-                          : "Click to upload your resource"}
-                      </p>
-
-                      <p className="mt-2 text-xs text-slate-400">
-                        PDF, DOC, DOCX, PPT, PPTX, ZIP
-                      </p>
-
-                      {form.file && (
-                        <div className="mt-4 flex items-center gap-2 rounded-full bg-indigo-100 px-3 py-1.5 text-xs font-bold text-indigo-700">
-                          <FileText size={13} />
-                          {(form.file.size / (1024 * 1024)).toFixed(2)} MB
-                        </div>
-                      )}
-
-                      <input
-                        type="file"
-                        name="file"
-                        onChange={handleChange}
-                        className="hidden"
-                        accept=".pdf,.doc,.docx,.ppt,.pptx,.zip"
-                      />
-                    </label>
-                  </div>
-                )}
-
-                {/* EXTERNAL LINK */}
-
-                {form.resourceType === "External Link" && (
-                  <div>
-                    <label className="mb-2 block text-sm font-bold text-slate-700">
-                      External Resource URL
-                      <span className="ml-1 text-red-500">*</span>
-                    </label>
-
-                    <div className="relative">
-                      <LinkIcon
-                        size={18}
-                        className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
-                      />
-
-                      <input
-                        type="url"
-                        name="externalUrl"
-                        value={form.externalUrl}
-                        onChange={handleChange}
-                        placeholder="https://example.com/learning-resource"
-                        className="h-13 w-full rounded-2xl border border-slate-200 bg-slate-50 pl-11 pr-4 text-sm outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-100"
-                      />
-                    </div>
-                  </div>
-                )}
-
-                {/* VIDEO URL */}
-
-                <div>
-                  <label className="mb-2 block text-sm font-bold text-slate-700">
-                    Optional Video URL
-                  </label>
-
-                  <div className="relative">
-                    <Video
-                      size={18}
-                      className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
-                    />
-
-                    <input
-                      type="url"
-                      name="videoUrl"
-                      value={form.videoUrl}
-                      onChange={handleChange}
-                      placeholder="https://youtube.com/watch?v=..."
-                      className="h-13 w-full rounded-2xl border border-slate-200 bg-slate-50 pl-11 pr-4 text-sm outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-100"
-                    />
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            {/* ================================================= */}
-            {/* SKILLS & TAGS */}
-            {/* ================================================= */}
-
-            <section className="rounded-3xl border border-slate-200 bg-white shadow-sm">
-              <div className="border-b border-slate-100 px-6 py-5 sm:px-8">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-100 text-amber-600">
-                    <Award size={19} />
-                  </div>
-
-                  <div>
-                    <h3 className="font-bold text-slate-900">
-                      Skills & Discovery
-                    </h3>
-
-                    <p className="mt-1 text-xs text-slate-500">
-                      Help students discover your resource.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-7 p-6 sm:p-8">
-                {/* SKILLS */}
-
-                <div>
-                  <label className="mb-2 block text-sm font-bold text-slate-700">
-                    Skills Covered
-                  </label>
-
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={skillInput}
-                      onChange={(e) => setSkillInput(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          e.preventDefault();
-                          addSkill();
-                        }
-                      }}
-                      placeholder="Example: Data Structures"
-                      className="h-12 flex-1 rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-100"
-                    />
-
-                    <button
-                      type="button"
-                      onClick={addSkill}
-                      className="flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-600 text-white transition hover:bg-indigo-700"
-                    >
-                      <Plus size={19} />
-                    </button>
-                  </div>
-
-                  {form.skills.length > 0 && (
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      {form.skills.map((skill) => (
-                        <span
-                          key={skill}
-                          className="inline-flex items-center gap-2 rounded-full bg-indigo-50 px-3 py-2 text-xs font-bold text-indigo-700"
-                        >
-                          {skill}
-
-                          <button
-                            type="button"
-                            onClick={() => removeSkill(skill)}
-                            className="hover:text-red-500"
-                          >
-                            <X size={13} />
-                          </button>
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* TAGS */}
-
-                <div>
-                  <label className="mb-2 block text-sm font-bold text-slate-700">
-                    Search Tags
-                  </label>
-
-                  <div className="flex gap-2">
-                    <div className="relative flex-1">
-                      <Tag
-                        size={17}
-                        className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
-                      />
-
-                      <input
-                        type="text"
-                        value={tagInput}
-                        onChange={(e) => setTagInput(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                            e.preventDefault();
-                            addTag();
-                          }
-                        }}
-                        placeholder="Example: dsa"
-                        className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 pl-11 pr-4 text-sm outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-100"
-                      />
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={addTag}
-                      className="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-900 text-white transition hover:bg-slate-800"
-                    >
-                      <Plus size={19} />
-                    </button>
-                  </div>
-
-                  {form.tags.length > 0 && (
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      {form.tags.map((tag) => (
-                        <span
-                          key={tag}
-                          className="inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-2 text-xs font-bold text-slate-700"
-                        >
-                          #{tag}
-                          <button
-                            type="button"
-                            onClick={() => removeTag(tag)}
-                            className="hover:text-red-500"
-                          >
-                            <X size={13} />
-                          </button>
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </section>
-
-            {/* ================================================= */}
-            {/* SEO */}
-            {/* ================================================= */}
-
-            <section className="rounded-3xl border border-slate-200 bg-white shadow-sm">
-              <div className="border-b border-slate-100 px-6 py-5 sm:px-8">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-cyan-100 text-cyan-600">
-                    <Search size={19} />
-                  </div>
-
-                  <div>
-                    <h3 className="font-bold text-slate-900">
-                      Search Optimization
-                    </h3>
-
-                    <p className="mt-1 text-xs text-slate-500">
-                      Improve how your resource appears in search.
+                    <p className="mt-0.5 text-xs text-slate-500">
+                      Title, human-readable slug, and summaries.
                     </p>
                   </div>
                 </div>
@@ -1154,303 +625,876 @@ export default function CreateResource() {
               <div className="space-y-5 p-6 sm:p-8">
                 <div>
                   <label className="mb-2 block text-sm font-bold text-slate-700">
-                    SEO Title
+                    Resource Title <span className="text-red-500">*</span>
                   </label>
-
                   <input
                     type="text"
-                    name="seoTitle"
-                    value={form.seoTitle}
+                    name="title"
+                    value={form.title}
                     onChange={handleChange}
-                    placeholder="Complete DSA Interview Preparation Guide"
-                    className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-100"
+                    placeholder="e.g. Master System Design: High-Scale Architecture"
+                    className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-medium outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-100"
+                  />
+                </div>
+
+                {/* SLUG */}
+                <div>
+                  <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-500">
+                    URL Slug
+                  </label>
+                  <div className="flex items-center rounded-2xl border border-slate-200 bg-slate-100/70 px-4">
+                    <span className="text-xs text-slate-400">/resources/</span>
+                    <input
+                      type="text"
+                      name="slug"
+                      value={form.slug}
+                      onChange={handleChange}
+                      placeholder="master-system-design"
+                      className="h-11 w-full bg-transparent text-xs font-semibold text-slate-700 outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-sm font-bold text-slate-700">
+                    Subtitle / Tagline <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="subtitle"
+                    value={form.subtitle}
+                    onChange={handleChange}
+                    placeholder="Short punchy summary for cards and search results"
+                    className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-100"
                   />
                 </div>
 
                 <div>
                   <label className="mb-2 block text-sm font-bold text-slate-700">
-                    SEO Description
+                    Resource Overview <span className="text-red-500">*</span>
                   </label>
-
                   <textarea
-                    name="seoDescription"
-                    value={form.seoDescription}
+                    name="description"
+                    value={form.description}
                     onChange={handleChange}
                     rows={4}
-                    placeholder="Learn DSA and prepare for coding interviews with this comprehensive career resource."
-                    className="w-full resize-none rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm leading-6 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-100"
+                    placeholder="Detailed introduction to what students will find here..."
+                    className="w-full resize-none rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-100"
                   />
+                </div>
+
+                {/* RICH BODY CONTENT / ARTICLE */}
+                <div>
+                  <div className="mb-2 flex items-center justify-between">
+                    <label className="flex items-center gap-1.5 text-sm font-bold text-slate-700">
+                      <AlignLeft size={16} className="text-indigo-600" />
+                      Rich Text Article / Inline Content (Markdown/HTML)
+                    </label>
+                  </div>
+                  <textarea
+                    name="bodyContent"
+                    value={form.bodyContent}
+                    onChange={handleChange}
+                    rows={8}
+                    placeholder="# Comprehensive Guide&#10;&#10;Write full articles, embed code snippets, and structured reading content directly..."
+                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 p-4 text-xs font-mono outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-100"
+                  />
+                </div>
+              </div>
+            </section>
+
+            {/* 2. MULTI-FILE ATTACHMENTS & PRIMARY MEDIA */}
+            <section className="rounded-3xl border border-slate-200 bg-white shadow-sm">
+              <div className="border-b border-slate-100 px-6 py-5 sm:px-8">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-100 text-violet-600">
+                    <FolderArchive size={19} />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-slate-900">
+                      Media, Videos & Downloadable Attachments
+                    </h3>
+                    <p className="mt-0.5 text-xs text-slate-500">
+                      Attach multiple files, set primary video provider, and
+                      links.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-6 p-6 sm:p-8">
+                {/* File Dropzone */}
+                <label className="group flex cursor-pointer flex-col items-center justify-center rounded-3xl border-2 border-dashed border-slate-200 bg-slate-50 p-8 text-center transition hover:border-indigo-300 hover:bg-indigo-50/40">
+                  <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-indigo-600 shadow-sm ring-1 ring-slate-100 transition group-hover:scale-105">
+                    <Upload size={22} />
+                  </div>
+                  <p className="text-sm font-bold text-slate-800">
+                    Upload File Assets
+                  </p>
+                  <p className="mt-1 text-xs text-slate-400">
+                    Drag and drop or browse files (PDF, ZIP, DOCX, Code)
+                  </p>
+                  <input
+                    type="file"
+                    onChange={handleFileUpload}
+                    multiple
+                    className="hidden"
+                  />
+                </label>
+
+                {/* Uploaded List */}
+                {form.attachments.length > 0 && (
+                  <div className="space-y-3">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                      Attached Files ({form.attachments.length})
+                    </h4>
+                    {form.attachments.map((asset, idx) => (
+                      <div
+                        key={idx}
+                        className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 p-3.5"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-indigo-600 shadow-sm">
+                            {asset.fileType === "pdf" && <FileText size={18} />}
+                            {asset.fileType === "zip" && (
+                              <FolderArchive size={18} />
+                            )}
+                            {asset.fileType === "code" && (
+                              <FileCode size={18} />
+                            )}
+                            {asset.fileType === "other" && <Upload size={18} />}
+                          </div>
+                          <div>
+                            <input
+                              type="text"
+                              value={asset.title}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                setForm((prev) => {
+                                  const updated = [...prev.attachments];
+                                  updated[idx].title = val;
+                                  return { ...prev, attachments: updated };
+                                });
+                              }}
+                              className="bg-transparent text-sm font-bold text-slate-800 outline-none hover:bg-white focus:bg-white focus:ring-1 focus:ring-indigo-300"
+                            />
+                            <p className="text-xs text-slate-400">
+                              {(asset.fileSize / (1024 * 1024)).toFixed(2)} MB •{" "}
+                              {asset.fileType.toUpperCase()}
+                            </p>
+                          </div>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => removeAttachment(idx)}
+                          className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-red-50 hover:text-red-500"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* EXTERNAL URL & PRIMARY VIDEO FIELDS */}
+                <div className="space-y-4 pt-2">
+                  <div>
+                    <label className="mb-2 block text-xs font-bold text-slate-700">
+                      External Resource URL
+                    </label>
+                    <div className="relative">
+                      <LinkIcon
+                        size={16}
+                        className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
+                      />
+                      <input
+                        type="url"
+                        name="externalUrl"
+                        value={form.externalUrl}
+                        onChange={handleChange}
+                        placeholder="https://github.com/repo or https://external-link.com"
+                        className="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 pl-10 pr-3 text-xs outline-none focus:border-indigo-500"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Primary Video Settings */}
+                  <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+                    <h4 className="mb-3 flex items-center gap-2 text-xs font-bold text-slate-800">
+                      <Video size={16} className="text-indigo-600" /> Primary
+                      Video Settings
+                    </h4>
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                      <div>
+                        <label className="mb-1 block text-[10px] font-bold uppercase text-slate-500">
+                          Provider
+                        </label>
+                        <select
+                          name="videoProvider"
+                          value={form.videoProvider}
+                          onChange={handleChange}
+                          className="h-10 w-full rounded-xl border border-slate-200 bg-white px-2.5 text-xs font-semibold outline-none focus:border-indigo-500"
+                        >
+                          {videoProviders.map((vp) => (
+                            <option key={vp} value={vp}>
+                              {vp.toUpperCase()}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="mb-1 block text-[10px] font-bold uppercase text-slate-500">
+                          Video URL
+                        </label>
+                        <input
+                          type="url"
+                          name="videoUrl"
+                          value={form.videoUrl}
+                          onChange={handleChange}
+                          placeholder="https://youtube.com/watch?v=..."
+                          className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs outline-none focus:border-indigo-500"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="mb-1 block text-[10px] font-bold uppercase text-slate-500">
+                          Duration (In Seconds)
+                        </label>
+                        <input
+                          type="number"
+                          name="videoDurationInSeconds"
+                          value={form.videoDurationInSeconds}
+                          onChange={handleChange}
+                          placeholder="e.g. 3600"
+                          className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs outline-none focus:border-indigo-500"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            {/* 3. ROADMAP & CURRICULUM MODULES (ALL FIELDS INCLUDED) */}
+            <section className="rounded-3xl border border-slate-200 bg-white shadow-sm">
+              <div className="border-b border-slate-100 px-6 py-5 sm:px-8">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-100 text-amber-600">
+                      <Layers size={19} />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-slate-900">
+                        Structured Curriculum / Roadmap Sections
+                      </h3>
+                      <p className="mt-0.5 text-xs text-slate-500">
+                        Break down your guide into interactive modules or
+                        chapters.
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={addModule}
+                    className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-50 px-3 py-2 text-xs font-bold text-indigo-700 transition hover:bg-indigo-100"
+                  >
+                    <Plus size={15} /> Add Section
+                  </button>
+                </div>
+              </div>
+
+              <div className="space-y-4 p-6 sm:p-8">
+                {form.modules.length === 0 ? (
+                  <p className="text-center text-xs text-slate-400">
+                    No curriculum modules added. Click "Add Section" to create a
+                    structured roadmap.
+                  </p>
+                ) : (
+                  form.modules.map((mod, idx) => (
+                    <div
+                      key={idx}
+                      className="rounded-2xl border border-slate-200 bg-slate-50/70 p-5 space-y-3"
+                    >
+                      <div className="flex items-center justify-between gap-4">
+                        <span className="rounded-lg bg-indigo-100 px-2.5 py-1 text-xs font-bold text-indigo-700">
+                          Section {idx + 1}
+                        </span>
+
+                        <div className="flex items-center gap-3">
+                          <label className="flex items-center gap-1.5 cursor-pointer text-xs font-semibold text-slate-600">
+                            <input
+                              type="checkbox"
+                              checked={mod.isFreePreview}
+                              onChange={(e) =>
+                                updateModule(
+                                  idx,
+                                  "isFreePreview",
+                                  e.target.checked
+                                )
+                              }
+                              className="accent-indigo-600"
+                            />
+                            Free Preview
+                          </label>
+
+                          <button
+                            type="button"
+                            onClick={() => removeModule(idx)}
+                            className="text-slate-400 hover:text-red-500"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Module Title */}
+                      <div>
+                        <label className="mb-1 block text-[10px] font-bold uppercase text-slate-500">
+                          Module Title
+                        </label>
+                        <input
+                          type="text"
+                          value={mod.title}
+                          onChange={(e) =>
+                            updateModule(idx, "title", e.target.value)
+                          }
+                          placeholder="Section Title (e.g. Chapter 1: Fundamentals)"
+                          className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold outline-none focus:border-indigo-500"
+                        />
+                      </div>
+
+                      {/* Module Description */}
+                      <div>
+                        <label className="mb-1 block text-[10px] font-bold uppercase text-slate-500">
+                          Short Description
+                        </label>
+                        <input
+                          type="text"
+                          value={mod.description}
+                          onChange={(e) =>
+                            updateModule(idx, "description", e.target.value)
+                          }
+                          placeholder="Brief overview of this chapter..."
+                          className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs outline-none focus:border-indigo-500"
+                        />
+                      </div>
+
+                      {/* Module Content */}
+                      <div>
+                        <label className="mb-1 block text-[10px] font-bold uppercase text-slate-500">
+                          Rich Content / Instructions
+                        </label>
+                        <textarea
+                          value={mod.content}
+                          onChange={(e) =>
+                            updateModule(idx, "content", e.target.value)
+                          }
+                          rows={3}
+                          placeholder="Detailed lesson content or instructions..."
+                          className="w-full resize-none rounded-xl border border-slate-200 bg-white p-3 text-xs outline-none focus:border-indigo-500"
+                        />
+                      </div>
+
+                      {/* Video URL & Duration */}
+                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                        <div>
+                          <label className="mb-1 block text-[10px] font-bold uppercase text-slate-500">
+                            Video URL (Optional)
+                          </label>
+                          <input
+                            type="url"
+                            value={mod.videoUrl}
+                            onChange={(e) =>
+                              updateModule(idx, "videoUrl", e.target.value)
+                            }
+                            placeholder="https://youtube.com/watch?v=..."
+                            className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs outline-none focus:border-indigo-500"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="mb-1 block text-[10px] font-bold uppercase text-slate-500">
+                            Duration (In Minutes)
+                          </label>
+                          <input
+                            type="number"
+                            value={mod.durationInMinutes}
+                            onChange={(e) =>
+                              updateModule(
+                                idx,
+                                "durationInMinutes",
+                                e.target.value
+                              )
+                            }
+                            placeholder="e.g. 45"
+                            className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs outline-none focus:border-indigo-500"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </section>
+
+            {/* 4. LEARNING OUTCOMES */}
+            <section className="rounded-3xl border border-slate-200 bg-white shadow-sm">
+              <div className="border-b border-slate-100 px-6 py-5 sm:px-8">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600">
+                    <GraduationCap size={19} />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-slate-900">
+                      Outcomes & Prerequisites
+                    </h3>
+                    <p className="mt-0.5 text-xs text-slate-500">
+                      Define explicitly what students learn and need.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-7 p-6 sm:p-8">
+                <DynamicList
+                  title="What You'll Learn"
+                  description="Key skill gains"
+                  icon={<ListChecks size={17} />}
+                  field="whatYouWillLearn"
+                  items={form.whatYouWillLearn}
+                  placeholder="e.g. Design resilient microservices"
+                  handleArrayChange={handleArrayChange}
+                  addArrayItem={addArrayItem}
+                  removeArrayItem={removeArrayItem}
+                />
+
+                <DynamicList
+                  title="Prerequisites"
+                  description="Required prior knowledge"
+                  icon={<Target size={17} />}
+                  field="prerequisites"
+                  items={form.prerequisites}
+                  placeholder="e.g. Basic understanding of HTTP and Databases"
+                  handleArrayChange={handleArrayChange}
+                  addArrayItem={addArrayItem}
+                  removeArrayItem={removeArrayItem}
+                />
+
+                <DynamicList
+                  title="Key Takeaways"
+                  description="Actionable summaries"
+                  icon={<Lightbulb size={17} />}
+                  field="keyTakeaways"
+                  items={form.keyTakeaways}
+                  placeholder="e.g. Architectural blueprint template"
+                  handleArrayChange={handleArrayChange}
+                  addArrayItem={addArrayItem}
+                  removeArrayItem={removeArrayItem}
+                />
+              </div>
+            </section>
+
+            {/* 5. TAXONOMY CHIPS & SEO */}
+            <section className="rounded-3xl border border-slate-200 bg-white shadow-sm">
+              <div className="border-b border-slate-100 px-6 py-5 sm:px-8">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-cyan-100 text-cyan-600">
+                    <Search size={19} />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-slate-900">
+                      Skills, Tags & Search Engine Indexing
+                    </h3>
+                    <p className="mt-0.5 text-xs text-slate-500">
+                      Optimize platform discoverability.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-6 p-6 sm:p-8">
+                {/* Skills Chips */}
+                <div>
+                  <label className="mb-2 block text-xs font-bold text-slate-700">
+                    Skills Covered
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={skillInput}
+                      onChange={(e) => setSkillInput(e.target.value)}
+                      onKeyDown={(e) =>
+                        e.key === "Enter" &&
+                        (e.preventDefault(),
+                        addChipItem("skills", skillInput, setSkillInput))
+                      }
+                      placeholder="Type a skill and hit Enter..."
+                      className="h-10 flex-1 rounded-xl border border-slate-200 bg-slate-50 px-3 text-xs outline-none focus:border-indigo-500"
+                    />
+                    <button
+                      type="button"
+                      onClick={() =>
+                        addChipItem("skills", skillInput, setSkillInput)
+                      }
+                      className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-600 text-white"
+                    >
+                      <Plus size={16} />
+                    </button>
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {form.skills.map((s) => (
+                      <span
+                        key={s}
+                        className="inline-flex items-center gap-1.5 rounded-full bg-indigo-50 px-3 py-1 text-xs font-bold text-indigo-700"
+                      >
+                        {s}
+                        <X
+                          size={12}
+                          className="cursor-pointer hover:text-red-500"
+                          onClick={() => removeChipItem("skills", s)}
+                        />
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Search Tags */}
+                <div>
+                  <label className="mb-2 block text-xs font-bold text-slate-700">
+                    Platform Search Tags
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={tagInput}
+                      onChange={(e) => setTagInput(e.target.value)}
+                      onKeyDown={(e) =>
+                        e.key === "Enter" &&
+                        (e.preventDefault(),
+                        addChipItem("tags", tagInput, setTagInput))
+                      }
+                      placeholder="e.g. system-design, distributed-systems"
+                      className="h-10 flex-1 rounded-xl border border-slate-200 bg-slate-50 px-3 text-xs outline-none focus:border-indigo-500"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => addChipItem("tags", tagInput, setTagInput)}
+                      className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-900 text-white"
+                    >
+                      <Plus size={16} />
+                    </button>
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {form.tags.map((t) => (
+                      <span
+                        key={t}
+                        className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-700"
+                      >
+                        #{t}
+                        <X
+                          size={12}
+                          className="cursor-pointer hover:text-red-500"
+                          onClick={() => removeChipItem("tags", t)}
+                        />
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                {/* SEO Fields */}
+                <div className="grid grid-cols-1 gap-4 pt-4 sm:grid-cols-2">
+                  <div>
+                    <label className="mb-1 block text-xs font-bold text-slate-600">
+                      SEO Title Tag
+                    </label>
+                    <input
+                      type="text"
+                      name="seoTitle"
+                      value={form.seoTitle}
+                      onChange={handleChange}
+                      placeholder="Defaults to resource title"
+                      className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-xs outline-none focus:border-indigo-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs font-bold text-slate-600">
+                      SEO Description
+                    </label>
+                    <input
+                      type="text"
+                      name="seoDescription"
+                      value={form.seoDescription}
+                      onChange={handleChange}
+                      placeholder="Defaults to tagline"
+                      className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-xs outline-none focus:border-indigo-500"
+                    />
+                  </div>
                 </div>
               </div>
             </section>
           </div>
 
-          {/* ================================================= */}
-          {/* RIGHT SIDEBAR */}
-          {/* ================================================= */}
-
+          {/* RIGHT SIDEBAR (Metadata & Publishing Settings) */}
           <aside className="space-y-6">
-            {/* ================================================= */}
-            {/* COVER IMAGE */}
-            {/* ================================================= */}
+            {/* THUMBNAIL & BANNER MEDIA */}
+            <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
+              <div>
+                <h3 className="font-bold text-slate-900">Cover Media</h3>
+                <p className="mt-0.5 text-xs text-slate-500">
+                  Thumbnail & Banner images
+                </p>
+              </div>
 
-            <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
-              <div className="p-5">
-                <div className="mb-4">
-                  <h3 className="font-bold text-slate-900">Cover Image</h3>
-
-                  <p className="mt-1 text-xs text-slate-500">
-                    Add an attractive image for your resource.
-                  </p>
-                </div>
-
+              {/* Thumbnail */}
+              <div>
+                <label className="mb-1 block text-xs font-bold text-slate-700">
+                  Thumbnail Image
+                </label>
                 <label className="group relative block cursor-pointer overflow-hidden rounded-2xl border border-slate-200 bg-slate-100">
                   {thumbnailPreview ? (
                     <img
                       src={thumbnailPreview}
-                      alt="Preview"
-                      className="h-52 w-full object-cover"
+                      alt="Thumbnail Preview"
+                      className="h-36 w-full object-cover"
                     />
                   ) : (
-                    <div className="flex h-52 flex-col items-center justify-center">
-                      <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-white text-slate-400 shadow-sm">
-                        <ImageIcon size={21} />
-                      </div>
-
-                      <p className="text-sm font-bold text-slate-600">
-                        Upload Cover Image
-                      </p>
-
-                      <p className="mt-1 text-xs text-slate-400">
-                        PNG, JPG or WEBP
+                    <div className="flex h-36 flex-col items-center justify-center">
+                      <ImageIcon size={20} className="text-slate-400" />
+                      <p className="mt-1 text-xs font-bold text-slate-600">
+                        Upload Thumbnail
                       </p>
                     </div>
                   )}
-
-                  <div className="absolute inset-0 flex items-center justify-center bg-slate-900/50 opacity-0 transition group-hover:opacity-100">
-                    <span className="rounded-xl bg-white px-4 py-2 text-xs font-bold text-slate-800">
-                      Change Image
-                    </span>
-                  </div>
-
                   <input
                     type="file"
                     name="thumbnail"
                     onChange={handleChange}
-                    accept="image/png,image/jpeg,image/webp"
+                    accept="image/*"
+                    className="hidden"
+                  />
+                </label>
+              </div>
+
+              {/* Banner Image */}
+              <div>
+                <label className="mb-1 block text-xs font-bold text-slate-700">
+                  Banner Image
+                </label>
+                <label className="group relative block cursor-pointer overflow-hidden rounded-2xl border border-slate-200 bg-slate-100">
+                  {bannerPreview ? (
+                    <img
+                      src={bannerPreview}
+                      alt="Banner Preview"
+                      className="h-28 w-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-28 flex-col items-center justify-center">
+                      <ImageIcon size={20} className="text-slate-400" />
+                      <p className="mt-1 text-xs font-bold text-slate-600">
+                        Upload Hero Banner
+                      </p>
+                    </div>
+                  )}
+                  <input
+                    type="file"
+                    name="bannerImage"
+                    onChange={handleChange}
+                    accept="image/*"
                     className="hidden"
                   />
                 </label>
               </div>
             </section>
 
-            {/* ================================================= */}
-            {/* RESOURCE DETAILS */}
-            {/* ================================================= */}
+            {/* CLASSIFICATION */}
+            <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+              <h3 className="mb-4 font-bold text-slate-900">Classification</h3>
 
-            <section className="rounded-3xl border border-slate-200 bg-white shadow-sm">
-              <div className="border-b border-slate-100 p-5">
-                <h3 className="font-bold text-slate-900">Resource Details</h3>
-              </div>
-
-              <div className="space-y-5 p-5">
-                {/* CATEGORY */}
-
+              <div className="space-y-4">
                 <div>
-                  <label className="mb-2 block text-xs font-bold uppercase tracking-wide text-slate-500">
+                  <label className="mb-1 block text-xs font-bold text-slate-500 uppercase">
                     Category
                   </label>
-
                   <select
                     name="category"
                     value={form.category}
                     onChange={handleChange}
-                    className="h-12 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100"
+                    className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold outline-none focus:border-indigo-500"
                   >
-                    {categories.map((category) => (
-                      <option key={category} value={category}>
-                        {category}
+                    {categories.map((c) => (
+                      <option key={c} value={c}>
+                        {c}
                       </option>
                     ))}
                   </select>
                 </div>
 
-                {/* DIFFICULTY */}
+                <div>
+                  <label className="mb-1 block text-xs font-bold text-slate-500 uppercase">
+                    Subcategory (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    name="subcategory"
+                    value={form.subcategory}
+                    onChange={handleChange}
+                    placeholder="e.g. System Architecture"
+                    className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold outline-none focus:border-indigo-500"
+                  />
+                </div>
 
                 <div>
-                  <label className="mb-2 block text-xs font-bold uppercase tracking-wide text-slate-500">
-                    Difficulty
+                  <label className="mb-1 block text-xs font-bold text-slate-500 uppercase">
+                    Resource Type
                   </label>
+                  <select
+                    name="resourceType"
+                    value={form.resourceType}
+                    onChange={handleChange}
+                    className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold outline-none focus:border-indigo-500"
+                  >
+                    {resourceTypes.map((rt) => (
+                      <option key={rt} value={rt}>
+                        {rt}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-                  <div className="grid grid-cols-3 gap-2">
-                    {difficulties.map((level) => {
-                      const selected = form.difficulty === level;
-
-                      return (
-                        <button
-                          type="button"
-                          key={level}
-                          onClick={() =>
-                            setForm((prev) => ({
-                              ...prev,
-                              difficulty: level,
-                            }))
-                          }
-                          className={`rounded-xl border px-2 py-3 text-xs font-bold transition ${
-                            selected
-                              ? "border-indigo-300 bg-indigo-50 text-indigo-700"
-                              : "border-slate-200 text-slate-500 hover:bg-slate-50"
-                          }`}
-                        >
-                          {level}
-                        </button>
-                      );
-                    })}
+                <div>
+                  <label className="mb-1 block text-xs font-bold text-slate-500 uppercase">
+                    Difficulty Level
+                  </label>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {difficulties.map((lvl) => (
+                      <button
+                        type="button"
+                        key={lvl}
+                        onClick={() =>
+                          setForm((prev) => ({ ...prev, difficulty: lvl }))
+                        }
+                        className={`rounded-xl border py-2 text-xs font-bold transition ${
+                          form.difficulty === lvl
+                            ? "border-indigo-300 bg-indigo-50 text-indigo-700"
+                            : "border-slate-200 text-slate-500 hover:bg-slate-50"
+                        }`}
+                      >
+                        {lvl}
+                      </button>
+                    ))}
                   </div>
                 </div>
 
-                {/* DURATION */}
-
                 <div>
-                  <label className="mb-2 block text-xs font-bold uppercase tracking-wide text-slate-500">
+                  <label className="mb-1 block text-xs font-bold text-slate-500 uppercase">
                     Estimated Duration
                   </label>
-
                   <div className="relative">
                     <Clock3
-                      size={17}
+                      size={15}
                       className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
                     />
-
                     <input
                       type="text"
                       name="estimatedDuration"
                       value={form.estimatedDuration}
                       onChange={handleChange}
-                      placeholder="8 hours"
-                      className="h-12 w-full rounded-xl border border-slate-200 pl-10 pr-3 text-sm outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100"
+                      placeholder="e.g. 4 hours"
+                      className="h-11 w-full rounded-xl border border-slate-200 pl-9 pr-3 text-xs outline-none focus:border-indigo-500"
                     />
                   </div>
                 </div>
               </div>
             </section>
 
-            {/* ================================================= */}
             {/* TARGET AUDIENCE */}
-            {/* ================================================= */}
-
-            <section className="rounded-3xl border border-slate-200 bg-white shadow-sm">
-              <div className="border-b border-slate-100 p-5">
-                <div className="flex items-center gap-2">
-                  <Target size={17} className="text-indigo-600" />
-
-                  <h3 className="font-bold text-slate-900">Target Audience</h3>
-                </div>
-              </div>
-
-              <div className="space-y-2 p-5">
-                {audienceOptions.map((audience) => {
-                  const selected = form.targetAudience.includes(audience);
-
+            <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+              <h3 className="mb-3 font-bold text-slate-900">Target Audience</h3>
+              <div className="space-y-1.5">
+                {audienceOptions.map((aud) => {
+                  const sel = form.targetAudience.includes(aud);
                   return (
                     <button
                       type="button"
-                      key={audience}
-                      onClick={() => toggleAudience(audience)}
-                      className={`flex w-full items-center justify-between rounded-xl border px-3 py-3 text-left text-xs font-semibold transition ${
-                        selected
+                      key={aud}
+                      onClick={() => toggleAudience(aud)}
+                      className={`flex w-full items-center justify-between rounded-xl border px-3 py-2.5 text-xs font-semibold transition ${
+                        sel
                           ? "border-indigo-200 bg-indigo-50 text-indigo-700"
                           : "border-slate-200 text-slate-600 hover:bg-slate-50"
                       }`}
                     >
-                      {audience}
-
-                      {selected && <CheckCircle2 size={16} />}
+                      {aud}
+                      {sel && <CheckCircle2 size={15} />}
                     </button>
                   );
                 })}
               </div>
             </section>
 
-            {/* ================================================= */}
-            {/* AUTHOR */}
-            {/* ================================================= */}
-
-            <section className="rounded-3xl border border-slate-200 bg-white shadow-sm">
-              <div className="border-b border-slate-100 p-5">
-                <div className="flex items-center gap-2">
-                  <UserRound size={17} className="text-violet-600" />
-
-                  <h3 className="font-bold text-slate-900">
-                    Author Information
-                  </h3>
-                </div>
-              </div>
-
-              <div className="space-y-4 p-5">
+            {/* AUTHOR DETAILS */}
+            <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+              <h3 className="mb-3 font-bold text-slate-900">
+                Author Attribution
+              </h3>
+              <div className="space-y-3">
                 <input
                   type="text"
                   name="authorName"
                   value={form.authorName}
                   onChange={handleChange}
-                  placeholder="Author name"
-                  className="h-12 w-full rounded-xl border border-slate-200 px-3 text-sm outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100"
+                  placeholder="Author Name"
+                  className="h-11 w-full rounded-xl border border-slate-200 px-3 text-xs outline-none focus:border-indigo-500"
                 />
-
                 <input
                   type="text"
                   name="authorRole"
                   value={form.authorRole}
                   onChange={handleChange}
-                  placeholder="Author role"
-                  className="h-12 w-full rounded-xl border border-slate-200 px-3 text-sm outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100"
+                  placeholder="Author Role"
+                  className="h-11 w-full rounded-xl border border-slate-200 px-3 text-xs outline-none focus:border-indigo-500"
+                />
+                <textarea
+                  name="authorBio"
+                  value={form.authorBio}
+                  onChange={handleChange}
+                  rows={2}
+                  placeholder="Author bio / summary..."
+                  className="w-full resize-none rounded-xl border border-slate-200 p-3 text-xs outline-none focus:border-indigo-500"
                 />
               </div>
             </section>
 
-            {/* ================================================= */}
-            {/* PUBLISHING */}
-            {/* ================================================= */}
+            {/* PUBLISHING & PREMIUM GATING */}
+            <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+              <h3 className="mb-4 font-bold text-slate-900">
+                Publishing Controls
+              </h3>
 
-            <section className="rounded-3xl border border-slate-200 bg-white shadow-sm">
-              <div className="border-b border-slate-100 p-5">
-                <div className="flex items-center gap-2">
-                  <Globe2 size={17} className="text-emerald-600" />
-
-                  <h3 className="font-bold text-slate-900">Publishing</h3>
-                </div>
-              </div>
-
-              <div className="space-y-4 p-5">
-                {/* STATUS */}
-
+              <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
                     onClick={() =>
-                      setForm((prev) => ({
-                        ...prev,
-                        status: "Draft",
-                      }))
+                      setForm((prev) => ({ ...prev, status: "Draft" }))
                     }
-                    className={`rounded-xl border px-3 py-3 text-xs font-bold transition ${
+                    className={`rounded-xl border py-2.5 text-xs font-bold transition ${
                       form.status === "Draft"
                         ? "border-amber-300 bg-amber-50 text-amber-700"
                         : "border-slate-200 text-slate-500"
                     }`}
                   >
-                    Save as Draft
+                    Draft
                   </button>
-
                   <button
                     type="button"
                     onClick={() =>
-                      setForm((prev) => ({
-                        ...prev,
-                        status: "Published",
-                      }))
+                      setForm((prev) => ({ ...prev, status: "Published" }))
                     }
-                    className={`rounded-xl border px-3 py-3 text-xs font-bold transition ${
+                    className={`rounded-xl border py-2.5 text-xs font-bold transition ${
                       form.status === "Published"
                         ? "border-emerald-300 bg-emerald-50 text-emerald-700"
                         : "border-slate-200 text-slate-500"
@@ -1460,60 +1504,68 @@ export default function CreateResource() {
                   </button>
                 </div>
 
-                {/* FEATURED */}
-
+                {/* Featured Toggle */}
                 <label
-                  className={`flex cursor-pointer items-center justify-between rounded-2xl border p-4 transition ${
+                  className={`flex cursor-pointer items-center justify-between rounded-xl border p-3 transition ${
                     form.isFeatured
-                      ? "border-amber-200 bg-amber-50"
+                      ? "border-amber-200 bg-amber-50/60"
                       : "border-slate-200"
                   }`}
                 >
-                  <div className="flex items-center gap-3">
-                    <div
-                      className={`flex h-9 w-9 items-center justify-center rounded-xl ${
-                        form.isFeatured
-                          ? "bg-amber-100 text-amber-600"
-                          : "bg-slate-100 text-slate-400"
-                      }`}
-                    >
-                      <Star size={17} />
-                    </div>
-
-                    <div>
-                      <p className="text-sm font-bold text-slate-800">
-                        Featured Resource
-                      </p>
-
-                      <p className="mt-0.5 text-xs text-slate-500">
-                        Highlight this resource.
-                      </p>
-                    </div>
+                  <div className="flex items-center gap-2">
+                    <Star
+                      size={16}
+                      className={
+                        form.isFeatured ? "text-amber-600" : "text-slate-400"
+                      }
+                    />
+                    <span className="text-xs font-bold text-slate-800">
+                      Featured
+                    </span>
                   </div>
-
                   <input
                     type="checkbox"
                     name="isFeatured"
                     checked={form.isFeatured}
                     onChange={handleChange}
-                    className="h-5 w-5 accent-indigo-600"
+                    className="accent-indigo-600"
+                  />
+                </label>
+
+                {/* Premium Gating Toggle */}
+                <label
+                  className={`flex cursor-pointer items-center justify-between rounded-xl border p-3 transition ${
+                    form.isPremium
+                      ? "border-indigo-200 bg-indigo-50/60"
+                      : "border-slate-200"
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <Lock
+                      size={16}
+                      className={
+                        form.isPremium ? "text-indigo-600" : "text-slate-400"
+                      }
+                    />
+                    <div>
+                      <p className="text-xs font-bold text-slate-800">
+                        Gated / Premium
+                      </p>
+                      <p className="text-[10px] text-slate-400">
+                        Require student registration
+                      </p>
+                    </div>
+                  </div>
+                  <input
+                    type="checkbox"
+                    name="isPremium"
+                    checked={form.isPremium}
+                    onChange={handleChange}
+                    className="accent-indigo-600"
                   />
                 </label>
               </div>
             </section>
-
-            {/* ================================================= */}
-            {/* MOBILE PREVIEW */}
-            {/* ================================================= */}
-
-            <button
-              type="button"
-              onClick={() => setActivePreview(true)}
-              className="flex w-full items-center justify-center gap-2 rounded-2xl border border-indigo-200 bg-indigo-50 px-5 py-4 text-sm font-bold text-indigo-700 transition hover:bg-indigo-100 xl:hidden"
-            >
-              <Eye size={17} />
-              Preview Resource
-            </button>
           </aside>
         </form>
       </main>
@@ -1521,167 +1573,100 @@ export default function CreateResource() {
       {/* ================================================= */}
       {/* PREVIEW MODAL */}
       {/* ================================================= */}
-
       {activePreview && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm">
           <div className="max-h-[92vh] w-full max-w-3xl overflow-y-auto rounded-3xl bg-white shadow-2xl">
-            {/* PREVIEW HEADER */}
-
-            <div className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-100 bg-white px-5 py-4">
-              <div>
-                <p className="text-xs font-bold uppercase tracking-wider text-indigo-600">
-                  Student Preview
-                </p>
-
-                <h3 className="mt-1 font-bold text-slate-900">
-                  How students will see this resource
-                </h3>
-              </div>
-
+            <div className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-100 bg-white px-6 py-4">
+              <p className="text-xs font-bold uppercase tracking-wider text-indigo-600">
+                Student Portal Preview
+              </p>
               <button
                 type="button"
                 onClick={() => setActivePreview(false)}
-                className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-slate-500 hover:bg-slate-200"
+                className="rounded-xl bg-slate-100 p-2 text-slate-500 hover:bg-slate-200"
               >
                 <X size={18} />
               </button>
             </div>
 
-            {/* PREVIEW CONTENT */}
-
-            <div>
+            <div className="p-6">
               <img
-                src={previewImage}
+                src={previewCover}
                 alt="Resource preview"
-                className="h-64 w-full object-cover"
+                className="h-64 w-full rounded-2xl object-cover"
               />
 
-              <div className="p-6 sm:p-8">
-                <div className="flex flex-wrap gap-2">
-                  <span className="rounded-full bg-indigo-50 px-3 py-1.5 text-xs font-bold text-indigo-700">
-                    {form.category}
+              <div className="mt-6 flex flex-wrap gap-2">
+                <span className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-bold text-indigo-700">
+                  {form.category}
+                </span>
+                <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-600">
+                  {form.difficulty}
+                </span>
+                {form.isPremium && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-indigo-100 px-3 py-1 text-xs font-bold text-indigo-800">
+                    <Lock size={12} /> Premium
                   </span>
-
-                  <span className="rounded-full bg-slate-100 px-3 py-1.5 text-xs font-bold text-slate-600">
-                    {form.difficulty}
-                  </span>
-
-                  {form.isFeatured && (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-3 py-1.5 text-xs font-bold text-amber-700">
-                      <Star size={12} />
-                      Featured
-                    </span>
-                  )}
-                </div>
-
-                <h2 className="mt-5 text-2xl font-black text-slate-900 sm:text-3xl">
-                  {form.title || "Your Resource Title"}
-                </h2>
-
-                <p className="mt-3 text-base font-medium leading-7 text-slate-500">
-                  {form.subtitle || "Your resource subtitle will appear here."}
-                </p>
-
-                <div className="mt-5 flex flex-wrap gap-4 text-xs font-semibold text-slate-500">
-                  <span className="inline-flex items-center gap-2">
-                    <Clock3 size={15} />
-                    {form.estimatedDuration || "Duration not specified"}
-                  </span>
-
-                  <span className="inline-flex items-center gap-2">
-                    <UserRound size={15} />
-                    {form.authorName || "GuideX Career Team"}
-                  </span>
-                </div>
-
-                <div className="my-7 h-px bg-slate-100" />
-
-                <h3 className="text-lg font-bold text-slate-900">
-                  About this resource
-                </h3>
-
-                <p className="mt-3 whitespace-pre-line text-sm leading-7 text-slate-600">
-                  {form.description ||
-                    "Your resource description will appear here."}
-                </p>
-
-                {form.whatYouWillLearn.filter((item) => item.trim()).length >
-                  0 && (
-                  <div className="mt-8 rounded-2xl bg-emerald-50 p-5">
-                    <h3 className="flex items-center gap-2 font-bold text-emerald-900">
-                      <CheckCircle2 size={18} />
-                      What You'll Learn
-                    </h3>
-
-                    <ul className="mt-4 space-y-3">
-                      {form.whatYouWillLearn
-                        .filter((item) => item.trim())
-                        .map((item, index) => (
-                          <li
-                            key={index}
-                            className="flex items-start gap-3 text-sm text-emerald-800"
-                          >
-                            <CheckCircle2
-                              size={16}
-                              className="mt-0.5 shrink-0"
-                            />
-
-                            {item}
-                          </li>
-                        ))}
-                    </ul>
-                  </div>
                 )}
-
-                {form.skills.length > 0 && (
-                  <div className="mt-7">
-                    <h3 className="text-sm font-bold text-slate-900">
-                      Skills Covered
-                    </h3>
-
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      {form.skills.map((skill) => (
-                        <span
-                          key={skill}
-                          className="rounded-full bg-indigo-50 px-3 py-2 text-xs font-bold text-indigo-700"
-                        >
-                          {skill}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                <div className="mt-8 flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                  <div>
-                    <p className="text-xs text-slate-500">Published by</p>
-
-                    <p className="mt-1 text-sm font-bold text-slate-800">
-                      {form.authorName || "GuideX Career Team"}
-                    </p>
-
-                    <p className="text-xs text-slate-500">
-                      {form.authorRole || "Career & Learning Team"}
-                    </p>
-                  </div>
-
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-indigo-600 shadow-sm">
-                    <BookOpen size={18} />
-                  </div>
-                </div>
               </div>
-            </div>
 
-            {/* PREVIEW FOOTER */}
+              <h2 className="mt-4 text-2xl font-black text-slate-900">
+                {form.title || "Resource Title"}
+              </h2>
+              <p className="mt-2 text-sm text-slate-500">{form.subtitle}</p>
 
-            <div className="flex justify-end border-t border-slate-100 bg-slate-50 p-5">
-              <button
-                type="button"
-                onClick={() => setActivePreview(false)}
-                className="rounded-xl bg-slate-900 px-5 py-3 text-sm font-bold text-white transition hover:bg-slate-800"
-              >
-                Close Preview
-              </button>
+              <div className="my-6 border-t border-slate-100 pt-6">
+                <h3 className="font-bold text-slate-900">Overview</h3>
+                <p className="mt-2 whitespace-pre-line text-xs text-slate-600">
+                  {form.description}
+                </p>
+              </div>
+
+              {form.modules.length > 0 && (
+                <div className="my-6 rounded-2xl bg-slate-50 p-4">
+                  <h4 className="text-xs font-bold text-slate-800">
+                    Roadmap Modules ({form.modules.length})
+                  </h4>
+                  <div className="mt-3 space-y-2">
+                    {form.modules.map((m, i) => (
+                      <div
+                        key={i}
+                        className="rounded-xl border border-slate-200 bg-white p-3"
+                      >
+                        <p className="text-xs font-bold text-slate-800">
+                          {m.title || `Module ${i + 1}`}
+                        </p>
+                        {m.description && (
+                          <p className="text-[10px] text-slate-500 mt-0.5">
+                            {m.description}
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {form.attachments.length > 0 && (
+                <div className="my-6 rounded-2xl bg-slate-50 p-4">
+                  <h4 className="text-xs font-bold text-slate-800">
+                    Included Files ({form.attachments.length})
+                  </h4>
+                  <ul className="mt-2 space-y-2">
+                    {form.attachments.map((att, i) => (
+                      <li
+                        key={i}
+                        className="flex items-center justify-between text-xs text-slate-600"
+                      >
+                        <span>• {att.title}</span>
+                        <span className="font-mono text-[10px] text-slate-400">
+                          {att.fileType.toUpperCase()}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -1690,10 +1675,7 @@ export default function CreateResource() {
   );
 }
 
-// =====================================================
-// DYNAMIC LIST COMPONENT
-// =====================================================
-
+// Helper Dynamic List component
 function DynamicList({
   title,
   description,
@@ -1707,49 +1689,40 @@ function DynamicList({
 }) {
   return (
     <div>
-      <div className="mb-4 flex items-start justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <div className="text-indigo-600">{icon}</div>
-
-            <h4 className="text-sm font-bold text-slate-800">{title}</h4>
+      <div className="mb-3 flex items-center justify-between gap-4">
+        <div className="flex items-center gap-2">
+          <div className="text-indigo-600">{icon}</div>
+          <div>
+            <h4 className="text-xs font-bold text-slate-800">{title}</h4>
+            <p className="text-[10px] text-slate-400">{description}</p>
           </div>
-
-          <p className="mt-1 text-xs text-slate-500">{description}</p>
         </div>
-
         <button
           type="button"
           onClick={() => addArrayItem(field)}
-          className="inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-slate-100 px-3 py-2 text-xs font-bold text-slate-700 transition hover:bg-indigo-50 hover:text-indigo-700"
+          className="inline-flex items-center gap-1 rounded-xl bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-700 hover:bg-indigo-50 hover:text-indigo-700"
         >
-          <Plus size={14} />
-          Add
+          <Plus size={13} /> Add
         </button>
       </div>
 
-      <div className="space-y-3">
+      <div className="space-y-2">
         {items.map((item, index) => (
           <div key={index} className="flex items-center gap-2">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-xs font-bold text-slate-500">
-              {index + 1}
-            </div>
-
             <input
               type="text"
               value={item}
               onChange={(e) => handleArrayChange(field, index, e.target.value)}
               placeholder={placeholder}
-              className="h-12 flex-1 rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-100"
+              className="h-10 flex-1 rounded-xl border border-slate-200 bg-slate-50 px-3 text-xs outline-none focus:border-indigo-500"
             />
-
             {items.length > 1 && (
               <button
                 type="button"
                 onClick={() => removeArrayItem(field, index)}
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-slate-400 transition hover:bg-red-50 hover:text-red-500"
+                className="text-slate-400 hover:text-red-500"
               >
-                <Trash2 size={16} />
+                <Trash2 size={15} />
               </button>
             )}
           </div>

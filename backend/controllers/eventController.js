@@ -1,247 +1,187 @@
 import Event from "../models/Event.js";
 import EventRegistration from "../models/EventRegistration.js";
+import mongoose from "mongoose";
+import Student from "../models/Student.js";
+
 
 export const createEvent = async (req, res) => {
   try {
     const {
       title,
+      shortSummary,
       description,
-
-      // =====================================================
-      // EVENT DATE & TIME
-      // =====================================================
-
+      domain,
+      eventType,
+      meetingUrl,
+      tags,
+      targetAudience,
       startDateTime,
       endDateTime,
-
-      // =====================================================
-      // SPEAKER INFORMATION
-      // =====================================================
-
-      speaker,
-      speakerRole,
-      speakerCompany,
-      speakerBio,
-      speakerExperience,
-
-      // =====================================================
-      // REGISTRATION
-      // =====================================================
-
       registrationDeadline,
+      maxSeats,
+      isPaid,
+      ticketPrice,
+      status,
+      isFeatured,
+      speakers,
     } = req.body;
 
     // =====================================================
-    // REQUIRED FIELD VALIDATION
+    // 1. REQUIRED FIELD VALIDATION
     // =====================================================
-
     if (
       !title?.trim() ||
       !description?.trim() ||
+      !domain?.trim() ||
       !startDateTime ||
       !endDateTime ||
-      !speaker?.trim() ||
       !registrationDeadline
     ) {
       return res.status(400).json({
         success: false,
         message:
-          "Title, description, event start date and time, event end date and time, speaker, and registration deadline are required",
+          "Title, description, domain, start date, end date, and registration deadline are required.",
       });
     }
 
     // =====================================================
-    // CREATE DATE OBJECTS
+    // 2. PARSE JSON DATA FROM MULTIPART FORM
     // =====================================================
+    let parsedSpeakers = [];
+    let parsedTags = [];
+    let parsedTargetAudience = {
+      experienceLevel: "All Levels",
+      prerequisites: [],
+    };
 
+    try {
+      parsedSpeakers =
+        typeof speakers === "string" ? JSON.parse(speakers) : speakers || [];
+      parsedTags = typeof tags === "string" ? JSON.parse(tags) : tags || [];
+      parsedTargetAudience =
+        typeof targetAudience === "string"
+          ? JSON.parse(targetAudience)
+          : targetAudience || parsedTargetAudience;
+    } catch (parseErr) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid JSON format for speakers, tags, or targetAudience.",
+      });
+    }
+
+    if (!parsedSpeakers || parsedSpeakers.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "At least one guest speaker is required.",
+      });
+    }
+
+    // =====================================================
+    // 3. DATE VALIDATIONS
+    // =====================================================
     const eventStartDate = new Date(startDateTime);
-
     const eventEndDate = new Date(endDateTime);
-
     const deadlineDate = new Date(registrationDeadline);
 
-    // =====================================================
-    // VALIDATE EVENT START DATE
-    // =====================================================
-
-    if (isNaN(eventStartDate.getTime())) {
+    if (
+      isNaN(eventStartDate.getTime()) ||
+      isNaN(eventEndDate.getTime()) ||
+      isNaN(deadlineDate.getTime())
+    ) {
       return res.status(400).json({
         success: false,
-        message: "Invalid event start date and time",
+        message: "Invalid date or time provided.",
       });
     }
-
-    // =====================================================
-    // VALIDATE EVENT END DATE
-    // =====================================================
-
-    if (isNaN(eventEndDate.getTime())) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid event end date and time",
-      });
-    }
-
-    // =====================================================
-    // VALIDATE REGISTRATION DEADLINE
-    // =====================================================
-
-    if (isNaN(deadlineDate.getTime())) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid registration deadline",
-      });
-    }
-
-    // =====================================================
-    // EVENT END MUST BE AFTER EVENT START
-    // =====================================================
 
     if (eventEndDate <= eventStartDate) {
       return res.status(400).json({
         success: false,
-        message:
-          "Event end date and time must be after event start date and time",
+        message: "Event end time must be after the start time.",
       });
     }
-
-    // =====================================================
-    // REGISTRATION DEADLINE MUST BE BEFORE EVENT START
-    // =====================================================
 
     if (deadlineDate >= eventStartDate) {
       return res.status(400).json({
         success: false,
-        message:
-          "Registration deadline must be before event start date and time",
+        message: "Registration deadline must be before the event starts.",
       });
     }
 
     // =====================================================
-    // UPLOADED BANNER IMAGE
+    // 4. PROCESS FILE UPLOADS
     // =====================================================
 
+    // Banner Image
     const bannerImage = req.files?.bannerImage?.[0]
       ? `/uploads/${req.files.bannerImage[0].filename}`
       : "";
 
-    // =====================================================
-    // UPLOADED SPEAKER IMAGE
-    // =====================================================
+    // Speaker Images Array
+    const speakerFiles = req.files?.speakerImages || [];
 
-    const speakerImage = req.files?.speakerImage?.[0]
-      ? `/uploads/${req.files.speakerImage[0].filename}`
-      : "";
+    // Map profile photos to their respective speakers
+    const finalSpeakers = parsedSpeakers.map((spk, index) => {
+      let profileImage = spk.existingImage || "";
+      if (speakerFiles[index]) {
+        profileImage = `/uploads/${speakerFiles[index].filename}`;
+      }
 
-    // =====================================================
-    // AUTOMATIC EVENT STATUS
-    // =====================================================
-    //
-    // At creation time:
-    //
-    // If event has already ended:
-    //     Completed
-    //
-    // If event is currently running:
-    //     Live
-    //
-    // If registration deadline has passed:
-    //     Registration Closed
-    //
-    // Otherwise:
-    //     Upcoming
-    //
-    // =====================================================
-
-    const now = new Date();
-
-    let status = "Upcoming";
-
-    if (now >= eventEndDate) {
-      status = "Completed";
-    } else if (now >= eventStartDate && now < eventEndDate) {
-      status = "Live";
-    } else if (now >= deadlineDate) {
-      status = "Registration Closed";
-    }
-
-    // =====================================================
-    // CREATE EVENT
-    // =====================================================
-
-    const event = await Event.create({
-      // ===================================================
-      // BASIC EVENT INFORMATION
-      // ===================================================
-
-      title: title.trim(),
-
-      description: description.trim(),
-
-      // ===================================================
-      // EVENT BANNER
-      // ===================================================
-
-      bannerImage,
-
-      // ===================================================
-      // EVENT DATE & TIME
-      // Matches Event Schema
-      // ===================================================
-
-      startDateTime: eventStartDate,
-
-      endDateTime: eventEndDate,
-
-      // ===================================================
-      // SPEAKER INFORMATION
-      // ===================================================
-
-      speaker: speaker.trim(),
-
-      speakerImage,
-
-      speakerRole: speakerRole?.trim() || "",
-
-      speakerCompany: speakerCompany?.trim() || "",
-
-      speakerBio: speakerBio?.trim() || "",
-
-      speakerExperience: speakerExperience?.trim() || "",
-
-      // ===================================================
-      // REGISTRATION DEADLINE
-      // Matches Event Schema
-      // ===================================================
-
-      registrationDeadline: deadlineDate,
-
-      // ===================================================
-      // AUTOMATIC STATUS
-      // ===================================================
-
-      status,
+      return {
+        name: spk.name?.trim(),
+        title: spk.title?.trim(),
+        organization: spk.organization?.trim(),
+        bio: spk.bio?.trim() || "",
+        linkedinUrl: spk.linkedinUrl?.trim() || "",
+        profileImage,
+      };
     });
 
     // =====================================================
-    // SUCCESS RESPONSE
+    // 5. AUTO GENERATE SLUG
     // =====================================================
+    const baseSlug = title
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)+/g, "");
+    const slug = `${baseSlug}-${Date.now()}`;
+
+    // =====================================================
+    // 6. CREATE EVENT IN DATABASE
+    // =====================================================
+    const newEvent = await Event.create({
+      title: title.trim(),
+      slug,
+      shortSummary: shortSummary?.trim() || "",
+      description: description.trim(),
+      domain: domain.trim(),
+      tags: parsedTags,
+      bannerImage,
+      createdByAdmin: req.user?._id, // Set by `protect` middleware
+      speakers: finalSpeakers,
+      targetAudience: parsedTargetAudience,
+      eventType: eventType || "Guest Lecture",
+      meetingUrl: meetingUrl?.trim() || "",
+      startDateTime: eventStartDate,
+      endDateTime: eventEndDate,
+      registrationDeadline: deadlineDate,
+      maxSeats: Number(maxSeats) || 100,
+      isPaid: isPaid === "true" || isPaid === true,
+      ticketPrice: isPaid ? Number(ticketPrice) || 0 : 0,
+      status: status || "Published",
+      isFeatured: isFeatured === "true" || isFeatured === true,
+    });
 
     return res.status(201).json({
       success: true,
-
       message: "Event created successfully",
-
-      event,
+      event: newEvent,
     });
   } catch (error) {
-    console.error("Create Event Error:", error);
-
+    console.error("Create Event Controller Error:", error);
     return res.status(500).json({
       success: false,
-
       message: "Failed to create event",
-
       error: error.message,
     });
   }
@@ -279,15 +219,10 @@ export const getAllEvents = async (req, res) => {
 export const getEventById = async (req, res) => {
   try {
     const { id } = req.params;
+    const studentId = req.user?.id || req.user?._id;
 
-    // Logged-in student ID
-    const studentId = req.user?.id;
-
-    // Find event
-    const event = await Event.findById(id).populate(
-      "createdBy",
-      "firstName lastName email"
-    );
+    // Fetch Event (No populate on 'createdBy' since schema uses createdByAdmin string)
+    const event = await Event.findById(id).lean();
 
     if (!event) {
       return res.status(404).json({
@@ -296,10 +231,7 @@ export const getEventById = async (req, res) => {
       });
     }
 
-    // =====================================================
-    // CHECK WHETHER CURRENT STUDENT IS REGISTERED
-    // =====================================================
-
+    // Check whether student is registered
     let isRegistered = false;
     let registration = null;
 
@@ -308,18 +240,14 @@ export const getEventById = async (req, res) => {
         event: event._id,
         student: studentId,
         status: "Registered",
-      }).select("_id event student status attended registeredAt joinedAt");
+      }).select("_id event student status attended createdAt joinedAt");
 
       if (registration) {
         isRegistered = true;
       }
     }
 
-    // =====================================================
-    // RESPONSE
-    // =====================================================
-
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       event,
       isRegistered,
@@ -327,10 +255,9 @@ export const getEventById = async (req, res) => {
     });
   } catch (error) {
     console.error("Get Event Error:", error);
-
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
-      message: "Failed to fetch event",
+      message: "Failed to fetch event details",
       error: error.message,
     });
   }
@@ -344,374 +271,173 @@ export const getEventById = async (req, res) => {
 export const updateEvent = async (req, res) => {
   try {
     const { id } = req.params;
-
     const {
       title,
+      slug,
+      shortSummary,
       description,
-
-      startDate,
-      startTime,
-
-      endDate,
-      endTime,
-
-      speaker,
-      speakerRole,
-      speakerCompany,
-      speakerBio,
-      speakerExperience,
-
-      registrationDeadlineDate,
-      registrationDeadlineTime,
-
+      domain,
+      eventType,
+      meetingUrl,
+      recordingUrl,
+      createdByAdmin,
+      tags,
+      targetAudience,
+      startDateTime,
+      endDateTime,
+      registrationDeadline,
+      maxSeats,
+      registeredStudentsCount,
+      isPaid,
+      ticketPrice,
       status,
+      isFeatured,
+      speakers,
+      existingBannerImage,
     } = req.body;
 
-    // =====================================================
-    // FIND EVENT
-    // =====================================================
-
-    const event = await Event.findById(id);
-
-    if (!event) {
+    const existingEvent = await Event.findById(id);
+    if (!existingEvent) {
       return res.status(404).json({
         success: false,
         message: "Event not found",
       });
     }
 
-    // =====================================================
-    // VALIDATE REQUIRED FIELDS
-    // =====================================================
+    // 1. Parse JSON Strings from FormData
+    let parsedSpeakers = [];
+    let parsedTags = [];
+    let parsedTargetAudience = {
+      experienceLevel: "All Levels",
+      prerequisites: [],
+    };
+
+    try {
+      parsedSpeakers =
+        typeof speakers === "string" ? JSON.parse(speakers) : speakers || [];
+      parsedTags = typeof tags === "string" ? JSON.parse(tags) : tags || [];
+      parsedTargetAudience =
+        typeof targetAudience === "string"
+          ? JSON.parse(targetAudience)
+          : targetAudience || parsedTargetAudience;
+    } catch (parseErr) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid JSON format for speakers, tags, or targetAudience.",
+      });
+    }
+
+    // 2. Validate Dates in Node.js before DB persistence
+    const start = new Date(startDateTime);
+    const end = new Date(endDateTime);
+    const deadline = new Date(registrationDeadline);
 
     if (
-      !title?.trim() ||
-      !description?.trim() ||
-      !startDate ||
-      !startTime ||
-      !endDate ||
-      !endTime ||
-      !speaker?.trim() ||
-      !registrationDeadlineDate ||
-      !registrationDeadlineTime
+      isNaN(start.getTime()) ||
+      isNaN(end.getTime()) ||
+      isNaN(deadline.getTime())
     ) {
       return res.status(400).json({
         success: false,
-        message:
-          "Title, description, event start date and time, event end date and time, speaker, and registration deadline are required",
+        message: "Invalid date format provided.",
       });
     }
 
-    // =====================================================
-    // CONVERT 12-HOUR TIME TO 24-HOUR TIME
-    // =====================================================
-
-    const convertTo24Hour = (time) => {
-      if (!time) {
-        return null;
-      }
-
-      const match = time.trim().match(/^(\d{1,2}):(\d{2})\s?(AM|PM)$/i);
-
-      if (!match) {
-        return null;
-      }
-
-      let hours = parseInt(match[1], 10);
-
-      const minutes = match[2];
-
-      const period = match[3].toUpperCase();
-
-      // =====================================================
-      // VALIDATE HOURS
-      // =====================================================
-
-      if (hours < 1 || hours > 12) {
-        return null;
-      }
-
-      // =====================================================
-      // CONVERT AM
-      // =====================================================
-
-      if (period === "AM" && hours === 12) {
-        hours = 0;
-      }
-
-      // =====================================================
-      // CONVERT PM
-      // =====================================================
-
-      if (period === "PM" && hours !== 12) {
-        hours += 12;
-      }
-
-      return `${String(hours).padStart(2, "0")}:${minutes}`;
-    };
-
-    // =====================================================
-    // CONVERT TIMES
-    // =====================================================
-
-    const startTime24 = convertTo24Hour(startTime);
-
-    const endTime24 = convertTo24Hour(endTime);
-
-    const registrationDeadlineTime24 = convertTo24Hour(
-      registrationDeadlineTime
-    );
-
-    // =====================================================
-    // VALIDATE START TIME
-    // =====================================================
-
-    if (!startTime24) {
+    if (end <= start) {
       return res.status(400).json({
         success: false,
-        message: "Invalid event start time. Use format like 10:30 AM",
+        message: "End time must be after start time.",
       });
     }
 
-    // =====================================================
-    // VALIDATE END TIME
-    // =====================================================
-
-    if (!endTime24) {
+    if (deadline >= start) {
       return res.status(400).json({
         success: false,
-        message: "Invalid event end time. Use format like 02:30 PM",
+        message: "Registration deadline must be before event start time.",
       });
     }
 
-    // =====================================================
-    // VALIDATE REGISTRATION DEADLINE TIME
-    // =====================================================
-
-    if (!registrationDeadlineTime24) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid registration deadline time. Use format like 11:59 PM",
-      });
-    }
-
-    // =====================================================
-    // CREATE COMBINED DATE OBJECTS
-    // =====================================================
-
-    const eventStartDate = new Date(`${startDate}T${startTime24}:00`);
-
-    const eventEndDate = new Date(`${endDate}T${endTime24}:00`);
-
-    const deadlineDate = new Date(
-      `${registrationDeadlineDate}T${registrationDeadlineTime24}:00`
-    );
-
-    // =====================================================
-    // VALIDATE EVENT START DATE
-    // =====================================================
-
-    if (isNaN(eventStartDate.getTime())) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid event start date or time",
-      });
-    }
-
-    // =====================================================
-    // VALIDATE EVENT END DATE
-    // =====================================================
-
-    if (isNaN(eventEndDate.getTime())) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid event end date or time",
-      });
-    }
-
-    // =====================================================
-    // VALIDATE REGISTRATION DEADLINE
-    // =====================================================
-
-    if (isNaN(deadlineDate.getTime())) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid registration deadline",
-      });
-    }
-
-    // =====================================================
-    // EVENT END MUST BE AFTER EVENT START
-    // =====================================================
-
-    if (eventEndDate <= eventStartDate) {
-      return res.status(400).json({
-        success: false,
-        message:
-          "Event end date and time must be after event start date and time",
-      });
-    }
-
-    // =====================================================
-    // REGISTRATION DEADLINE MUST BE BEFORE EVENT START
-    // =====================================================
-
-    if (deadlineDate >= eventStartDate) {
-      return res.status(400).json({
-        success: false,
-        message:
-          "Registration deadline must be before event start date and time",
-      });
-    }
-
-    // =====================================================
-    // UPDATE BASIC EVENT INFORMATION
-    // =====================================================
-
-    event.title = title.trim();
-
-    event.description = description.trim();
-
-    // =====================================================
-    // EVENT DATE & TIME
-    // Store exactly as received from frontend
-    // Example:
-    //
-    // startDate = 2026-08-15
-    // startTime = 10:30 AM
-    // endDate   = 2026-08-15
-    // endTime   = 02:30 PM
-    // =====================================================
-
-    event.startDate = startDate;
-
-    event.startTime = startTime;
-
-    event.endDate = endDate;
-
-    event.endTime = endTime;
-
-    // =====================================================
-    // OPTIONAL COMBINED DATETIME FIELDS
-    //
-    // These are useful for:
-    // - Automatic status
-    // - Event countdown
-    // - Checking whether event started
-    // - Checking whether event ended
-    // =====================================================
-
-    event.startDateTime = eventStartDate;
-
-    event.endDateTime = eventEndDate;
-
-    // =====================================================
-    // UPDATE SPEAKER INFORMATION
-    // =====================================================
-
-    event.speaker = speaker.trim();
-
-    event.speakerRole = speakerRole?.trim() || "";
-
-    event.speakerCompany = speakerCompany?.trim() || "";
-
-    event.speakerBio = speakerBio?.trim() || "";
-
-    event.speakerExperience = speakerExperience?.trim() || "";
-
-    // =====================================================
-    // UPDATE REGISTRATION DEADLINE
-    // Store date and 12-hour time separately
-    // =====================================================
-
-    event.registrationDeadlineDate = registrationDeadlineDate;
-
-    event.registrationDeadlineTime = registrationDeadlineTime;
-
-    // =====================================================
-    // AUTOMATIC EVENT STATUS
-    // =====================================================
-
-    const now = new Date();
-
-    // =====================================================
-    // EVENT ALREADY FINISHED
-    // =====================================================
-
-    if (now >= eventEndDate) {
-      event.status = "Completed";
-    }
-
-    // =====================================================
-    // EVENT IS CURRENTLY LIVE
-    // =====================================================
-    else if (now >= eventStartDate && now < eventEndDate) {
-      event.status = "Live";
-    }
-
-    // =====================================================
-    // REGISTRATION DEADLINE HAS PASSED
-    // =====================================================
-    else if (now >= deadlineDate && now < eventStartDate) {
-      event.status = "Registration Closed";
-    }
-
-    // =====================================================
-    // EVENT HAS NOT STARTED
-    // =====================================================
-    else {
-      // Keep manually selected status if provided
-      // Otherwise use Upcoming
-
-      event.status = status || "Upcoming";
-    }
-
-    // =====================================================
-    // UPDATE BANNER IMAGE
-    // =====================================================
-
+    // 3. Process Banner Image
+    let bannerImage = existingEvent.bannerImage;
     if (req.files?.bannerImage?.[0]) {
-      event.bannerImage = `/uploads/events/${req.files.bannerImage[0].filename}`;
+      bannerImage = `/uploads/${req.files.bannerImage[0].filename}`;
+    } else if (existingBannerImage !== undefined && !existingBannerImage) {
+      bannerImage = "";
     }
 
-    // =====================================================
-    // UPDATE SPEAKER IMAGE
-    // =====================================================
+    // 4. Process Dynamic Speaker Profile Images
+    const speakerFiles = req.files?.speakerImages || [];
+    let speakerFileIndex = 0;
 
-    if (req.files?.speakerImage?.[0]) {
-      event.speakerImage = `/uploads/events/${req.files.speakerImage[0].filename}`;
-    }
+    const updatedSpeakers = parsedSpeakers.map((spk) => {
+      let profileImage = spk.existingImage || "";
 
-    // =====================================================
-    // SAVE EVENT
-    // =====================================================
+      // If a new photo file was uploaded for this speaker slot
+      if (
+        (!spk.existingImage || spk.profileImage === null) &&
+        speakerFiles[speakerFileIndex]
+      ) {
+        profileImage = `/uploads/${speakerFiles[speakerFileIndex].filename}`;
+        speakerFileIndex++;
+      }
 
-    await event.save();
+      return {
+        name: spk.name?.trim(),
+        title: spk.title?.trim(),
+        organization: spk.organization?.trim(),
+        bio: spk.bio?.trim() || "",
+        linkedinUrl: spk.linkedinUrl?.trim() || "",
+        profileImage,
+      };
+    });
 
-    // =====================================================
-    // SUCCESS RESPONSE
-    // =====================================================
+    // 5. Explicitly Update Event Document
+    const updatedEvent = await Event.findByIdAndUpdate(
+      id,
+      {
+        title: title?.trim(),
+        slug: slug?.trim() || existingEvent.slug,
+        shortSummary: shortSummary?.trim() || "",
+        description: description?.trim(),
+        domain: domain?.trim(),
+        eventType: eventType || "Guest Lecture",
+        meetingUrl: meetingUrl?.trim() || "",
+        recordingUrl: recordingUrl?.trim() || "",
+        createdByAdmin: createdByAdmin?.trim() || "Guideex Admin",
+        tags: parsedTags,
+        targetAudience: parsedTargetAudience,
+        speakers: updatedSpeakers,
+        startDateTime: start,
+        endDateTime: end,
+        registrationDeadline: deadline,
+        maxSeats: Number(maxSeats) || 100,
+        registeredStudentsCount: Number(registeredStudentsCount) || 0,
+        isPaid: isPaid === "true" || isPaid === true,
+        ticketPrice: isPaid ? Number(ticketPrice) || 0 : 0,
+        status: status || "Draft",
+        isFeatured: isFeatured === "true" || isFeatured === true,
+        bannerImage,
+      },
+      {
+        returnDocument: "after", // Modern Mongoose option (replaces deprecating new: true)
+        runValidators: false, // Bypasses Mongoose context validator bug on update
+      }
+    );
 
     return res.status(200).json({
       success: true,
-
       message: "Event updated successfully",
-
-      event,
+      event: updatedEvent,
     });
   } catch (error) {
     console.error("Update Event Error:", error);
-
     return res.status(500).json({
       success: false,
-
       message: "Failed to update event",
-
       error: error.message,
     });
   }
 };
-
 
 // ==========================================
 // DELETE EVENT
@@ -843,141 +569,52 @@ export const registerForEvent = async (req, res) => {
 
 export const getUpcomingEvents = async (req, res) => {
   try {
-    const now = new Date();
-
-    // =====================================================
-    // GET LOGGED-IN STUDENT ID
-    // =====================================================
-
-    // Change this according to your protect middleware.
-    // Usually req.user._id contains the logged-in student ID.
     const studentId = req.user?.id;
 
-    // =====================================================
-    // 1. MARK ENDED EVENTS AS COMPLETED
-    // =====================================================
-
-    await Event.updateMany(
-      {
-        endDateTime: { $lte: now },
-        status: {
-          $nin: ["Cancelled", "Completed"],
-        },
-      },
-      {
-        $set: {
-          status: "Completed",
-        },
-      }
-    );
-
-    // =====================================================
-    // 2. MARK CURRENTLY RUNNING EVENTS AS LIVE
-    // =====================================================
-
-    await Event.updateMany(
-      {
-        startDateTime: { $lte: now },
-        endDateTime: { $gt: now },
-        status: {
-          $nin: ["Cancelled", "Completed"],
-        },
-      },
-      {
-        $set: {
-          status: "Live",
-        },
-      }
-    );
-
-    // =====================================================
-    // 3. MARK REGISTRATION CLOSED
-    // =====================================================
-
-    await Event.updateMany(
-      {
-        registrationDeadline: { $lte: now },
-        startDateTime: { $gt: now },
-        status: "Upcoming",
-      },
-      {
-        $set: {
-          status: "Registration Closed",
-        },
-      }
-    );
-
-    // =====================================================
-    // 4. FETCH EVENTS
-    // =====================================================
-
     const events = await Event.find({
-      startDateTime: {
-        $exists: true,
-      },
+      status: "Published",
+      startDateTime: { $exists: true },
     })
-      .sort({
-        startDateTime: 1,
-      })
-      .lean();
+      .sort({ startDateTime: 1 })
+      .lean({ virtuals: true }); // Crucial: Ensures virtual computedStatus is included in lean()
 
     // =====================================================
-    // 5. GET EVENT IDS
+    // 2. GET EVENT IDS
     // =====================================================
-
     const eventIds = events.map((event) => event._id);
 
     // =====================================================
-    // 6. GET REGISTRATION COUNTS
-    //
-    // Only active "Registered" registrations are counted.
-    // Cancelled registrations are not counted.
+    // 3. GET ACTIVE REGISTRATION COUNTS
     // =====================================================
-
     const registrationCounts = await EventRegistration.aggregate([
       {
         $match: {
-          event: {
-            $in: eventIds,
-          },
+          event: { $in: eventIds },
           status: "Registered",
         },
       },
       {
         $group: {
           _id: "$event",
-          count: {
-            $sum: 1,
-          },
+          count: { $sum: 1 },
         },
       },
     ]);
 
-    // =====================================================
-    // 7. CREATE REGISTRATION COUNT MAP
-    // =====================================================
-
     const registrationCountMap = {};
-
     registrationCounts.forEach((item) => {
       registrationCountMap[item._id.toString()] = item.count;
     });
 
     // =====================================================
-    // 8. GET CURRENT STUDENT REGISTRATIONS
-    //
-    // This checks which events the logged-in student
-    // has already registered for.
+    // 4. GET CURRENT STUDENT REGISTRATIONS
     // =====================================================
-
     let registeredEventIds = [];
 
     if (studentId) {
       const registrations = await EventRegistration.find({
         student: studentId,
-        event: {
-          $in: eventIds,
-        },
+        event: { $in: eventIds },
         status: "Registered",
       })
         .select("event")
@@ -988,44 +625,50 @@ export const getUpcomingEvents = async (req, res) => {
       );
     }
 
-    // =====================================================
-    // 9. CREATE REGISTERED EVENT SET
-    //
-    // Set makes lookup faster.
-    // =====================================================
-
     const registeredEventSet = new Set(registeredEventIds);
 
     // =====================================================
-    // 10. ADD REGISTRATION DATA TO EACH EVENT
+    // 5. MERGE DATA & ATTACH COMPUTED STATUS
     // =====================================================
-
-    const eventsWithRegistrationData = events.map((event) => {
+    const eventsWithData = events.map((event) => {
       const eventId = event._id.toString();
+      const currentRegisteredCount = registrationCountMap[eventId] || 0;
+
+      // Calculate runtime timeline status if virtual isn't automatically bound by lean()
+      const now = new Date();
+      let computed = event.computedStatus;
+
+      if (!computed) {
+        if (event.status === "Cancelled") computed = "Cancelled";
+        else if (now > new Date(event.endDateTime)) computed = "Completed";
+        else if (
+          now >= new Date(event.startDateTime) &&
+          now <= new Date(event.endDateTime)
+        )
+          computed = "Live Now";
+        else if (now > new Date(event.registrationDeadline))
+          computed = "Registration Closed";
+        else if (currentRegisteredCount >= (event.maxSeats || 100))
+          computed = "Housefull";
+        else computed = "Upcoming";
+      }
 
       return {
         ...event,
-
-        // Total active registrations
-        registeredCount: registrationCountMap[eventId] || 0,
-
-        // Current student registration status
+        registeredCount: currentRegisteredCount,
         isRegistered: registeredEventSet.has(eventId),
+        // Use computedStatus as the primary display status for students
+        displayStatus: computed,
       };
     });
 
-    // =====================================================
-    // 11. RETURN RESPONSE
-    // =====================================================
-
     return res.status(200).json({
       success: true,
-      count: eventsWithRegistrationData.length,
-      events: eventsWithRegistrationData,
+      count: eventsWithData.length,
+      events: eventsWithData,
     });
   } catch (error) {
     console.error("Get Upcoming Events Error:", error);
-
     return res.status(500).json({
       success: false,
       message: "Failed to fetch events",
@@ -1033,7 +676,6 @@ export const getUpcomingEvents = async (req, res) => {
     });
   }
 };
-
 
 export const completeEvent = async (req, res) => {
   try {
@@ -1089,11 +731,21 @@ export const completeEvent = async (req, res) => {
 
 
 
-export const getEventDetails = async (req, res) => {
+
+export const getEventDetailsById = async (req, res) => {
   try {
     const { id } = req.params;
+    const studentId = req.user?.id;
 
-    const event = await Event.findById(id).lean();
+    // Validate if ID is a valid MongoDB ObjectId
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid Event ID format",
+      });
+    }
+
+    const event = await Event.findById(id).lean({ virtuals: true });
 
     if (!event) {
       return res.status(404).json({
@@ -1102,71 +754,56 @@ export const getEventDetails = async (req, res) => {
       });
     }
 
-    // =====================================================
-    // FIND EVENT REGISTRATIONS
-    // =====================================================
+    const registrations = await EventRegistration.find({ event: id }).populate(
+      "student",
+      "firstName lastName email education careerGoal profileImage"
+    );
 
-    const registrations = await EventRegistration.find({
-      event: id,
-    })
-      .populate({
-        path: "student",
-        select:
-          "firstName lastName name email phone profileImage avatar college university course branch yearOfStudy",
-      })
-      .sort({
-        registeredAt: -1,
-      })
-      .lean();
-
-    // =====================================================
-    // STATISTICS
-    // =====================================================
-
+    // Compute statistics server-side to match the frontend expectations
     const totalRegistrations = registrations.length;
-
     const registeredCount = registrations.filter(
-      (registration) => registration.status === "Registered"
+      (r) => r.status === "Registered"
     ).length;
-
     const cancelledCount = registrations.filter(
-      (registration) => registration.status === "Cancelled"
+      (r) => r.status === "Cancelled"
     ).length;
-
     const attendedCount = registrations.filter(
-      (registration) => registration.attended === true
+      (r) => r.attended === true
     ).length;
-
     const notAttendedCount = registrations.filter(
-      (registration) =>
-        registration.status === "Registered" && registration.attended === false
+      (r) => r.attended === false
     ).length;
 
-    // =====================================================
-    // RESPONSE
-    // =====================================================
+    const statistics = {
+      totalRegistrations,
+      registeredCount,
+      cancelledCount,
+      attendedCount,
+      notAttendedCount,
+    };
 
-    return res.status(200).json({
+    const currentRegistration = registrations.find(
+      (reg) =>
+        reg.student &&
+        reg.student._id.toString() === studentId &&
+        reg.status === "Registered"
+    );
+
+    const isRegistered = !!currentRegistration;
+
+    res.status(200).json({
       success: true,
-
       event,
-
       registrations,
-
-      statistics: {
-        totalRegistrations,
-        registeredCount,
-        cancelledCount,
-        attendedCount,
-        notAttendedCount,
-      },
+      statistics,
+      isRegistered,
+      currentRegistration,
     });
   } catch (error) {
-    console.error("Get Admin Event Details Error:", error);
-
-    return res.status(500).json({
+    console.error("Detailed Server Error in getEventDetailsById:", error);
+    res.status(500).json({
       success: false,
-      message: "Failed to load event details",
+      message: "Failed to load event details and insights",
       error: error.message,
     });
   }
@@ -1178,21 +815,8 @@ export const updateEventStatus = async (req, res) => {
     const { id } = req.params;
     const { status } = req.body;
 
-    // =====================================================
-    // VALID STATUSES
-    // =====================================================
-
-    const allowedStatuses = [
-      "Upcoming",
-      "Registration Closed",
-      "Live",
-      "Completed",
-      "Cancelled",
-    ];
-
-    // =====================================================
-    // VALIDATE STATUS
-    // =====================================================
+    // Allowed database statuses in your Mongoose Schema
+    const allowedDatabaseStatuses = ["Draft", "Published", "Cancelled"];
 
     if (!status) {
       return res.status(400).json({
@@ -1201,43 +825,51 @@ export const updateEventStatus = async (req, res) => {
       });
     }
 
-    if (!allowedStatuses.includes(status)) {
+    // Map any loose/computed dropdown values if sent accidentally
+    let targetStatus = status;
+    if (
+      [
+        "Upcoming",
+        "Live Now",
+        "Registration Closed",
+        "Completed",
+        "Housefull",
+      ].includes(status)
+    ) {
+      targetStatus = "Published"; // Default active/live states to Published
+    }
+
+    if (!allowedDatabaseStatuses.includes(targetStatus)) {
       return res.status(400).json({
         success: false,
-        message: "Invalid event status",
-        allowedStatuses,
+        message: `Invalid status. Allowed database statuses are: ${allowedDatabaseStatuses.join(
+          ", "
+        )}`,
+        allowedDatabaseStatuses,
       });
     }
 
-    // =====================================================
-    // FIND EVENT
-    // =====================================================
+    // Find and update document cleanly
+    const updatedEvent = await Event.findByIdAndUpdate(
+      id,
+      { status: targetStatus },
+      {
+        returnDocument: "after",
+        runValidators: true,
+      }
+    );
 
-    const event = await Event.findById(id);
-
-    if (!event) {
+    if (!updatedEvent) {
       return res.status(404).json({
         success: false,
         message: "Event not found",
       });
     }
 
-    // =====================================================
-    // UPDATE STATUS
-    // =====================================================
-
-    event.status = status;
-
-    await event.save();
-
-    // =====================================================
-    // RESPONSE
-    // =====================================================
-
     return res.status(200).json({
       success: true,
-      message: `Event status changed to ${status}`,
-      event,
+      message: `Event status updated to ${targetStatus}`,
+      event: updatedEvent,
     });
   } catch (error) {
     console.error("Update Event Status Error:", error);

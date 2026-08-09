@@ -21,23 +21,25 @@ import {
   Heart,
   Users,
   UserRound,
-  Mail,
-  ShieldCheck,
-  ShieldOff,
   BriefcaseBusiness,
   Brain,
   Target,
-  HardDrive,
-  Calendar,
+  Bookmark,
+  Layers,
+  Lock,
+  Star,
+  FolderArchive,
+  FileCode,
+  Tag,
+  Award,
+  ListChecks,
+  Lightbulb,
+  Video,
+  PlayCircle,
   UserCheck,
   Globe,
-  Database,
-  BarChart3,
   Image as ImageIcon,
-  Info,
-  Activity,
-  FileArchive,
-  Sparkles,
+  ChevronRight,
 } from "lucide-react";
 
 import { toast } from "react-toastify";
@@ -45,7 +47,7 @@ import { toast } from "react-toastify";
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 // =====================================================
-// GET TOKEN
+// AUTH TOKEN HELPER
 // =====================================================
 
 const getToken = () => {
@@ -57,12 +59,11 @@ const getToken = () => {
 };
 
 // =====================================================
-// FORMAT DATE
+// FORMAT HELPERS
 // =====================================================
 
 const formatDate = (date) => {
   if (!date) return "N/A";
-
   return new Date(date).toLocaleDateString("en-GB", {
     day: "2-digit",
     month: "short",
@@ -70,149 +71,90 @@ const formatDate = (date) => {
   });
 };
 
-// =====================================================
-// FORMAT DATE TIME
-// =====================================================
-
-const formatDateTime = (date) => {
-  if (!date) return "N/A";
-
-  return new Date(date).toLocaleString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-};
-
-// =====================================================
-// FORMAT FILE SIZE
-// =====================================================
-
 const formatFileSize = (bytes) => {
-  if (!bytes || bytes === 0) {
-    return "N/A";
-  }
-
-  if (bytes < 1024) {
-    return `${bytes} Bytes`;
-  }
-
-  if (bytes < 1024 * 1024) {
-    return `${(bytes / 1024).toFixed(2)} KB`;
-  }
-
-  if (bytes < 1024 * 1024 * 1024) {
+  if (!bytes || bytes === 0) return "N/A";
+  if (bytes < 1024) return `${bytes} Bytes`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(2)} KB`;
+  if (bytes < 1024 * 1024 * 1024)
     return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
-  }
-
   return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
 };
 
-// =====================================================
-// CATEGORY ICON
-// =====================================================
+const formatSecondsToMinutes = (seconds) => {
+  if (!seconds || seconds === 0) return "N/A";
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return secs > 0 ? `${mins}m ${secs}s` : `${mins} mins`;
+};
 
 const getCategoryIcon = (category) => {
   switch (category) {
     case "Interview Preparation":
       return Target;
-
     case "Coding Roadmaps":
       return Code2;
-
     case "Resume Templates":
       return FileText;
-
     case "Career Guidance":
       return BriefcaseBusiness;
-
     case "Skill Development":
       return Brain;
-
+    case "System Design":
+      return Layers;
     default:
       return BookOpen;
   }
 };
-
-// =====================================================
-// RESOURCE ICON
-// =====================================================
 
 const getResourceIcon = (type) => {
   switch (type) {
     case "PDF":
       return FileText;
-
     case "External Link":
       return LinkIcon;
-
-    case "File":
+    case "Interactive Guide":
+      return Sparkles;
+    case "Video Course":
+      return Layers;
+    case "Template Pack":
       return File;
-
     default:
       return BookOpen;
   }
 };
 
-// =====================================================
-// IMAGE URL
-// =====================================================
-
-const getImageUrl = (imagePath) => {
-  if (!imagePath) {
-    return "";
-  }
-
-  if (
-    imagePath.startsWith("http://") ||
-    imagePath.startsWith("https://")
-  ) {
-    return imagePath;
-  }
-
-  return `${API_BASE_URL.replace(/\/$/, "")}/${imagePath.replace(
-    /^\//,
-    ""
-  )}`;
+const getImageUrl = (imageObj) => {
+  if (!imageObj) return "";
+  const path = typeof imageObj === "string" ? imageObj : imageObj.url;
+  if (!path) return "";
+  if (path.startsWith("http://") || path.startsWith("https://")) return path;
+  return `${API_BASE_URL.replace(/\/$/, "")}/${path.replace(/^\//, "")}`;
 };
 
 // =====================================================
-// ADMIN RESOURCE DETAILS
+// MAIN COMPONENT
 // =====================================================
 
 const AdminResourceDetails = () => {
   const navigate = useNavigate();
-
   const { id } = useParams();
 
-  // =====================================================
-  // STATES
-  // =====================================================
-
   const [resource, setResource] = useState(null);
-
   const [loading, setLoading] = useState(true);
-
   const [error, setError] = useState("");
-
   const [deleting, setDeleting] = useState(false);
-
   const [updatingStatus, setUpdatingStatus] = useState(false);
 
   // =====================================================
-  // FETCH RESOURCE
+  // FETCH RESOURCE DETAILS
   // =====================================================
 
   const fetchResource = async () => {
     try {
       setLoading(true);
-
       setError("");
 
       const token = getToken();
-
       const response = await fetch(
         `${API_BASE_URL}/api/resources/details/${id}`,
         {
@@ -225,38 +167,21 @@ const AdminResourceDetails = () => {
 
       const data = await response.json();
 
-      console.log("Resource Details:", data);
-
       if (!response.ok) {
-        throw new Error(
-          data.message || "Failed to fetch resource details"
-        );
+        throw new Error(data.message || "Failed to fetch resource details");
       }
 
       setResource(data.resource);
-    } catch (error) {
-      console.error(
-        "Fetch resource details error:",
-        error
-      );
-
-      setError(
-        error.message ||
-          "Failed to load resource details"
-      );
+    } catch (err) {
+      console.error("Fetch details error:", err);
+      setError(err.message || "Failed to load resource details");
     } finally {
       setLoading(false);
     }
   };
 
-  // =====================================================
-  // INITIAL FETCH
-  // =====================================================
-
   useEffect(() => {
-    if (id) {
-      fetchResource();
-    }
+    if (id) fetchResource();
   }, [id]);
 
   // =====================================================
@@ -264,23 +189,16 @@ const AdminResourceDetails = () => {
   // =====================================================
 
   const handleDelete = async () => {
-    if (!resource?._id) {
-      return;
-    }
-
+    if (!resource?._id) return;
     const confirmed = window.confirm(
       "Are you sure you want to permanently delete this resource?"
     );
 
-    if (!confirmed) {
-      return;
-    }
+    if (!confirmed) return;
 
     try {
       setDeleting(true);
-
       const token = getToken();
-
       const response = await fetch(
         `${API_BASE_URL}/api/resources/delete/${resource._id}`,
         {
@@ -292,29 +210,15 @@ const AdminResourceDetails = () => {
       );
 
       const data = await response.json();
-
       if (!response.ok) {
-        throw new Error(
-          data.message ||
-            "Failed to delete resource"
-        );
+        throw new Error(data.message || "Failed to delete resource");
       }
 
-      toast.success(
-        "Resource deleted successfully"
-      );
-
+      toast.success("Resource deleted successfully");
       navigate("/admin/careerResources");
-    } catch (error) {
-      console.error(
-        "Delete resource error:",
-        error
-      );
-
-      toast.error(
-        error.message ||
-          "Failed to delete resource"
-      );
+    } catch (err) {
+      console.error("Delete error:", err);
+      toast.error(err.message || "Failed to delete resource");
     } finally {
       setDeleting(false);
     }
@@ -325,15 +229,11 @@ const AdminResourceDetails = () => {
   // =====================================================
 
   const handleToggleStatus = async () => {
-    if (!resource?._id) {
-      return;
-    }
+    if (!resource?._id) return;
 
     try {
       setUpdatingStatus(true);
-
       const token = getToken();
-
       const response = await fetch(
         `${API_BASE_URL}/api/resources/toggle-status/${resource._id}`,
         {
@@ -345,279 +245,147 @@ const AdminResourceDetails = () => {
       );
 
       const data = await response.json();
-
       if (!response.ok) {
-        throw new Error(
-          data.message ||
-            "Failed to update resource status"
-        );
+        throw new Error(data.message || "Failed to update resource status");
       }
 
-      toast.success(
-        "Resource status updated"
-      );
-
-      setResource(
-        data.resource || resource
-      );
-
+      toast.success("Resource status updated");
+      setResource(data.resource || resource);
       await fetchResource();
-    } catch (error) {
-      console.error(
-        "Toggle status error:",
-        error
-      );
-
-      toast.error(
-        error.message ||
-          "Failed to update resource status"
-      );
+    } catch (err) {
+      console.error("Toggle status error:", err);
+      toast.error(err.message || "Failed to update status");
     } finally {
       setUpdatingStatus(false);
     }
   };
 
   // =====================================================
-  // OPEN RESOURCE
+  // ACTION HELPERS
   // =====================================================
 
- const handleOpenResource = () => {
-   if (!resource) {
-     toast.error("Resource information is not available");
-     return;
-   }
-
-   let url = "";
-
-   // External Link
-   if (resource.resourceType === "External Link") {
-     url = resource.externalUrl?.trim();
-   }
-   // Uploaded PDF / File
-   else {
-     const filePath = resource.fileUrl?.trim();
-
-     if (filePath) {
-       // Already a complete URL
-       if (filePath.startsWith("http://") || filePath.startsWith("https://")) {
-         url = filePath;
-       } else {
-         // Convert relative path into backend URL
-         url = `${API_BASE_URL.replace(/\/$/, "")}/${filePath.replace(
-           /^\//,
-           ""
-         )}`;
-       }
-     }
-   }
-
-   if (!url) {
-     toast.error("Resource URL is not available");
-     return;
-   }
-
-   console.log("Opening resource:", url);
-
-   window.open(url, "_blank", "noopener,noreferrer");
- };
-
-  // =====================================================
-  // COPY URL
-  // =====================================================
-
-const handleCopyUrl = async (url) => {
-  if (!url) {
-    toast.error("URL is not available");
-    return;
-  }
-
-  try {
-    let finalUrl = url.trim();
-
-    // External URL or already complete URL
-    if (!finalUrl.startsWith("http://") && !finalUrl.startsWith("https://")) {
-      // Remove /api from API_BASE_URL if it exists
-      const BACKEND_URL = API_BASE_URL.replace(/\/api\/?$/, "");
-
-      // Build complete file URL
-      finalUrl = `${BACKEND_URL}/${finalUrl.replace(/^\//, "")}`;
+  const handleCopyUrl = async (url) => {
+    if (!url) {
+      toast.error("URL is not available");
+      return;
     }
 
-    await navigator.clipboard.writeText(finalUrl);
-
-    toast.success("Resource URL copied to clipboard");
-  } catch (error) {
-    console.error("Copy URL error:", error);
-
-    toast.error("Unable to copy URL");
-  }
-};
+    try {
+      let finalUrl = url.trim();
+      if (!finalUrl.startsWith("http://") && !finalUrl.startsWith("https://")) {
+        const BACKEND_URL = API_BASE_URL.replace(/\/api\/?$/, "");
+        finalUrl = `${BACKEND_URL}/${finalUrl.replace(/^\//, "")}`;
+      }
+      await navigator.clipboard.writeText(finalUrl);
+      toast.success("URL copied to clipboard");
+    } catch (err) {
+      toast.error("Unable to copy URL");
+    }
+  };
 
   // =====================================================
-  // LOADING
+  // LOADING / ERROR STATES
   // =====================================================
 
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-50 p-4 sm:p-6 lg:p-8">
         <div className="mx-auto max-w-7xl">
-
           <div className="mb-6 h-10 w-40 animate-pulse rounded-xl bg-white" />
-
           <div className="h-72 animate-pulse rounded-3xl bg-white" />
-
-          <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
-            {[1, 2, 3, 4].map((item) => (
+          <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-5">
+            {[1, 2, 3, 4, 5].map((i) => (
               <div
-                key={item}
-                className="h-28 animate-pulse rounded-2xl bg-white"
+                key={i}
+                className="h-24 animate-pulse rounded-2xl bg-white"
               />
             ))}
           </div>
-
           <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
             <div className="h-96 animate-pulse rounded-3xl bg-white lg:col-span-2" />
-
             <div className="h-96 animate-pulse rounded-3xl bg-white" />
           </div>
-
         </div>
       </div>
     );
   }
-
-  // =====================================================
-  // ERROR
-  // =====================================================
 
   if (error || !resource) {
     return (
       <div className="min-h-screen bg-slate-50 p-6">
-        <div className="mx-auto max-w-3xl">
-
+        <div className="mx-auto max-w-3xl text-center">
           <button
-            onClick={() =>
-              navigate(
-                "/admin/careerResources"
-              )
-            }
+            onClick={() => navigate("/admin/careerResources")}
             className="mb-6 inline-flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-indigo-600"
           >
-            <ArrowLeft size={18} />
-            Back to Resources
+            <ArrowLeft size={18} /> Back to Resources
           </button>
-
-          <div className="rounded-3xl border border-red-200 bg-white p-10 text-center shadow-sm">
-
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-red-50 text-red-600">
-              <FileText size={28} />
-            </div>
-
-            <h2 className="mt-5 text-xl font-bold text-slate-900">
+          <div className="rounded-3xl border border-red-200 bg-white p-10 shadow-sm">
+            <FileText size={40} className="mx-auto text-red-500" />
+            <h2 className="mt-4 text-xl font-bold text-slate-900">
               Resource Not Found
             </h2>
-
             <p className="mt-2 text-sm text-slate-500">
-              {error ||
-                "The requested resource could not be found."}
+              {error || "Requested resource could not be loaded."}
             </p>
-
-            <button
-              onClick={() =>
-                navigate(
-                  "/admin/careerResources"
-                )
-              }
-              className="mt-6 inline-flex h-11 items-center gap-2 rounded-xl bg-indigo-600 px-5 text-sm font-semibold text-white hover:bg-indigo-700"
-            >
-              <ArrowLeft size={17} />
-              Back to Resources
-            </button>
-
           </div>
         </div>
       </div>
     );
   }
 
-  // =====================================================
-  // ICONS
-  // =====================================================
+  // Extract schema values safely
+  const ResourceIcon = getResourceIcon(resource.resourceType);
+  const CategoryIcon = getCategoryIcon(resource.category);
 
-  const ResourceIcon = getResourceIcon(
-    resource.resourceType
-  );
+  const thumbnailUrl = getImageUrl(resource.thumbnail);
+  const bannerUrl = getImageUrl(resource.bannerImage);
 
-  const CategoryIcon = getCategoryIcon(
-    resource.category
-  );
+  const authorName =
+    resource.author?.name || resource.authorName || "GuideX Team";
+  const authorRole =
+    resource.author?.role || resource.authorRole || "Career & Learning";
+  const authorBio = resource.author?.bio || "";
+  const authorAvatar = getImageUrl(resource.author?.avatar);
 
-  const thumbnailUrl = getImageUrl(
-    resource.thumbnail
-  );
+  const metrics = {
+    views: resource.metrics?.viewsCount ?? resource.views ?? 0,
+    downloads: resource.metrics?.downloadsCount ?? resource.downloads ?? 0,
+    likes: resource.metrics?.likesCount ?? resource.likes ?? 0,
+    saves: resource.metrics?.savesCount ?? 0,
+  };
 
-  const resourceUrl =
-    resource.resourceType ===
-    "External Link"
-      ? resource.externalUrl
-      : resource.fileUrl;
-
-  // =====================================================
-  // ENGAGEMENT
-  // =====================================================
-
-  const likedStudents =
-    resource.likedBy || [];
-
-  const downloadedStudents =
-    resource.downloadedBy || [];
-
-  const studentsEngaged = Math.max(
-    likedStudents.length,
-    downloadedStudents.length
-  );
-
-  // =====================================================
-  // RENDER
-  // =====================================================
+  const likedStudents = resource.likedBy || [];
+  const downloadedStudents = resource.downloadedBy || [];
+  const savedStudents = resource.savedBy || [];
 
   return (
     <div className="min-h-screen bg-slate-50 p-4 sm:p-6 lg:p-8">
       <div className="mx-auto max-w-7xl">
-        {/* ================================================= */}
-        {/* TOP NAVIGATION */}
-        {/* ================================================= */}
-
-        <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+        {/* TOP BAR */}
+        <div className="mb-6 flex items-center justify-between">
           <button
             onClick={() => navigate("/admin/careerResources")}
             className="inline-flex items-center gap-2 text-sm font-semibold text-slate-600 transition hover:text-indigo-600"
           >
-            <ArrowLeft size={18} />
-            Back to Resources
+            <ArrowLeft size={18} /> Back to Resources
           </button>
 
           <button
             onClick={fetchResource}
             disabled={loading}
-            className="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-600 shadow-sm transition hover:bg-slate-50 disabled:opacity-50"
+            className="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-600 shadow-sm transition hover:bg-slate-50"
           >
-            <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
+            <RefreshCw size={16} className={loading ? "animate-spin" : ""} />{" "}
             Refresh
           </button>
         </div>
 
-        {/* ================================================= */}
-        {/* HERO RESOURCE CARD */}
-        {/* ================================================= */}
-
+        {/* HERO BANNER CARD */}
         <div className="mb-6 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
           <div className="grid grid-cols-1 lg:grid-cols-3">
-            {/* ================================================= */}
-            {/* THUMBNAIL */}
-            {/* ================================================= */}
-
-            <div className="relative min-h-[250px] overflow-hidden bg-gradient-to-br from-indigo-600 via-violet-600 to-purple-700 lg:min-h-full">
+            {/* THUMBNAIL / MEDIA COVER */}
+            <div className="relative min-h-[260px] bg-gradient-to-br from-indigo-600 via-violet-600 to-purple-700 lg:min-h-full">
               {thumbnailUrl ? (
                 <img
                   src={thumbnailUrl}
@@ -625,566 +393,657 @@ const handleCopyUrl = async (url) => {
                   className="absolute inset-0 h-full w-full object-cover"
                 />
               ) : (
-                <div className="flex h-full min-h-[250px] items-center justify-center">
-                  <div className="text-center text-white">
+                <div className="flex h-full min-h-[260px] items-center justify-center text-white">
+                  <div className="text-center">
                     <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-white/15 backdrop-blur-sm">
                       <ResourceIcon size={38} />
                     </div>
-
-                    <p className="mt-4 text-sm font-semibold text-white/80">
+                    <p className="mt-3 text-xs font-bold uppercase tracking-wider text-white/80">
                       {resource.resourceType}
                     </p>
                   </div>
                 </div>
               )}
 
-              {/* OVERLAY */}
-
-              <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
-
-              {/* CATEGORY */}
-
-              <div className="absolute left-5 top-5">
-                <span className="inline-flex items-center gap-2 rounded-full bg-white/95 px-3 py-2 text-xs font-bold text-indigo-700 shadow-lg">
-                  <CategoryIcon size={14} />
-
-                  {resource.category}
+              {/* COVER OVERLAY BADGES */}
+              <div className="absolute left-4 top-4 flex flex-col gap-2">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-white/95 px-3 py-1 text-xs font-bold text-indigo-700 shadow-md">
+                  <CategoryIcon size={14} /> {resource.category}
                 </span>
+
+                {resource.isFeatured && (
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/95 px-3 py-1 text-xs font-bold text-white shadow-md">
+                    <Star size={12} className="fill-white" /> Featured
+                  </span>
+                )}
+
+                {resource.isPremium && (
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-900/90 px-3 py-1 text-xs font-bold text-white shadow-md">
+                    <Lock size={12} /> Premium Gated
+                  </span>
+                )}
               </div>
             </div>
 
-            {/* ================================================= */}
             {/* HERO CONTENT */}
-            {/* ================================================= */}
-
             <div className="p-6 sm:p-8 lg:col-span-2">
-              <div className="flex flex-col gap-6">
-                <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
-                  <div className="min-w-0">
-                    <div className="mb-4 flex flex-wrap items-center gap-2">
-                      <span
-                        className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-bold ${
-                          resource.status === "Published"
-                            ? "bg-emerald-50 text-emerald-700"
-                            : "bg-amber-50 text-amber-700"
-                        }`}
-                      >
-                        {resource.status === "Published" ? (
-                          <CheckCircle2 size={14} />
-                        ) : (
-                          <Clock3 size={14} />
-                        )}
+              <div className="flex flex-col justify-between space-y-6">
+                <div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span
+                      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold ${
+                        resource.status === "Published"
+                          ? "bg-emerald-50 text-emerald-700"
+                          : "bg-amber-50 text-amber-700"
+                      }`}
+                    >
+                      {resource.status === "Published" ? (
+                        <CheckCircle2 size={14} />
+                      ) : (
+                        <Clock3 size={14} />
+                      )}
+                      {resource.status}
+                    </span>
 
-                        {resource.status}
+                    <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-600">
+                      {resource.difficulty || "Beginner"}
+                    </span>
+
+                    {resource.subcategory && (
+                      <span className="rounded-full bg-violet-50 px-3 py-1 text-xs font-bold text-violet-700">
+                        {resource.subcategory}
                       </span>
+                    )}
 
-                      <span className="rounded-full bg-indigo-50 px-3 py-1.5 text-xs font-bold text-indigo-700">
-                        {resource.resourceType}
+                    {resource.estimatedDuration && (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-indigo-50 px-3 py-1 text-xs font-bold text-indigo-700">
+                        <Clock3 size={12} /> {resource.estimatedDuration}
                       </span>
-                    </div>
-
-                    <h1 className="break-words text-2xl font-black tracking-tight text-slate-900 sm:text-3xl lg:text-4xl">
-                      {resource.title}
-                    </h1>
-
-                    <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm text-slate-500">
-                      <span className="flex items-center gap-2">
-                        <CalendarDays size={16} className="text-indigo-500" />
-                        Created {formatDate(resource.createdAt)}
-                      </span>
-
-                      <span className="flex items-center gap-2">
-                        <UserRound size={16} className="text-indigo-500" />
-                        {resource.createdBy || "Admin"}
-                      </span>
-                    </div>
+                    )}
                   </div>
 
-                  {/* ACTIONS */}
+                  <h1 className="mt-3 text-2xl font-black text-slate-900 sm:text-3xl lg:text-4xl">
+                    {resource.title}
+                  </h1>
 
-                  <div className="flex flex-wrap gap-2">
-                    <button
-                      onClick={() =>
-                        navigate(`/admin/careerResources/edit/${resource._id}`)
-                      }
-                      className="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-bold text-slate-700 shadow-sm transition hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600"
-                    >
-                      <Pencil size={16} />
-                      Edit
-                    </button>
+                  {resource.subtitle && (
+                    <p className="mt-2 text-base font-medium text-slate-500">
+                      {resource.subtitle}
+                    </p>
+                  )}
 
-                    <button
-                      onClick={handleToggleStatus}
-                      disabled={updatingStatus}
-                      className="inline-flex h-10 items-center gap-2 rounded-xl bg-amber-50 px-4 text-sm font-bold text-amber-700 transition hover:bg-amber-100 disabled:opacity-50"
-                    >
-                      {updatingStatus ? (
-                        <RefreshCw size={16} className="animate-spin" />
-                      ) : resource.status === "Published" ? (
-                        <Clock3 size={16} />
-                      ) : (
-                        <CheckCircle2 size={16} />
-                      )}
-
-                      {resource.status === "Published" ? "Draft" : "Publish"}
-                    </button>
-
-                    <button
-                      onClick={handleDelete}
-                      disabled={deleting}
-                      className="inline-flex h-10 items-center gap-2 rounded-xl bg-red-50 px-4 text-sm font-bold text-red-600 transition hover:bg-red-100 disabled:opacity-50"
-                    >
-                      {deleting ? (
-                        <RefreshCw size={16} className="animate-spin" />
-                      ) : (
-                        <Trash2 size={16} />
-                      )}
-                      Delete
-                    </button>
+                  <div className="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-xs font-semibold text-slate-500">
+                    <span className="flex items-center gap-1.5">
+                      <CalendarDays size={15} className="text-indigo-500" />
+                      Created {formatDate(resource.createdAt)}
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                      <UserRound size={15} className="text-indigo-500" />
+                      {authorName} ({authorRole})
+                    </span>
+                    {resource.publishedAt && (
+                      <span className="flex items-center gap-1.5 text-emerald-600">
+                        <CheckCircle2 size={15} /> Published{" "}
+                        {formatDate(resource.publishedAt)}
+                      </span>
+                    )}
                   </div>
                 </div>
 
-                {/* DESCRIPTION */}
-
-                <div className="border-t border-slate-100 pt-6">
-                  <div className="mb-3 flex items-center gap-2">
-                    <Info size={17} className="text-indigo-500" />
-
-                    <p className="text-xs font-black uppercase tracking-wider text-slate-400">
-                      About this resource
-                    </p>
-                  </div>
-
-                  <p className="max-w-5xl whitespace-pre-wrap text-sm leading-7 text-slate-600">
+                <div className="border-t border-slate-100 pt-5">
+                  <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                    Overview
+                  </p>
+                  <p className="mt-2 line-clamp-3 text-sm leading-6 text-slate-600">
                     {resource.description}
                   </p>
                 </div>
 
-                {/* OPEN RESOURCE */}
+                {/* PRIMARY ACTIONS */}
+                <div className="flex flex-wrap gap-3 pt-2">
+                  <button
+                    onClick={() =>
+                      navigate(`/admin/careerResources/edit/${resource._id}`)
+                    }
+                    className="inline-flex h-10 items-center gap-2 rounded-xl bg-indigo-600 px-5 text-xs font-bold text-white shadow-md shadow-indigo-200 hover:bg-indigo-700"
+                  >
+                    <Pencil size={15} /> Edit Resource
+                  </button>
 
-                {resourceUrl && (
-                  <div className="flex flex-wrap gap-3">
-                    <button
-                      onClick={handleOpenResource}
-                      className="inline-flex h-11 items-center gap-2 rounded-xl bg-indigo-600 px-5 text-sm font-bold text-white shadow-lg shadow-indigo-200 transition hover:bg-indigo-700"
-                    >
-                      {resource.resourceType === "External Link" ? (
-                        <ExternalLink size={17} />
-                      ) : (
-                        <Download size={17} />
-                      )}
+                  <button
+                    onClick={handleToggleStatus}
+                    disabled={updatingStatus}
+                    className="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-xs font-bold text-slate-700 hover:bg-slate-50"
+                  >
+                    {updatingStatus ? (
+                      <RefreshCw size={15} className="animate-spin" />
+                    ) : (
+                      <Clock3 size={15} />
+                    )}
+                    {resource.status === "Published"
+                      ? "Move to Draft"
+                      : "Publish Resource"}
+                  </button>
 
-                      {resource.resourceType === "External Link"
-                        ? "Open External Resource"
-                        : "Open Resource File"}
-                    </button>
-
-                    <button
-                      onClick={() => handleCopyUrl(resourceUrl)}
-                      className="inline-flex h-11 items-center gap-2 rounded-xl border border-slate-200 bg-white px-5 text-sm font-bold text-slate-700 transition hover:bg-slate-50"
-                    >
-                      <Copy size={17} />
-                      Copy URL
-                    </button>
-                  </div>
-                )}
+                  <button
+                    onClick={handleDelete}
+                    disabled={deleting}
+                    className="inline-flex h-10 items-center gap-2 rounded-xl bg-red-50 px-4 text-xs font-bold text-red-600 hover:bg-red-100"
+                  >
+                    <Trash2 size={15} /> Delete
+                  </button>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* ================================================= */}
-        {/* ANALYTICS */}
-        {/* ================================================= */}
-
+        {/* METRICS ROW */}
         <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-5">
-          <MetricCard
-            icon={Eye}
-            label="Total Views"
-            value={resource.views || 0}
-          />
-
+          <MetricCard icon={Eye} label="Views" value={metrics.views} />
           <MetricCard
             icon={Download}
             label="Downloads"
-            value={resource.downloads || 0}
+            value={metrics.downloads}
           />
-
-          <MetricCard icon={Heart} label="Likes" value={resource.likes || 0} />
-
+          <MetricCard icon={Heart} label="Likes" value={metrics.likes} />
+          <MetricCard icon={Bookmark} label="Saves" value={metrics.saves} />
           <MetricCard
             icon={Users}
             label="Engaged Students"
-            value={studentsEngaged}
-          />
-
-          <MetricCard
-            icon={Activity}
-            label="Total Activity"
-            value={
-              (resource.views || 0) +
-              (resource.likes || 0) +
-              (resource.downloads || 0)
-            }
+            value={Math.max(
+              likedStudents.length,
+              downloadedStudents.length,
+              savedStudents.length
+            )}
           />
         </div>
 
-        {/* ================================================= */}
-        {/* MAIN GRID */}
-        {/* ================================================= */}
-
+        {/* MAIN DETAILS GRID */}
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
-          {/* ================================================= */}
-          {/* LEFT CONTENT */}
-          {/* ================================================= */}
-
+          {/* LEFT 2 COLUMNS */}
           <div className="space-y-6 xl:col-span-2">
-            {/* ================================================= */}
-            {/* COMPLETE RESOURCE INFORMATION */}
-            {/* ================================================= */}
-
-            <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-7">
-              <SectionHeader
-                icon={Database}
-                title="Complete Resource Information"
-                description="All information stored for this resource"
-              />
-
-              <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <InfoItem
-                  icon={BookOpen}
-                  label="Resource Title"
-                  value={resource.title}
-                />
-
-                <InfoItem
-                  icon={Target}
-                  label="Category"
-                  value={resource.category}
-                />
-
-                <InfoItem
+            {/* RICH BODY CONTENT / ARTICLE (SCROLLABLE AREA) */}
+            {resource.bodyContent && (
+              <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+                <SectionHeader
                   icon={FileText}
-                  label="Resource Type"
-                  value={resource.resourceType}
+                  title="Article & Body Content"
+                  description="Inline reading material"
+                />
+                {/* Scrollable container bounded to 384px height max */}
+                <div className="mt-4 max-h-96 overflow-y-auto rounded-2xl bg-slate-50 p-5 scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-slate-100">
+                  <pre className="whitespace-pre-wrap font-sans text-xs leading-6 text-slate-700">
+                    {resource.bodyContent}
+                  </pre>
+                </div>
+              </section>
+            )}
+
+            {/* PRIMARY VIDEO PLAYER DETAILS */}
+            {resource.primaryVideo?.url && (
+              <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+                <SectionHeader
+                  icon={Video}
+                  title="Primary Resource Video"
+                  description="Embedded video media details"
                 />
 
-                <InfoItem
-                  icon={resource.status === "Published" ? CheckCircle2 : Clock3}
-                  label="Status"
-                  value={resource.status}
+                <div className="mt-4 rounded-2xl border border-slate-100 bg-slate-50 p-5">
+                  <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-100 text-indigo-600">
+                        <PlayCircle size={20} />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="uppercase text-[10px] font-black tracking-wider text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md">
+                            {resource.primaryVideo.provider || "YouTube"}
+                          </span>
+                          {resource.primaryVideo.durationInSeconds > 0 && (
+                            <span className="text-xs text-slate-400">
+                              Duration:{" "}
+                              {formatSecondsToMinutes(
+                                resource.primaryVideo.durationInSeconds
+                              )}
+                            </span>
+                          )}
+                        </div>
+                        <p className="mt-1 break-all text-xs font-mono text-slate-700">
+                          {resource.primaryVideo.url}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-2">
+                      <a
+                        href={resource.primaryVideo.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex h-9 items-center gap-1.5 rounded-xl bg-indigo-600 px-4 text-xs font-bold text-white shadow-sm hover:bg-indigo-700"
+                      >
+                        <ExternalLink size={13} /> Watch Video
+                      </a>
+                      <button
+                        onClick={() => handleCopyUrl(resource.primaryVideo.url)}
+                        className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 text-xs font-bold text-slate-700 hover:bg-slate-50"
+                      >
+                        <Copy size={13} /> Copy Link
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </section>
+            )}
+
+            {/* ATTACHMENT BUNDLE / FILES */}
+            {resource.attachments && resource.attachments.length > 0 && (
+              <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+                <SectionHeader
+                  icon={FolderArchive}
+                  title={`Attached Files (${resource.attachments.length})`}
+                  description="Downloadable assets bundle"
                 />
+                <div className="mt-4 space-y-3">
+                  {resource.attachments.map((att, idx) => (
+                    <div
+                      key={idx}
+                      className="flex items-center justify-between rounded-2xl border border-slate-100 bg-slate-50 p-4"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-indigo-600 shadow-sm">
+                          {att.fileType === "pdf" && <FileText size={18} />}
+                          {att.fileType === "zip" && (
+                            <FolderArchive size={18} />
+                          )}
+                          {att.fileType === "code" && <FileCode size={18} />}
+                          {att.fileType !== "pdf" &&
+                            att.fileType !== "zip" &&
+                            att.fileType !== "code" && <File size={18} />}
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold text-slate-800">
+                            {att.title}
+                          </p>
+                          <p className="text-xs text-slate-400">
+                            {formatFileSize(att.fileSize)} •{" "}
+                            {att.fileType.toUpperCase()}
+                            {att.publicId && ` • ID: ${att.publicId}`}
+                          </p>
+                        </div>
+                      </div>
 
-                <InfoItem
-                  icon={UserRound}
-                  label="Created By"
-                  value={resource.createdBy || "Admin"}
+                      <div className="flex items-center gap-2">
+                        <a
+                          href={getImageUrl(att.fileUrl)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex h-9 items-center gap-1.5 rounded-xl bg-indigo-50 px-3 text-xs font-bold text-indigo-700 hover:bg-indigo-100"
+                        >
+                          <Download size={13} /> Download
+                        </a>
+                        <button
+                          onClick={() => handleCopyUrl(att.fileUrl)}
+                          className="flex h-9 items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 text-xs font-bold text-slate-700 hover:bg-slate-50"
+                        >
+                          <Copy size={13} /> Copy Link
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* CURRICULUM MODULES (WITH FULL BREAKDOWN) */}
+            {resource.modules && resource.modules.length > 0 && (
+              <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+                <SectionHeader
+                  icon={Layers}
+                  title={`Roadmap & Modules (${resource.modules.length})`}
+                  description="Sequential curriculum sections"
                 />
+                <div className="mt-4 space-y-4">
+                  {resource.modules.map((mod, idx) => (
+                    <div
+                      key={idx}
+                      className="rounded-2xl border border-slate-100 bg-slate-50/70 p-5 space-y-3"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="rounded-lg bg-indigo-100 px-2.5 py-1 text-xs font-bold text-indigo-700">
+                            Section {idx + 1}
+                          </span>
+                          {mod.isFreePreview ? (
+                            <span className="rounded-md bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
+                              Free Preview
+                            </span>
+                          ) : (
+                            <span className="rounded-md bg-slate-200 px-2 py-0.5 text-[10px] font-bold text-slate-600">
+                              Locked
+                            </span>
+                          )}
+                        </div>
+                        {mod.durationInMinutes > 0 && (
+                          <span className="text-xs font-semibold text-slate-500 flex items-center gap-1">
+                            <Clock3 size={12} /> {mod.durationInMinutes} mins
+                          </span>
+                        )}
+                      </div>
 
-                <InfoItem
-                  icon={Calendar}
-                  label="Created At"
-                  value={formatDateTime(resource.createdAt)}
-                />
+                      <h4 className="text-sm font-bold text-slate-900">
+                        {mod.title}
+                      </h4>
 
-                <InfoItem
-                  icon={CalendarDays}
-                  label="Last Updated"
-                  value={formatDateTime(resource.updatedAt)}
-                />
+                      {mod.description && (
+                        <p className="text-xs font-medium text-slate-500">
+                          {mod.description}
+                        </p>
+                      )}
 
-                <InfoItem
-                  icon={Database}
-                  label="Resource ID"
-                  value={resource._id}
-                />
-              </div>
-            </section>
+                      {mod.content && (
+                        <div className="rounded-xl bg-white p-3 border border-slate-200/60 max-h-60 overflow-y-auto">
+                          <p className="whitespace-pre-line text-xs leading-5 text-slate-600">
+                            {mod.content}
+                          </p>
+                        </div>
+                      )}
 
-            {/* ================================================= */}
-            {/* FILE INFORMATION */}
-            {/* ================================================= */}
+                      {mod.videoUrl && (
+                        <div className="flex items-center justify-between rounded-xl bg-indigo-50/50 p-2.5 text-xs text-indigo-900 border border-indigo-100/50">
+                          <span className="flex items-center gap-1.5 font-medium truncate">
+                            <Video
+                              size={14}
+                              className="text-indigo-600 shrink-0"
+                            />
+                            <span className="truncate">{mod.videoUrl}</span>
+                          </span>
+                          <button
+                            onClick={() => handleCopyUrl(mod.videoUrl)}
+                            className="shrink-0 text-indigo-600 font-bold hover:underline text-[11px]"
+                          >
+                            Copy Video Link
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
 
-            <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-7">
-              <SectionHeader
-                icon={HardDrive}
-                title="File & Content Information"
-                description="Complete information about the uploaded content"
-              />
-
-              <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <InfoItem
-                  icon={FileText}
-                  label="File Name"
-                  value={resource.fileName || "No file uploaded"}
-                />
-
-                <InfoItem
-                  icon={HardDrive}
-                  label="File Size"
-                  value={formatFileSize(resource.fileSize)}
-                />
-
-                <InfoItem
-                  icon={Globe}
-                  label="External URL"
-                  value={resource.externalUrl || "No external URL"}
-                />
-
-                <InfoItem
-                  icon={File}
-                  label="File URL"
-                  value={resource.fileUrl || "No file URL"}
-                />
-
-                <InfoItem
-                  icon={ImageIcon}
-                  label="Thumbnail"
-                  value={resource.thumbnail || "No thumbnail"}
-                />
-              </div>
-
-              {/* FILE URL */}
-
-              {resource.fileUrl && (
-                <UrlBox
-                  label="Uploaded File URL"
-                  url={
-                    resource.fileUrl.startsWith("http://") ||
-                    resource.fileUrl.startsWith("https://")
-                      ? resource.fileUrl
-                      : `${API_BASE_URL.replace(
-                          /\/api\/?$/,
-                          ""
-                        )}/${resource.fileUrl.replace(/^\//, "")}`
-                  }
-                  onCopy={handleCopyUrl}
-                />
-              )}
-
-              {/* EXTERNAL URL */}
-
-              {resource.externalUrl && (
-                <UrlBox
-                  label="External Resource URL"
-                  url={resource.externalUrl}
-                  onCopy={handleCopyUrl}
-                />
-              )}
-            </section>
-
-            {/* ================================================= */}
-            {/* DESCRIPTION */}
-            {/* ================================================= */}
-
-            <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-7">
-              <SectionHeader
-                icon={FileText}
-                title="Full Description"
-                description="Complete resource description"
-              />
-
-              <div className="mt-6 rounded-2xl bg-slate-50 p-5">
-                <p className="whitespace-pre-wrap text-sm leading-8 text-slate-600">
-                  {resource.description}
-                </p>
-              </div>
-            </section>
-
-            {/* ================================================= */}
-            {/* LIKED STUDENTS */}
-            {/* ================================================= */}
-
-            <StudentSection
-              title="Students Who Liked This Resource"
-              icon={Heart}
-              students={likedStudents}
-              emptyText="No students have liked this resource yet."
-            />
-
-            {/* ================================================= */}
-            {/* DOWNLOADED STUDENTS */}
-            {/* ================================================= */}
-
-            <StudentSection
-              title="Students Who Downloaded This Resource"
-              icon={Download}
-              students={downloadedStudents}
-              emptyText="No students have downloaded this resource yet."
-            />
-          </div>
-
-          {/* ================================================= */}
-          {/* RIGHT SIDEBAR */}
-          {/* ================================================= */}
-
-          <div className="space-y-6">
-            {/* ================================================= */}
-            {/* STATUS */}
-            {/* ================================================= */}
-
+            {/* EDUCATIONAL OUTCOMES */}
             <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
               <SectionHeader
-                icon={ShieldCheck}
-                title="Publication Status"
-                description="Control student visibility"
+                icon={Award}
+                title="Educational Outcomes & Requirements"
+                description="Gains, takeaways & prerequisites"
               />
 
-              <div className="mt-5 rounded-2xl bg-slate-50 p-5">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-semibold text-slate-500">
-                    Current Status
-                  </span>
-
-                  <span
-                    className={`rounded-full px-3 py-1.5 text-xs font-black ${
-                      resource.status === "Published"
-                        ? "bg-emerald-50 text-emerald-700"
-                        : "bg-amber-50 text-amber-700"
-                    }`}
-                  >
-                    {resource.status}
-                  </span>
-                </div>
-
-                <button
-                  onClick={handleToggleStatus}
-                  disabled={updatingStatus}
-                  className="mt-5 flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white text-sm font-bold text-slate-700 transition hover:bg-slate-100 disabled:opacity-50"
-                >
-                  {updatingStatus ? (
-                    <RefreshCw size={16} className="animate-spin" />
-                  ) : resource.status === "Published" ? (
-                    <Clock3 size={16} />
-                  ) : (
-                    <CheckCircle2 size={16} />
+              <div className="mt-5 space-y-6">
+                {resource.whatYouWillLearn &&
+                  resource.whatYouWillLearn.length > 0 && (
+                    <div>
+                      <h4 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-500">
+                        <ListChecks size={15} className="text-indigo-600" />{" "}
+                        What You'll Learn
+                      </h4>
+                      <ul className="mt-2 space-y-2">
+                        {resource.whatYouWillLearn.map((item, i) => (
+                          <li
+                            key={i}
+                            className="flex items-start gap-2 text-xs font-medium text-slate-700"
+                          >
+                            <CheckCircle2
+                              size={14}
+                              className="mt-0.5 shrink-0 text-emerald-500"
+                            />{" "}
+                            {item}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
                   )}
 
-                  {resource.status === "Published"
-                    ? "Move to Draft"
-                    : "Publish Resource"}
-                </button>
+                {resource.keyTakeaways && resource.keyTakeaways.length > 0 && (
+                  <div>
+                    <h4 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-500">
+                      <Lightbulb size={15} className="text-amber-500" /> Key
+                      Takeaways
+                    </h4>
+                    <ul className="mt-2 space-y-2">
+                      {resource.keyTakeaways.map((item, i) => (
+                        <li
+                          key={i}
+                          className="flex items-start gap-2 text-xs font-medium text-slate-700"
+                        >
+                          <Star
+                            size={13}
+                            className="mt-0.5 shrink-0 text-amber-500 fill-amber-500"
+                          />{" "}
+                          {item}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {resource.prerequisites &&
+                  resource.prerequisites.length > 0 && (
+                    <div>
+                      <h4 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-500">
+                        <Target size={15} className="text-indigo-600" />{" "}
+                        Prerequisites
+                      </h4>
+                      <ul className="mt-2 space-y-2">
+                        {resource.prerequisites.map((item, i) => (
+                          <li
+                            key={i}
+                            className="flex items-start gap-2 text-xs font-medium text-slate-700"
+                          >
+                            <span className="mt-1 h-1.5 w-1.5 rounded-full bg-indigo-500 shrink-0" />{" "}
+                            {item}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
               </div>
             </section>
 
-            {/* ================================================= */}
-            {/* ENGAGEMENT */}
-            {/* ================================================= */}
+            {/* DEDICATED STUDENT INTERACTIONS ACTION CARD */}
+            <section
+              onClick={() =>
+                navigate(`/admin/careerResources/${resource._id}/interactions`)
+              }
+              className="group cursor-pointer rounded-3xl border border-indigo-100 bg-gradient-to-r from-indigo-500 via-indigo-600 to-violet-600 p-6 text-white shadow-md transition-all duration-300 hover:shadow-xl hover:scale-[1.01]"
+            >
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-md text-white">
+                    <Users size={24} />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-extrabold text-white">
+                      Student Interactions & Analytics
+                    </h3>
+                    <p className="mt-0.5 text-xs text-indigo-100">
+                      View full student lists who liked ({likedStudents.length}
+                      ), downloaded ({downloadedStudents.length}), or bookmarked
+                      ({savedStudents.length}) this resource.
+                    </p>
+                  </div>
+                </div>
 
-            <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-              <SectionHeader
-                icon={BarChart3}
-                title="Engagement Analytics"
-                description="Resource performance"
-              />
-
-              <div className="mt-5 space-y-3">
-                <EngagementRow
-                  icon={Eye}
-                  label="Total Views"
-                  value={resource.views || 0}
-                />
-
-                <EngagementRow
-                  icon={Heart}
-                  label="Total Likes"
-                  value={resource.likes || 0}
-                />
-
-                <EngagementRow
-                  icon={Download}
-                  label="Total Downloads"
-                  value={resource.downloads || 0}
-                />
-
-                <EngagementRow
-                  icon={Heart}
-                  label="Students Who Liked"
-                  value={likedStudents.length}
-                />
-
-                <EngagementRow
-                  icon={Download}
-                  label="Students Who Downloaded"
-                  value={downloadedStudents.length}
-                />
+                <div className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-xs font-bold text-indigo-600 shadow-sm transition group-hover:bg-indigo-50">
+                  <span>View Full Interactions</span>
+                  <ChevronRight size={16} />
+                </div>
               </div>
             </section>
+          </div>
 
-            {/* ================================================= */}
-            {/* RESOURCE OWNER */}
-            {/* ================================================= */}
-
+          {/* RIGHT COLUMN SIDEBAR */}
+          <div className="space-y-6">
+            {/* AUTHOR CREDIT CARD */}
             <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
               <SectionHeader
                 icon={UserCheck}
-                title="Resource Owner"
-                description="Creation information"
+                title="Author Attribution"
+                description="Resource creator profile"
               />
 
-              <div className="mt-5 rounded-2xl bg-indigo-50 p-5">
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-100 text-indigo-600">
-                  <UserRound size={22} />
+              <div className="mt-4 flex items-center gap-3 rounded-2xl bg-indigo-50/70 p-4 border border-indigo-100/60">
+                {authorAvatar ? (
+                  <img
+                    src={authorAvatar}
+                    alt={authorName}
+                    className="h-12 w-12 rounded-xl object-cover"
+                  />
+                ) : (
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-100 text-indigo-700 font-black">
+                    {authorName.charAt(0)}
+                  </div>
+                )}
+                <div>
+                  <h4 className="text-sm font-bold text-slate-900">
+                    {authorName}
+                  </h4>
+                  <p className="text-xs font-medium text-indigo-600">
+                    {authorRole}
+                  </p>
                 </div>
-
-                <p className="mt-4 text-xs font-bold uppercase tracking-wider text-indigo-400">
-                  Created By
-                </p>
-
-                <p className="mt-1 text-lg font-black text-indigo-950">
-                  {resource.createdBy || "Admin"}
-                </p>
-
-                <p className="mt-3 text-xs leading-5 text-indigo-700">
-                  This resource was created and managed by the administrator.
-                </p>
               </div>
+
+              {authorBio && (
+                <p className="mt-3 text-xs leading-5 text-slate-500 bg-slate-50 p-3 rounded-xl">
+                  {authorBio}
+                </p>
+              )}
             </section>
 
-            {/* ================================================= */}
-            {/* QUICK ACCESS */}
-            {/* ================================================= */}
-
+            {/* TAXONOMY & TAGS */}
             <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
               <SectionHeader
-                icon={Sparkles}
-                title="Quick Access"
-                description="Manage this resource"
+                icon={Tag}
+                title="Skills & Tags"
+                description="Platform search taxonomy"
               />
 
-              <div className="mt-5 space-y-3">
-                {resourceUrl && (
-                  <button
-                    onClick={handleOpenResource}
-                    className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 text-sm font-bold text-white shadow-lg shadow-indigo-100 transition hover:bg-indigo-700"
-                  >
-                    <ExternalLink size={16} />
-                    Open Resource
-                  </button>
+              {resource.skills && resource.skills.length > 0 && (
+                <div className="mt-4">
+                  <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                    Skills Covered
+                  </p>
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {resource.skills.map((s) => (
+                      <span
+                        key={s}
+                        className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-bold text-indigo-700"
+                      >
+                        {s}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {resource.tags && resource.tags.length > 0 && (
+                <div className="mt-4">
+                  <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                    Search Tags
+                  </p>
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {resource.tags.map((t) => (
+                      <span
+                        key={t}
+                        className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-700"
+                      >
+                        #{t}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </section>
+
+            {/* AUDIENCE */}
+            {resource.targetAudience && resource.targetAudience.length > 0 && (
+              <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+                <SectionHeader
+                  icon={Target}
+                  title="Target Audience"
+                  description="Intended audience segments"
+                />
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {resource.targetAudience.map((aud) => (
+                    <span
+                      key={aud}
+                      className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold text-slate-700"
+                    >
+                      {aud}
+                    </span>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* BANNER MEDIA PREVIEW */}
+            {bannerUrl && (
+              <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+                <SectionHeader
+                  icon={ImageIcon}
+                  title="Hero Banner Image"
+                  description="Secondary cover media"
+                />
+                <img
+                  src={bannerUrl}
+                  alt="Hero Banner"
+                  className="mt-3 h-32 w-full rounded-2xl object-cover border border-slate-200"
+                />
+              </section>
+            )}
+
+            {/* SEO SUMMARY */}
+            <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+              <SectionHeader
+                icon={Globe}
+                title="SEO Metadata & Slug"
+                description="Search engine optimization"
+              />
+              <div className="mt-3 space-y-3">
+                <InfoItem
+                  icon={Globe}
+                  label="URL Slug"
+                  value={resource.slug || "N/A"}
+                />
+                <InfoItem
+                  icon={Globe}
+                  label="SEO Title"
+                  value={resource.seo?.title || resource.title}
+                />
+                <InfoItem
+                  icon={FileText}
+                  label="SEO Description"
+                  value={resource.seo?.description || resource.subtitle}
+                />
+                {resource.seo?.keywords && resource.seo.keywords.length > 0 && (
+                  <div className="rounded-2xl border border-slate-100 bg-slate-50 p-3">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                      SEO Keywords
+                    </p>
+                    <div className="mt-1.5 flex flex-wrap gap-1">
+                      {resource.seo.keywords.map((kw) => (
+                        <span
+                          key={kw}
+                          className="rounded-md bg-white border border-slate-200/80 px-2 py-0.5 text-[10px] font-semibold text-slate-600"
+                        >
+                          {kw}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
                 )}
-
-                <button
-                  onClick={() =>
-                    navigate(`/admin/careerResources/edit/${resource._id}`)
-                  }
-                  className="flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white text-sm font-bold text-slate-700 transition hover:bg-slate-50"
-                >
-                  <Pencil size={16} />
-                  Edit Resource
-                </button>
-
-                <button
-                  onClick={handleDelete}
-                  disabled={deleting}
-                  className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-red-50 text-sm font-bold text-red-600 transition hover:bg-red-100 disabled:opacity-50"
-                >
-                  {deleting ? (
-                    <RefreshCw size={16} className="animate-spin" />
-                  ) : (
-                    <Trash2 size={16} />
-                  )}
-                  Delete Resource
-                </button>
               </div>
             </section>
           </div>
@@ -1194,418 +1053,47 @@ const handleCopyUrl = async (url) => {
   );
 };
 
-// =====================================================
-// METRIC CARD
-// =====================================================
+// UI HELPER COMPONENTS
 
-function MetricCard({
-  icon: Icon,
-  label,
-  value,
-}) {
+function MetricCard({ icon: Icon, label, value }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
-
+    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
       <div className="flex items-center gap-3">
-
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
-          <Icon size={20} />
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
+          <Icon size={18} />
         </div>
-
-        <div className="min-w-0">
-
-          <p className="truncate text-xs font-semibold text-slate-400">
-            {label}
-          </p>
-
-          <p className="mt-1 text-xl font-black text-slate-900">
-            {value}
-          </p>
-
+        <div>
+          <p className="text-xs font-medium text-slate-400">{label}</p>
+          <p className="text-lg font-black text-slate-900">{value}</p>
         </div>
-
       </div>
-
     </div>
   );
 }
 
-// =====================================================
-// SECTION HEADER
-// =====================================================
-
-function SectionHeader({
-  icon: Icon,
-  title,
-  description,
-}) {
+function SectionHeader({ icon: Icon, title, description }) {
   return (
     <div className="flex items-start gap-3">
-
       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
-        <Icon size={19} />
+        <Icon size={18} />
       </div>
-
       <div>
-
-        <h2 className="text-lg font-black text-slate-900">
-          {title}
-        </h2>
-
-        {description && (
-          <p className="mt-1 text-xs text-slate-400">
-            {description}
-          </p>
-        )}
-
+        <h3 className="text-base font-bold text-slate-900">{title}</h3>
+        {description && <p className="text-xs text-slate-400">{description}</p>}
       </div>
-
     </div>
   );
 }
 
-// =====================================================
-// INFO ITEM
-// =====================================================
-
-function InfoItem({
-  icon: Icon,
-  label,
-  value,
-}) {
+function InfoItem({ icon: Icon, label, value }) {
   return (
-    <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4 transition hover:border-indigo-100 hover:bg-indigo-50/30">
-
-      <div className="flex items-start gap-3">
-
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white text-indigo-500 shadow-sm">
-          <Icon size={16} />
-        </div>
-
-        <div className="min-w-0">
-
-          <p className="text-xs font-semibold text-slate-400">
-            {label}
-          </p>
-
-          <p className="mt-1 break-all text-sm font-bold leading-6 text-slate-700">
-            {value || "N/A"}
-          </p>
-
-        </div>
-
-      </div>
-
-    </div>
-  );
-}
-
-// =====================================================
-// URL BOX
-// =====================================================
-
-function UrlBox({
-  label,
-  url,
-  onCopy,
-}) {
-  return (
-    <div className="mt-5 rounded-2xl border border-slate-100 bg-slate-50 p-4">
-
-      <div className="flex items-center justify-between gap-3">
-
-        <p className="text-xs font-black uppercase tracking-wider text-slate-400">
-          {label}
-        </p>
-
-        <button
-          onClick={() =>
-            onCopy(url)
-          }
-          className="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-600 hover:text-indigo-700"
-        >
-          <Copy size={13} />
-          Copy
-        </button>
-
-      </div>
-
-      <p className="mt-3 break-all rounded-xl bg-white p-3 text-xs leading-5 text-slate-600">
-        {url}
+    <div className="rounded-2xl border border-slate-100 bg-slate-50 p-3">
+      <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+        {label}
       </p>
-
-    </div>
-  );
-}
-
-// =====================================================
-// ENGAGEMENT ROW
-// =====================================================
-
-function EngagementRow({
-  icon: Icon,
-  label,
-  value,
-}) {
-  return (
-    <div className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50 px-4 py-3">
-
-      <div className="flex items-center gap-3">
-
-        <Icon
-          size={16}
-          className="text-indigo-500"
-        />
-
-        <span className="text-sm font-semibold text-slate-600">
-          {label}
-        </span>
-
-      </div>
-
-      <span className="text-sm font-black text-slate-900">
-        {value}
-      </span>
-
-    </div>
-  );
-}
-
-// =====================================================
-// STUDENT SECTION
-// =====================================================
-
-function StudentSection({
-  title,
-  icon: Icon,
-  students,
-  emptyText,
-}) {
-  return (
-    <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-7">
-
-      <div className="flex items-center justify-between gap-4">
-
-        <SectionHeader
-          icon={Icon}
-          title={title}
-          description="Students associated with this resource"
-        />
-
-        <span className="shrink-0 rounded-full bg-indigo-50 px-3 py-1.5 text-xs font-black text-indigo-600">
-          {students.length}
-        </span>
-
-      </div>
-
-      {students.length === 0 ? (
-        <div className="mt-6 rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-8 text-center">
-
-          <Users
-            size={28}
-            className="mx-auto text-slate-300"
-          />
-
-          <p className="mt-3 text-sm font-medium text-slate-500">
-            {emptyText}
-          </p>
-
-        </div>
-      ) : (
-        <div className="mt-6 overflow-x-auto pb-2">
-
-          <div className="flex min-w-max gap-4">
-
-            {students.map(
-              (student, index) => (
-                <StudentCompactCard
-                  key={
-                    student._id ||
-                    student.id ||
-                    index
-                  }
-                  student={
-                    student
-                  }
-                />
-              )
-            )}
-
-          </div>
-
-        </div>
-      )}
-
-    </section>
-  );
-}
-
-// =====================================================
-// STUDENT COMPACT CARD
-// =====================================================
-
-function StudentCompactCard({
-  student,
-}) {
-  const isObject =
-    typeof student ===
-    "object" &&
-    student !== null;
-
-  const fullName = isObject
-    ? `${student.firstName || ""} ${
-        student.lastName || ""
-      }`.trim() ||
-      student.name ||
-      "Unknown Student"
-    : "Student";
-
-  const email = isObject
-    ? student.email ||
-      "No email available"
-    : "Student ID";
-
-  const studentId = isObject
-    ? student._id
-    : student;
-
-  const profileImage = isObject
-    ? getImageUrl(
-        student.profileImage
-      )
-    : "";
-
-  return (
-    <div className="w-80 shrink-0 rounded-2xl border border-slate-200 bg-slate-50 p-4 transition hover:border-indigo-200 hover:bg-white hover:shadow-md">
-
-      <div className="flex items-center gap-3">
-
-        <div className="relative h-12 w-12 shrink-0">
-
-          {profileImage ? (
-            <img
-              src={profileImage}
-              alt={fullName}
-              className="h-12 w-12 rounded-xl object-cover"
-              onError={(event) => {
-                event.currentTarget.style.display =
-                  "none";
-
-                const fallback =
-                  event.currentTarget
-                    .parentElement
-                    .querySelector(
-                      ".student-fallback"
-                    );
-
-                if (fallback) {
-                  fallback.style.display =
-                    "flex";
-                }
-              }}
-            />
-          ) : null}
-
-          <div
-            className="student-fallback h-12 w-12 items-center justify-center rounded-xl bg-indigo-100 text-sm font-black text-indigo-600"
-            style={{
-              display: profileImage
-                ? "none"
-                : "flex",
-            }}
-          >
-            {fullName
-              .charAt(0)
-              .toUpperCase()}
-          </div>
-
-        </div>
-
-        <div className="min-w-0 flex-1">
-
-          <p className="truncate text-sm font-black text-slate-900">
-            {fullName}
-          </p>
-
-          <p className="mt-1 flex items-center gap-1 truncate text-xs text-slate-500">
-
-            <Mail
-              size={12}
-              className="shrink-0"
-            />
-
-            <span className="truncate">
-              {email}
-            </span>
-
-          </p>
-
-        </div>
-
-      </div>
-
-      <div className="mt-4 border-t border-slate-200 pt-3">
-
-        <div className="flex items-center justify-between">
-
-          <span className="text-xs font-semibold text-slate-400">
-            Student ID
-          </span>
-
-          <span className="max-w-[160px] truncate text-xs font-bold text-slate-600">
-            {studentId || "N/A"}
-          </span>
-
-        </div>
-
-        {isObject && (
-          <div className="mt-2 flex items-center justify-between">
-
-            <span className="flex items-center gap-1 text-xs font-semibold text-slate-500">
-
-              {student.isActive ? (
-                <>
-                  <ShieldCheck
-                    size={13}
-                    className="text-emerald-500"
-                  />
-
-                  <span className="text-emerald-600">
-                    Active
-                  </span>
-                </>
-              ) : (
-                <>
-                  <ShieldOff
-                    size={13}
-                    className="text-slate-400"
-                  />
-
-                  <span>
-                    Inactive
-                  </span>
-                </>
-              )}
-
-            </span>
-
-            <span
-              className={`text-xs font-bold ${
-                student.isBlocked
-                  ? "text-red-600"
-                  : "text-emerald-600"
-              }`}
-            >
-              {student.isBlocked
-                ? "Blocked"
-                : "Normal"}
-            </span>
-
-          </div>
-        )}
-
-      </div>
-
+      <p className="mt-1 break-all text-xs font-bold text-slate-700">
+        {value || "N/A"}
+      </p>
     </div>
   );
 }
