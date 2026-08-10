@@ -195,8 +195,51 @@ export const createEvent = async (req, res) => {
 
 export const getAllEvents = async (req, res) => {
   try {
-    const events = await Event.find()
-      .sort({ date: 1, time: 1 });
+    // Aggregate events with their payment telemetry from EventRegistration
+    const events = await Event.aggregate([
+      {
+        $lookup: {
+          from: "eventregistrations",
+          localField: "_id",
+          foreignField: "event",
+          as: "registrations",
+        },
+      },
+      {
+        $addFields: {
+          // Filter only successful paid registrations
+          paidRegistrations: {
+            $filter: {
+              input: "$registrations",
+              as: "reg",
+              cond: {
+                $and: [
+                  { $eq: ["$$reg.paymentStatus", "Paid"] },
+                  { $eq: ["$$reg.status", "Registered"] },
+                ],
+              },
+            },
+          },
+        },
+      },
+      {
+        $addFields: {
+          // Compute total gross amount, platform fees, and commissions collected
+          totalGrossRevenue: { $sum: "$paidRegistrations.amountPaid" },
+          totalPlatformFees: { $sum: "$paidRegistrations.platformFee" },
+          totalAdminCommissions: { $sum: "$paidRegistrations.adminCommission" },
+        },
+      },
+      {
+        $project: {
+          registrations: 0,
+          paidRegistrations: 0,
+        },
+      },
+      {
+        $sort: { startDateTime: 1 },
+      },
+    ]);
 
     res.status(200).json({
       success: true,
@@ -204,7 +247,6 @@ export const getAllEvents = async (req, res) => {
     });
   } catch (error) {
     console.error("Get Events Error:", error);
-
     res.status(500).json({
       success: false,
       message: "Failed to fetch events",

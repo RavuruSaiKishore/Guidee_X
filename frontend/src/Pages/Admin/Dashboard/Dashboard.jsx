@@ -15,12 +15,10 @@ import {
   Headphones,
   Clock3,
   CheckCircle2,
-  AlertCircle,
   BarChart3,
   UserRound,
   FileCheck2,
   History,
-  Settings2,
   Eye,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -37,7 +35,11 @@ const Dashboard = () => {
       totalUsers: 0,
       totalMentors: 0,
       totalBookings: 0,
-      totalRevenue: 0,
+      totalEvents: 0,
+      totalGrossRevenue: 0,
+      totalPlatformRevenue: 0,
+      sessionsFinancials: { gross: 0, platformFees: 0, adminCommissions: 0 },
+      eventsFinancials: { gross: 0, platformFees: 0, adminCommissions: 0 },
       pendingMentorRequests: 0,
       approvedMentors: 0,
       totalRequests: 0,
@@ -79,7 +81,19 @@ const Dashboard = () => {
           totalUsers: data.stats?.totalUsers || 0,
           totalMentors: data.stats?.totalMentors || 0,
           totalBookings: data.stats?.totalBookings || 0,
-          totalRevenue: data.stats?.totalRevenue || 0,
+          totalEvents: data.stats?.totalEvents || 0,
+          totalGrossRevenue: data.stats?.totalGrossRevenue || 0,
+          totalPlatformRevenue: data.stats?.totalPlatformRevenue || 0,
+          sessionsFinancials: data.stats?.sessionsFinancials || {
+            gross: 0,
+            platformFees: 0,
+            adminCommissions: 0,
+          },
+          eventsFinancials: data.stats?.eventsFinancials || {
+            gross: 0,
+            platformFees: 0,
+            adminCommissions: 0,
+          },
           pendingMentorRequests: data.stats?.pendingMentorRequests || 0,
           approvedMentors: data.stats?.approvedMentors || 0,
           totalRequests: data.stats?.totalRequests || 0,
@@ -119,33 +133,41 @@ const Dashboard = () => {
       description: "Active mentors",
     },
     {
-      title: "Total Bookings",
-      value: dashboard.stats.totalBookings,
-      icon: CalendarDays,
-      iconBg: "bg-violet-50",
-      iconColor: "text-violet-600",
-      accent: "from-violet-500 to-purple-500",
-      description: "All sessions",
-    },
-    {
-      title: "Total Revenue",
-      value: `₹${Number(dashboard.stats.totalRevenue || 0).toLocaleString(
-        "en-IN"
-      )}`,
+      title: "Platform Net Revenue",
+      value: `₹${Number(
+        dashboard.stats.totalPlatformRevenue || 0
+      ).toLocaleString("en-IN")}`,
       icon: IndianRupee,
       iconBg: "bg-orange-50",
       iconColor: "text-orange-600",
       accent: "from-orange-500 to-amber-500",
-      description: "Platform earnings",
+      description: "Fees + Commissions earned",
     },
     {
-      title: "Pending Requests",
-      value: dashboard.stats.pendingMentorRequests,
-      icon: ClipboardCheck,
-      iconBg: "bg-amber-50",
-      iconColor: "text-amber-600",
-      accent: "from-amber-500 to-yellow-500",
-      description: "Awaiting approval",
+      title: "Sessions Volume",
+      value: `₹${Number(
+        dashboard.stats.sessionsFinancials?.gross || 0
+      ).toLocaleString("en-IN")}`,
+      icon: CalendarDays,
+      iconBg: "bg-violet-50",
+      iconColor: "text-violet-600",
+      accent: "from-violet-500 to-purple-500",
+      description: `Fees: ₹${
+        dashboard.stats.sessionsFinancials?.platformFees || 0
+      } | Comm: ₹${dashboard.stats.sessionsFinancials?.adminCommissions || 0}`,
+    },
+    {
+      title: "Events Volume",
+      value: `₹${Number(
+        dashboard.stats.eventsFinancials?.gross || 0
+      ).toLocaleString("en-IN")}`,
+      icon: BarChart3,
+      iconBg: "bg-indigo-50",
+      iconColor: "text-indigo-600",
+      accent: "from-indigo-500 to-blue-500",
+      description: `Fees: ₹${
+        dashboard.stats.eventsFinancials?.platformFees || 0
+      } | Comm: ₹${dashboard.stats.eventsFinancials?.adminCommissions || 0}`,
     },
     {
       title: "Approved Mentors",
@@ -347,21 +369,15 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-700">
       <div className="max-w-[1600px] mx-auto p-4 sm:p-6 lg:p-8">
-        {/* ===================================================== */}
         {/* HEADER */}
-        {/* ===================================================== */}
-
         <div className="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-slate-950 via-slate-900 to-blue-950 shadow-2xl">
-          {/* Background Effects */}
           <div className="absolute -top-32 -right-32 w-96 h-96 rounded-full bg-blue-500/20 blur-3xl" />
-
           <div className="absolute -bottom-40 left-1/3 w-96 h-96 rounded-full bg-indigo-500/10 blur-3xl" />
 
           <div className="relative p-6 sm:p-8 lg:p-10">
             <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-8">
-              {/* Header Content */}
               <div className="flex items-start gap-5">
-                <div className="hidden sm:flex w-16 h-16 rounded-2xl bg-white/10 backdrop-blur-xl border border-white/10 items-center justify-center shadow-xl">
+                <div className="hidden sm:flex w-16 h-16 rounded-2xl bg-white/15 backdrop-blur-xl border border-white/10 items-center justify-center shadow-xl">
                   <LayoutDashboard className="w-8 h-8 text-white" />
                 </div>
 
@@ -379,8 +395,7 @@ const Dashboard = () => {
 
                   <p className="text-slate-300 text-sm sm:text-base max-w-2xl leading-relaxed">
                     Manage your GuideX platform, monitor users and mentors,
-                    track bookings, review support requests, and keep an eye on
-                    overall platform activity.
+                    track session & event bookings, and review support requests.
                   </p>
 
                   <div className="flex flex-wrap items-center gap-3 mt-6">
@@ -410,31 +425,25 @@ const Dashboard = () => {
               <div className="grid grid-cols-3 gap-3 sm:gap-4">
                 <div className="min-w-[100px] rounded-2xl bg-white/10 backdrop-blur-xl border border-white/10 p-4 text-center">
                   <p className="text-xs text-slate-400">Users</p>
-
                   <p className="text-2xl font-bold text-white mt-1">
                     {dashboard.stats.totalUsers}
                   </p>
-
                   <p className="text-[11px] text-blue-300 mt-1">Registered</p>
                 </div>
 
                 <div className="min-w-[100px] rounded-2xl bg-white/10 backdrop-blur-xl border border-white/10 p-4 text-center">
                   <p className="text-xs text-slate-400">Mentors</p>
-
                   <p className="text-2xl font-bold text-white mt-1">
                     {dashboard.stats.totalMentors}
                   </p>
-
                   <p className="text-[11px] text-emerald-300 mt-1">Active</p>
                 </div>
 
                 <div className="min-w-[100px] rounded-2xl bg-white/10 backdrop-blur-xl border border-white/10 p-4 text-center">
                   <p className="text-xs text-slate-400">Bookings</p>
-
                   <p className="text-2xl font-bold text-white mt-1">
                     {dashboard.stats.totalBookings}
                   </p>
-
                   <p className="text-[11px] text-violet-300 mt-1">Sessions</p>
                 </div>
               </div>
@@ -442,31 +451,23 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* ===================================================== */}
         {/* OVERVIEW TITLE */}
-        {/* ===================================================== */}
-
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-10 mb-5">
           <div>
             <h2 className="text-2xl font-bold text-slate-900">
-              Platform Overview
+              Platform Overview & Revenue Breakdown
             </h2>
-
             <p className="text-sm text-slate-500 mt-1">
-              Key metrics and performance indicators
+              Key metrics, session volume, and event registration distributions
             </p>
           </div>
-
           <div className="flex items-center gap-2 text-sm text-slate-500">
             <span className="w-2 h-2 bg-emerald-500 rounded-full"></span>
             Data updated just now
           </div>
         </div>
 
-        {/* ===================================================== */}
         {/* KPI CARDS */}
-        {/* ===================================================== */}
-
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6 gap-5">
           {stats.map((item, index) => {
             const Icon = item.icon;
@@ -511,21 +512,16 @@ const Dashboard = () => {
           })}
         </div>
 
-        {/* ===================================================== */}
         {/* CONTACT CENTER */}
-        {/* ===================================================== */}
-
         <div className="mt-10">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-5">
             <div>
               <div className="flex items-center gap-2">
                 <Headphones className="text-blue-600" size={22} />
-
                 <h2 className="text-2xl font-bold text-slate-900">
                   Contact Center
                 </h2>
               </div>
-
               <p className="text-sm text-slate-500 mt-1">
                 Monitor and manage student support requests.
               </p>
@@ -566,20 +562,15 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* ===================================================== */}
         {/* RECENT USERS & MENTORS */}
-        {/* ===================================================== */}
-
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mt-10">
           {/* Recent Users */}
-
           <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
             <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100">
               <div>
                 <h2 className="font-bold text-lg text-slate-900">
                   Recent Users
                 </h2>
-
                 <p className="text-xs text-slate-500 mt-1">
                   Latest registered students
                 </p>
@@ -622,7 +613,6 @@ const Dashboard = () => {
                         <h3 className="font-semibold text-slate-800 truncate">
                           {user.firstName} {user.lastName}
                         </h3>
-
                         <p className="text-xs text-slate-500 truncate">
                           {user.email}
                         </p>
@@ -633,7 +623,6 @@ const Dashboard = () => {
                       <span className="text-xs font-medium text-slate-500 capitalize">
                         {user.role}
                       </span>
-
                       <span
                         className={`text-[11px] font-semibold px-2 py-1 rounded-full ${
                           user.isActive
@@ -649,7 +638,6 @@ const Dashboard = () => {
               ) : (
                 <div className="py-14 text-center">
                   <UserRound className="mx-auto text-slate-300" size={35} />
-
                   <p className="text-sm text-slate-500 mt-3">No users found.</p>
                 </div>
               )}
@@ -657,14 +645,12 @@ const Dashboard = () => {
           </div>
 
           {/* Recent Mentors */}
-
           <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
             <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100">
               <div>
                 <h2 className="font-bold text-lg text-slate-900">
                   Recent Mentors
                 </h2>
-
                 <p className="text-xs text-slate-500 mt-1">
                   Latest approved mentors
                 </p>
@@ -707,7 +693,6 @@ const Dashboard = () => {
                         <h3 className="font-semibold text-slate-800 truncate">
                           {mentor.firstName} {mentor.lastName}
                         </h3>
-
                         <p className="text-xs text-slate-500 truncate">
                           {mentor.profession || "Mentor"}
                         </p>
@@ -718,7 +703,6 @@ const Dashboard = () => {
                       <div className="flex items-center gap-1 text-sm font-semibold text-amber-500">
                         ⭐ {mentor.rating || "New"}
                       </div>
-
                       <p className="text-[11px] text-slate-400 mt-1">Rating</p>
                     </div>
                   </div>
@@ -726,7 +710,6 @@ const Dashboard = () => {
               ) : (
                 <div className="py-14 text-center">
                   <UserCheck className="mx-auto text-slate-300" size={35} />
-
                   <p className="text-sm text-slate-500 mt-3">
                     No mentors found.
                   </p>
@@ -736,17 +719,13 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* ===================================================== */}
         {/* RECENT BOOKINGS */}
-        {/* ===================================================== */}
-
         <div className="mt-10 bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-6 py-5 border-b border-slate-100">
             <div>
               <h2 className="font-bold text-lg text-slate-900">
                 Recent Bookings
               </h2>
-
               <p className="text-xs text-slate-500 mt-1">
                 Latest mentor session activity
               </p>
@@ -768,23 +747,18 @@ const Dashboard = () => {
                   <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider text-slate-500">
                     Student
                   </th>
-
                   <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider text-slate-500">
                     Mentor
                   </th>
-
                   <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider text-slate-500">
                     Date
                   </th>
-
                   <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider text-slate-500">
                     Amount
                   </th>
-
                   <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider text-slate-500">
                     Status
                   </th>
-
                   <th className="px-6 py-4 text-right text-xs font-bold uppercase tracking-wider text-slate-500">
                     Action
                   </th>
@@ -806,13 +780,11 @@ const Dashboard = () => {
                             <div className="w-9 h-9 rounded-full bg-blue-50 flex items-center justify-center text-blue-600">
                               <UserRound size={17} />
                             </div>
-
                             <div>
                               <p className="font-semibold text-slate-800">
                                 {booking.student?.firstName || "Unknown"}{" "}
                                 {booking.student?.lastName || ""}
                               </p>
-
                               <p className="text-xs text-slate-400">Student</p>
                             </div>
                           </div>
@@ -823,14 +795,12 @@ const Dashboard = () => {
                             {booking.mentor?.firstName || "Unknown"}{" "}
                             {booking.mentor?.lastName || ""}
                           </p>
-
                           <p className="text-xs text-slate-400">Mentor</p>
                         </td>
 
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-2 text-sm text-slate-600">
                             <CalendarDays size={15} />
-
                             {booking.createdAt
                               ? new Date(booking.createdAt).toLocaleDateString(
                                   "en-IN",
@@ -860,7 +830,6 @@ const Dashboard = () => {
                             <span
                               className={`w-1.5 h-1.5 rounded-full ${statusStyle.dot}`}
                             />
-
                             {booking.bookingStatus || "Unknown"}
                           </span>
                         </td>
@@ -888,7 +857,6 @@ const Dashboard = () => {
                         className="mx-auto text-slate-300"
                         size={38}
                       />
-
                       <p className="mt-3 text-sm">No bookings available.</p>
                     </td>
                   </tr>
@@ -898,14 +866,10 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* ===================================================== */}
         {/* QUICK ACTIONS */}
-        {/* ===================================================== */}
-
         <div className="mt-10">
           <div className="mb-5">
             <h2 className="text-2xl font-bold text-slate-900">Quick Actions</h2>
-
             <p className="text-sm text-slate-500 mt-1">
               Quickly access frequently used admin tools.
             </p>
@@ -938,7 +902,6 @@ const Dashboard = () => {
                   <h3 className="font-bold text-slate-800 mt-5">
                     {action.title}
                   </h3>
-
                   <p className="text-sm text-slate-500 mt-1">
                     {action.description}
                   </p>
@@ -948,21 +911,16 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* ===================================================== */}
         {/* FOOTER STATUS */}
-        {/* ===================================================== */}
-
         <div className="mt-10 flex flex-col sm:flex-row items-center justify-between gap-3 px-5 py-4 bg-white rounded-2xl border border-slate-100 shadow-sm">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
               <ShieldCheck size={18} />
             </div>
-
             <div>
               <p className="text-sm font-semibold text-slate-800">
                 System Status
               </p>
-
               <p className="text-xs text-slate-500">
                 All core platform services are operational
               </p>

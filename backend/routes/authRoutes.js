@@ -8,9 +8,11 @@ import {
   verifyForgotOtpAndResetPassword,
 } from "../controllers/authController.js";
 import { authLimiter } from "../middleware/rateLimiter.js";
+import { googleAuth } from "../controllers/authController.js";
+
 const router = express.Router();
 
-
+router.post("/google", googleAuth);
 router.post("/register", authLimiter, registerUser);
 router.post("/verify-otp", authLimiter, verifyOtpAndRegisterUser);
 router.post("/login", authLimiter, loginUser);

@@ -7,6 +7,7 @@ import crypto from "crypto";
 import nodemailer from "nodemailer";
 import Meeting from "../models/Meeting.js";
 import axios from "axios";
+import {createMeeting} from "./meetingController.js";
 
 
 
@@ -613,42 +614,31 @@ const getMonthName = (monthIndex) => {
   return months[monthIndex];
 };
 
-const calculateProfileCompletion = (mentor) => {
-  let completed = 0;
 
-  const fields = [
-    mentor.profileImage,
-    mentor.resume,
-    mentor.degreeCertificate,
-    mentor.governmentId,
-    mentor.about,
-    mentor.headline,
-    mentor.company,
-    mentor.profession,
-    mentor.category,
-    mentor.primarySkill?.length > 0,
-    mentor.languages?.length > 0,
-    mentor.education?.degree,
-    mentor.education?.college,
-    mentor.education?.graduationYear,
-    mentor.availability?.availableDays,
-    mentor.availability?.startTime,
-    mentor.availability?.endTime,
-    mentor.pricing?.sessionPrice,
-  ];
-
-  fields.forEach((field) => {
-    if (field) completed++;
-  });
-
-  return Math.round((completed / fields.length) * 100);
-};
 
 // =======================================================
 // GET MENTOR DASHBOARD
 // GET /api/mentor/dashboard
 // Private
 // =======================================================
+
+// Helper function to calculate profile completion percentage
+const calculateProfileCompletion = (mentor) => {
+  let fields = [
+    mentor.firstName,
+    mentor.lastName,
+    mentor.profession,
+    mentor.bio,
+    mentor.profileImage,
+    mentor.skills && mentor.skills.length > 0,
+    mentor.experience && mentor.experience.length > 0,
+    mentor.education && mentor.education.length > 0,
+    mentor.hourlyRate,
+  ];
+
+  const completed = fields.filter(Boolean).length;
+  return Math.round((completed / fields.length) * 100);
+};
 
 export const getMentorDashboard = async (req, res) => {
   try {
@@ -677,7 +667,7 @@ export const getMentorDashboard = async (req, res) => {
       .sort({ createdAt: -1 });
 
     // ===================================================
-    // STATS
+    // STATS & FINANCIALS
     // ===================================================
 
     const completedBookings = bookings.filter(
@@ -693,20 +683,35 @@ export const getMentorDashboard = async (req, res) => {
       completedBookings.map((b) => b.student?._id?.toString())
     ).size;
 
+    // Net earnings for the mentor (after platform fees & commissions)
     const totalEarnings = completedBookings.reduce(
+      (sum, booking) => sum + (booking.mentorEarnings || booking.amount),
+      0
+    );
+
+    // Gross earnings (total paid by students)
+    const grossEarnings = completedBookings.reduce(
       (sum, booking) => sum + booking.amount,
       0
     );
 
+    // Total platform and admin fees deducted from mentor sessions
+    const totalCommissionsPaid = completedBookings.reduce(
+      (sum, booking) => sum + (booking.adminCommission || 0) + (booking.platformFee || 0),
+      0
+    );
+
     const stats = {
-      totalEarnings,
+      totalEarnings,         // Net earnings
+      grossEarnings,         // Gross volume
+      totalCommissionsPaid,  // Total fees/commissions deducted
       totalStudents,
       completedSessions: completedBookings.length,
       upcomingSessions: upcomingBookings.length,
     };
 
     // ===================================================
-    // MONTHLY EARNINGS
+    // MONTHLY EARNINGS (NET)
     // ===================================================
 
     const earningsByMonth = [];
@@ -719,7 +724,7 @@ export const getMentorDashboard = async (req, res) => {
       });
 
       const earnings = monthBookings.reduce(
-        (sum, booking) => sum + booking.amount,
+        (sum, booking) => sum + (booking.mentorEarnings || booking.amount),
         0
       );
 
@@ -728,6 +733,7 @@ export const getMentorDashboard = async (req, res) => {
         earnings,
       });
     }
+
     // ===================================================
     // SESSION ANALYTICS
     // ===================================================
@@ -791,13 +797,9 @@ export const getMentorDashboard = async (req, res) => {
 
     const formattedReviews = recentReviews.map((review) => ({
       _id: review._id,
-
       rating: review.rating,
-
       comment: review.review,
-
       createdAt: review.createdAt,
-
       student: review.studentId,
     }));
 
@@ -815,17 +817,11 @@ export const getMentorDashboard = async (req, res) => {
       if (!studentMap.has(id)) {
         studentMap.set(id, {
           _id: booking.student._id,
-
           firstName: booking.student.firstName,
-
           lastName: booking.student.lastName,
-
           email: booking.student.email,
-
           profileImage: booking.student.profileImage,
-
           totalSessions: 1,
-
           lastSession: booking.sessionDate,
         });
       } else {
@@ -854,87 +850,58 @@ export const getMentorDashboard = async (req, res) => {
     // ===================================================
 
     const activities = [];
-    // ===================================================
-    // BOOKING ACTIVITIES
-    // ===================================================
 
+    // BOOKING ACTIVITIES
     bookings.slice(0, 5).forEach((booking) => {
       activities.push({
         _id: booking._id,
-
         type:
           booking.bookingStatus === "Completed"
             ? "completed"
             : booking.bookingStatus === "Cancelled"
             ? "cancelled"
             : "booking",
-
         title: `${booking.bookingStatus} Session`,
-
         description: `${booking.sessionType} session with ${
           booking.student?.firstName || "Student"
         } ${booking.student?.lastName || ""}`,
-
         createdAt: booking.updatedAt,
       });
     });
 
-    // ===================================================
     // REVIEW ACTIVITIES
-    // ===================================================
-
     recentReviews.forEach((review) => {
       activities.push({
         _id: review._id,
-
         type: "review",
-
         title: "New Review Received",
-
         description: `${review.studentId?.firstName} rated you ${review.rating}/5 stars.`,
-
         createdAt: review.createdAt,
       });
     });
 
-    // ===================================================
     // PAYMENT ACTIVITIES
-    // ===================================================
-
     completedBookings.slice(0, 3).forEach((booking) => {
+      const earningsToShow = booking.mentorEarnings || booking.amount;
       activities.push({
         _id: `${booking._id}-payment`,
-
         type: "payment",
-
-        title: "Payment Received",
-
-        description: `₹${booking.amount} received for ${booking.sessionType}.`,
-
+        title: "Earnings Credited",
+        description: `₹${earningsToShow} earned (Net) for ${booking.sessionType}.`,
         createdAt: booking.updatedAt,
       });
     });
 
-    // ===================================================
     // PROFILE ACTIVITY
-    // ===================================================
-
     activities.push({
       _id: "profile",
-
       type: "profile",
-
       title: "Profile Updated",
-
       description: `Your profile is ${profileCompletion}% complete.`,
-
       createdAt: mentor.updatedAt,
     });
 
-    // ===================================================
     // SORT ACTIVITIES
-    // ===================================================
-
     activities.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
     // ===================================================
@@ -943,23 +910,14 @@ export const getMentorDashboard = async (req, res) => {
 
     return res.status(200).json({
       mentor,
-
       stats,
-
       earningsByMonth,
-
       sessionAnalytics,
-
       upcomingBookings: upcomingBookingsList,
-
       todayBookings,
-
       recentReviews: formattedReviews,
-
       recentStudents,
-
       profileCompletion,
-
       activities: activities.slice(0, 10),
     });
   } catch (error) {
@@ -1041,82 +999,40 @@ export const getPendingBookings = async (req, res) => {
 // =====================================================
 // APPROVE BOOKING
 // =====================================================
-
 export const approveBooking = async (req, res) => {
   try {
     const { bookingId } = req.params;
 
-    // Find mentor
-    const mentor = await Mentor.findOne({
-      student: req.user.id,
-    });
-
+    const mentor = await Mentor.findOne({ student: req.user.id });
     if (!mentor) {
-      return res.status(404).json({
-        success: false,
-        message: "Mentor not found",
-      });
+      return res
+        .status(404)
+        .json({ success: false, message: "Mentor not found" });
     }
 
-    // Find booking
     const booking = await Booking.findOne({
       _id: bookingId,
       mentor: mentor._id,
     });
-
     if (!booking) {
-      return res.status(404).json({
-        success: false,
-        message: "Booking not found",
-      });
+      return res
+        .status(404)
+        .json({ success: false, message: "Booking not found" });
     }
 
-    // Prevent approving twice
     if (booking.bookingStatus === "Confirmed") {
-      return res.status(400).json({
-        success: false,
-        message: "Booking is already approved",
-      });
+      return res
+        .status(400)
+        .json({ success: false, message: "Booking is already approved" });
     }
 
-    // Generate unique room ID
-    const roomId = "room_" + crypto.randomUUID().replace(/-/g, "");
-
-    // Meeting URL
-    const meetingLink = `${process.env.FRONTEND_URL}/meeting/${roomId}`;
-
-    // Update booking
     booking.bookingStatus = "Confirmed";
     booking.cancellationReason = null;
     booking.cancelledBy = null;
-
     await booking.save();
 
-    const meeting = await Meeting.create({
-      booking: booking._id,
-
-      mentor: booking.mentor,
-
-      student: booking.student,
-
-      provider: "ZEGOCLOUD",
-
-      roomId,
-
-      roomName: `GuideX-${roomId}`,
-
-      meetingLink,
-
-      scheduledDate: booking.sessionDate,
-
-      scheduledStartTime: booking.startTime,
-
-      scheduledEndTime: booking.endTime,
-
-      scheduledDuration: booking.duration,
-
-      status: "Scheduled",
-    });
+    // Automatically generate the Meeting room & Google Meet link
+    const meeting = await createMeeting(booking._id);
 
     return res.status(200).json({
       success: true,
@@ -1125,12 +1041,8 @@ export const approveBooking = async (req, res) => {
       meeting,
     });
   } catch (error) {
-    console.error(error);
-
-    return res.status(500).json({
-      success: false,
-      message: "Server Error",
-    });
+    console.error("Approve Booking Error:", error);
+    return res.status(500).json({ success: false, message: "Server Error" });
   }
 };
 

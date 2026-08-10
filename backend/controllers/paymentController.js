@@ -60,6 +60,15 @@ export const verifyPayment = async (req, res) => {
       });
     }
 
+    // ==========================================
+    // FINANCIAL SPLIT & COMMISSION CALCULATION
+    // ==========================================
+    const totalAmount = Number(amount); // e.g., 499
+    const platformFee = 20; // Flat platform handling fee (₹20)
+    const remainingAmount = totalAmount - platformFee;
+    const adminCommission = Math.round(remainingAmount * 0.1); // 10% admin commission on remaining
+    const mentorEarnings = remainingAmount - adminCommission; // Net money for the mentor
+
     const booking = await Booking.create({
       mentor,
       student: req.user.id,
@@ -72,12 +81,15 @@ export const verifyPayment = async (req, res) => {
 
       duration,
 
-      amount,
+      amount: totalAmount,
       currency: "INR",
 
-      notes,
+      // Financial breakdown saved in DB
+      platformFee,
+      adminCommission,
+      mentorEarnings,
 
-      meetingLink: null,
+      notes,
 
       paymentStatus: "Paid",
       bookingStatus: "Pending",
@@ -102,10 +114,10 @@ export const verifyPayment = async (req, res) => {
       },
       action: "Payment Success",
       module: "Payment",
-      description: `Successfully paid ₹${amount} and booked a session with mentor ${mentorData.firstName} ${mentorData.lastName}.`,
+      description: `Successfully paid ₹${totalAmount} and booked a session with mentor ${mentorData.firstName} ${mentorData.lastName}. (Mentor Net: ₹${mentorEarnings}, Commission: ₹${adminCommission})`,
       targetId: booking._id,
       targetType: "Booking",
-    }); 
+    });
 
     return res.status(200).json({
       success: true,

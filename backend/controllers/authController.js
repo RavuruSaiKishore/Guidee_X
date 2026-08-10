@@ -10,6 +10,9 @@ import { Resend } from "resend";
 import axios from "axios";
 import { sendSecurityEmail } from "../utils/sendSecurityEmail.js";
 import { isStrongPassword } from "../utils/validatePassword.js";
+import { OAuth2Client } from "google-auth-library";
+
+
 
 
 export const registerUser = async (req, res) => {
@@ -488,8 +491,7 @@ export const verifyForgotOtpAndResetPassword = async (req, res) => {
     if (!isStrongPassword(newPassword)) {
       return res.status(400).json({
         success: false,
-        message:
-          "Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special symbol.",
+        message: "Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special symbol.",
       });
     }
 
@@ -710,6 +712,84 @@ export const loginUser = async (req, res) => {
     res.status(500).json({
       success: false,
       message: error.message,
+    });
+  }
+};
+
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+export const googleAuth = async (req, res) => {
+  try {
+    const { token } = req.body;
+
+    if (!token) {
+      return res.status(400).json({
+        success: false,
+        message: "Google token is required",
+      });
+    }
+
+    // Verify the Google ID token securely
+    const ticket = await client.verifyIdToken({
+      idToken: token,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
+    const { email, given_name, family_name, picture, sub: googleId } = payload;
+
+    // Check if user already exists in your database
+    let user = await User.findOne({ email });
+
+    if (!user) {
+      // Create new user automatically if they don't exist
+      user = await User.create({
+        firstName: given_name || "User",
+        lastName: family_name || "",
+        email,
+        profileImage: picture,
+        googleId,
+        authProvider: "google",
+        isVerified: true, // Google accounts are pre-verified
+        role: "student", // Default role for Google signups
+      });
+    } else if (!user.googleId) {
+      // Link Google ID if user previously registered with email/password
+      user.googleId = googleId;
+      if (!user.profileImage) user.profileImage = picture;
+      await user.save();
+    }
+
+    // Generate your application's JWT session token
+    const appToken = jwt.sign(
+      { id: user._id, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    // Determine redirection route based on role
+    let redirectTo = "/";
+    if (user.role === "admin") {
+      redirectTo = "/admin";
+    } else if (user.role === "mentor") {
+      redirectTo = "/mentor";
+    } else {
+      redirectTo = "/"; // default student route
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Google sign-in successful",
+      token: appToken,
+      user,
+      redirectTo,
+    });
+  } catch (error) {
+    console.error("Google Auth Backend Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error during Google authentication",
+      error: error.message,
     });
   }
 };

@@ -200,7 +200,9 @@ export const getDashboard = async (req, res) => {
       totalUsers,
       totalMentors,
       totalBookings,
-      revenueResult,
+      totalEvents,
+      bookingRevenueResult,
+      eventRevenueResult,
       pendingMentorRequests,
       approvedMentors,
       totalRequests,
@@ -213,18 +215,14 @@ export const getDashboard = async (req, res) => {
       recentMentors,
       recentBookings,
     ] = await Promise.all([
-      // Total Students
-      Student.countDocuments({
-        role: "student",
-      }),
-
-      // Total Mentors
+      Student.countDocuments({ role: "student" }),
       Mentor.countDocuments(),
-
-      // Total Bookings
       Booking.countDocuments(),
+      EventRegistration.countDocuments(),
 
-      // Total Revenue
+      // ==========================
+      // SESSION BOOKING REVENUE
+      // ==========================
       Booking.aggregate([
         {
           $match: {
@@ -235,62 +233,51 @@ export const getDashboard = async (req, res) => {
         {
           $group: {
             _id: null,
-            totalRevenue: {
-              $sum: "$amount",
-            },
+            gross: { $sum: "$amount" },
+            platformFees: { $sum: "$platformFee" },
+            adminCommissions: { $sum: "$adminCommission" },
           },
         },
       ]),
 
-      // Pending Mentor Requests
-      Mentor.countDocuments({
-        verificationStatus: "Pending",
-        isVerified: false,
-      }),
-
       // ==========================
-      // CONTACT REQUEST STATS
+      // EVENT REGISTRATION REVENUE
       // ==========================
+      EventRegistration.aggregate([
+        {
+          $match: {
+            paymentStatus: "Paid",
+            status: "Registered",
+          },
+        },
+        {
+          $group: {
+            _id: null,
+            gross: { $sum: "$amountPaid" },
+            platformFees: { $sum: "$platformFee" },
+            adminCommissions: { $sum: "$adminCommission" },
+          },
+        },
+      ]),
 
+      Mentor.countDocuments({ verificationStatus: "Pending", isVerified: false }),
       Contact.countDocuments(),
+      Contact.countDocuments({ status: "Pending" }),
+      Contact.countDocuments({ status: "In Progress" }),
+      Contact.countDocuments({ status: "Resolved" }),
+      Contact.countDocuments({ replied: true }),
+      Mentor.countDocuments({ verificationStatus: "Approved", isVerified: true }),
 
-      Contact.countDocuments({
-        status: "Pending",
-      }),
-
-      Contact.countDocuments({
-        status: "In Progress",
-      }),
-
-      Contact.countDocuments({
-        status: "Resolved",
-      }),
-
-      Contact.countDocuments({
-        replied: true,
-      }),
-
-      // Approved Mentors
-      Mentor.countDocuments({
-        verificationStatus: "Approved",
-        isVerified: true,
-      }),
-
-      // Recent Users
       Student.find({ role: "student" })
         .select("firstName lastName email role createdAt isActive profileImage")
         .sort({ createdAt: -1 })
         .limit(10),
 
-      // Recent Mentors
       Mentor.find()
-        .select(
-          "firstName lastName email expertise rating createdAt profession profileImage"
-        )
+        .select("firstName lastName email expertise rating createdAt profession profileImage")
         .sort({ createdAt: -1 })
         .limit(7),
 
-      // Recent Bookings
       Booking.find()
         .populate("student", "firstName lastName email profileImage")
         .populate("mentor", "firstName lastName profileImage")
@@ -298,8 +285,16 @@ export const getDashboard = async (req, res) => {
         .limit(10),
     ]);
 
-    const totalRevenue =
-      revenueResult.length > 0 ? revenueResult[0].totalRevenue : 0;
+    // Extract Session Booking Financials
+    const bookingFin = bookingRevenueResult[0] || { gross: 0, platformFees: 0, adminCommissions: 0 };
+    // Extract Event Registration Financials
+    const eventFin = eventRevenueResult[0] || { gross: 0, platformFees: 0, adminCommissions: 0 };
+
+    // Combined Platform Totals
+    const totalGrossRevenue = bookingFin.gross + eventFin.gross;
+    const totalPlatformFees = bookingFin.platformFees + eventFin.platformFees;
+    const totalAdminCommissions = bookingFin.adminCommissions + eventFin.adminCommissions;
+    const totalPlatformRevenue = totalPlatformFees + totalAdminCommissions;
 
     return res.status(200).json({
       success: true,
@@ -307,12 +302,21 @@ export const getDashboard = async (req, res) => {
         totalUsers,
         totalMentors,
         totalBookings,
-        totalRevenue,
+        totalEvents,
+
+        // Overall Revenue Metrics
+        totalGrossRevenue,
+        totalPlatformRevenue,
+        totalPlatformFees,
+        totalAdminCommissions,
+
+        // Individual Breakdown (Sessions vs Events)
+        sessionsFinancials: bookingFin,
+        eventsFinancials: eventFin,
 
         pendingMentorRequests,
         approvedMentors,
 
-        // Contact Statistics
         totalRequests,
         pendingRequests,
         inProgressRequests,
@@ -326,7 +330,6 @@ export const getDashboard = async (req, res) => {
     });
   } catch (error) {
     console.log(error);
-
     return res.status(500).json({
       success: false,
       message: error.message,
@@ -1705,6 +1708,7 @@ export const deleteAuditLog = async (req, res) => {
 export const deleteFilteredAuditLogs = async (req, res) => {
   try {
     const { ids } = req.body;
+    console.log(ids);
 
     if (!ids || !Array.isArray(ids) || ids.length === 0) {
       return res.status(400).json({
@@ -1731,7 +1735,6 @@ export const deleteFilteredAuditLogs = async (req, res) => {
     });
   }
 };
-
 export const suspendMentor = async (req, res) => {
   try {
     const { mentorId } = req.params;

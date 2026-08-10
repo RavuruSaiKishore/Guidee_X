@@ -6,7 +6,7 @@ import Mentor from "../models/Mentor.js";
 import Notification from "../models/Notification.js";
 import Meeting from "../models/Meeting.js";
 import RescheduleRequest from "../models/RescheduleRequest.js";
-
+import Razorpay from "razorpay";
 
 
 const generateMeetingLink = () => {
@@ -189,11 +189,10 @@ export const cancelBooking = async (req, res) => {
       });
     }
 
-   const booking = await Booking.findOne({
-     _id: bookingId,
-     student: req.user.id,
-   });
-
+    const booking = await Booking.findOne({
+      _id: bookingId,
+      student: req.user.id,
+    });
 
     if (!booking) {
       return res.status(404).json({
@@ -215,6 +214,55 @@ export const cancelBooking = async (req, res) => {
     const user = await Student.findById(req.user.id);
     const mentorData = await Mentor.findById(booking.mentor);
 
+    // ==========================================
+    // REFUND POLICY CHECK (e.g., 24 hours prior)
+    // ==========================================
+    const sessionDateObj = new Date(booking.sessionDate);
+    let hours = 0;
+    let minutes = 0;
+    if (booking.startTime) {
+      const parts = booking.startTime.trim().split(" ");
+      const timePart = parts[0];
+      const period = parts[1] ? parts[1].toLowerCase() : "";
+      const timeSubParts = timePart.split(":");
+      hours = Number(timeSubParts[0]) || 0;
+      minutes = Number(timeSubParts[1]) || 0;
+      if (period === "pm" && hours !== 12) hours += 12;
+      if (period === "am" && hours === 12) hours = 0;
+    }
+    sessionDateObj.setHours(hours, minutes, 0, 0);
+
+    const now = new Date();
+    const hoursBeforeSession = (sessionDateObj - now) / (1000 * 60 * 60);
+
+    let refundProcessed = false;
+
+    // If cancelled more than 24 hours before session and payment was completed via Razorpay
+    if (
+      hoursBeforeSession >= 24 &&
+      booking.paymentStatus === "Paid" &&
+      booking.paymentId
+    ) {
+      try {
+        const razorpay = new Razorpay({
+          key_id: "rzp_test_T8DdDenfZutICk",
+          key_secret: "F05R8y6xtSCe7mNeWuvphIgL",
+        });
+
+        await razorpay.payments.refund(booking.paymentId, {
+          amount: booking.amount * 100, // Convert to paise (lowest currency unit)
+          speed: "optimum",
+          notes: {
+            reason: cancellationReason,
+          },
+        });
+        refundProcessed = true;
+        booking.paymentStatus = "Refunded";
+      } catch (refundErr) {
+        console.error("Razorpay Refund Error:", refundErr);
+      }
+    }
+
     booking.bookingStatus = "Cancelled";
     booking.cancelledBy = `${user.firstName} ${user.lastName}`;
     booking.cancellationReason = cancellationReason;
@@ -222,24 +270,21 @@ export const cancelBooking = async (req, res) => {
 
     await booking.save();
 
-
     await Notification.create({
       recipient: booking.mentor,
       recipientModel: "Mentor",
-
       sender: booking.student,
       senderModel: "Student",
-
       booking: booking._id,
-
       type: "BOOKING_CANCELLED",
-
       title: "Booking Cancelled",
-
-      message: `${user.firstName} ${user.lastName} cancelled the booked session.`,
+      message: `${user.firstName} ${
+        user.lastName
+      } cancelled the booked session.${
+        refundProcessed ? " (Refund Processed)" : ""
+      }`,
     });
 
-   
     // ===========================
     // AUDIT LOG
     // ===========================
@@ -251,18 +296,23 @@ export const cancelBooking = async (req, res) => {
       },
       action: "Cancel Booking",
       module: "Booking",
-      description: `Cancelled booking with mentor ${mentorData.firstName} ${mentorData.lastName}. Reason: ${cancellationReason}`,
+      description: `Cancelled booking with mentor ${mentorData.firstName} ${
+        mentorData.lastName
+      }. Reason: ${cancellationReason}.${
+        refundProcessed ? " Refund issued." : ""
+      }`,
       targetId: booking._id,
       targetType: "Booking",
     });
 
     res.json({
       success: true,
-      message: "Booking cancelled successfully..!",
+      message: refundProcessed
+        ? "Booking cancelled and refund processed successfully..!"
+        : "Booking cancelled successfully..! (Note: Refund applicable only if cancelled 24 hours prior).",
     });
   } catch (error) {
     console.log(error);
-
     res.status(500).json({
       success: false,
       message: "Internal Server Error",

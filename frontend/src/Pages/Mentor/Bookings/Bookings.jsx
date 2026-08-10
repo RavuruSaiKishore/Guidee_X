@@ -47,6 +47,7 @@ const ConfirmedSessions = () => {
       );
 
       const data = await response.json();
+      console.log(data);
 
       if (!response.ok) {
         throw new Error(data.message || "Failed to fetch confirmed sessions");
@@ -57,7 +58,6 @@ const ConfirmedSessions = () => {
       }
     } catch (error) {
       console.error("Error fetching confirmed sessions:", error);
-
       toast.error(error.message || "Failed to load confirmed sessions");
     } finally {
       setLoading(false);
@@ -127,8 +127,32 @@ const ConfirmedSessions = () => {
       }
     } catch (error) {
       console.error("Cancel booking error:", error);
-
       toast.error("Something went wrong.");
+    }
+  };
+
+  // ==================================================
+  // JOIN GOOGLE MEET HANDLER
+  // ==================================================
+
+  const handleJoinGoogleMeet = async (roomId) => {
+    try {
+      const token = localStorage.getItem("MentorToken");
+      const res = await fetch(`${API_BASE_URL}/api/meeting/${roomId}`, {
+        method: "GET",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        return toast.error(data.message || "Unable to join meeting.");
+      }
+
+      // Open Google Meet link in a new tab
+      window.open(data.googleMeetLink, "_blank");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to connect to meeting room.");
     }
   };
 
@@ -143,9 +167,7 @@ const ConfirmedSessions = () => {
     `.toLowerCase();
 
     const sessionType = (session.sessionType || "").toLowerCase();
-
     const email = (session.student?.email || "").toLowerCase();
-
     const search = searchTerm.toLowerCase().trim();
 
     return (
@@ -156,60 +178,45 @@ const ConfirmedSessions = () => {
   });
 
   // ==================================================
-  // MEETING TIMES
+  // MEETING TIMES (FIXED LOCAL TIMEZONE PARSING)
   // ==================================================
 
   const getMeetingTimes = (session) => {
-    const meetingStart = new Date(session.sessionDate);
+    const datePart = session.sessionDate.split("T")[0];
+    const [year, month, day] = datePart.split("-").map(Number);
+
+    const meetingStart = new Date(year, month - 1, day);
+    const meetingEnd = new Date(year, month - 1, day);
 
     if (!session.startTime || !session.endTime) {
       return {
         meetingStart,
-        meetingEnd: meetingStart,
+        meetingEnd,
         joinTime: meetingStart,
       };
     }
 
     // START TIME
-
     let [startTime, startPeriod] = session.startTime.split(" ");
-
     let [startHour, startMinute] = startTime.split(":").map(Number);
-
     startPeriod = startPeriod?.toLowerCase();
 
-    if (startPeriod === "pm" && startHour !== 12) {
-      startHour += 12;
-    }
-
-    if (startPeriod === "am" && startHour === 12) {
-      startHour = 0;
-    }
+    if (startPeriod === "pm" && startHour !== 12) startHour += 12;
+    if (startPeriod === "am" && startHour === 12) startHour = 0;
 
     meetingStart.setHours(startHour, startMinute, 0, 0);
 
     // END TIME
-
-    const meetingEnd = new Date(session.sessionDate);
-
     let [endTime, endPeriod] = session.endTime.split(" ");
-
     let [endHour, endMinute] = endTime.split(":").map(Number);
-
     endPeriod = endPeriod?.toLowerCase();
 
-    if (endPeriod === "pm" && endHour !== 12) {
-      endHour += 12;
-    }
-
-    if (endPeriod === "am" && endHour === 12) {
-      endHour = 0;
-    }
+    if (endPeriod === "pm" && endHour !== 12) endHour += 12;
+    if (endPeriod === "am" && endHour === 12) endHour = 0;
 
     meetingEnd.setHours(endHour, endMinute, 0, 0);
 
     // JOIN 10 MINUTES BEFORE
-
     const joinTime = new Date(meetingStart.getTime() - 10 * 60 * 1000);
 
     return {
@@ -225,9 +232,7 @@ const ConfirmedSessions = () => {
 
   const formatCountdown = (seconds) => {
     const hrs = Math.floor(seconds / 3600);
-
     const mins = Math.floor((seconds % 3600) / 60);
-
     const secs = seconds % 60;
 
     return `${hrs.toString().padStart(2, "0")}:${mins
@@ -261,14 +266,11 @@ const ConfirmedSessions = () => {
         <div className="flex flex-col items-center">
           <div className="relative h-14 w-14">
             <div className="h-14 w-14 rounded-full border-4 border-emerald-100" />
-
             <div className="absolute inset-0 h-14 w-14 animate-spin rounded-full border-4 border-transparent border-t-emerald-600" />
           </div>
-
           <p className="mt-5 text-center font-medium text-gray-700">
             Loading your Bookings...
           </p>
-
           <p className="mt-1 text-sm text-gray-400">Please wait a moment</p>
         </div>
       </div>
@@ -277,32 +279,16 @@ const ConfirmedSessions = () => {
 
   return (
     <>
-      {/* ==================================================
-          PAGE CONTENT
-
-          Mobile:
-          pt-20 -> space for mobile navbar
-
-          Desktop:
-          ml-64 -> space for fixed sidebar
-      ================================================== */}
-
       <main className="min-h-screen w-full min-w-0 overflow-x-hidden bg-gray-50 px-3 pb-8 pt-20 sm:px-5 sm:pb-10 sm:pt-20 lg:ml-64 lg:w-[calc(100%-16rem)] lg:px-6 lg:pt-8 xl:px-8">
         {/* ==================================================
             HEADER
         ================================================== */}
-
         <section className="mb-5 sm:mb-8">
           <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-violet-700 via-indigo-700 to-fuchsia-700 p-4 text-white shadow-xl sm:rounded-3xl sm:p-6 lg:p-8">
-            {/* Decorative */}
-
             <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-white/10 blur-3xl sm:h-44 sm:w-44" />
-
             <div className="absolute -bottom-16 -left-10 h-40 w-40 rounded-full bg-white/10 blur-3xl sm:h-56 sm:w-56" />
 
             <div className="relative flex flex-col gap-5 sm:gap-6 lg:flex-row lg:items-center lg:justify-between">
-              {/* Left */}
-
               <div className="flex min-w-0 items-start gap-3 sm:items-center sm:gap-5">
                 <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-white/20 bg-white/20 backdrop-blur-md sm:h-16 sm:w-16 sm:rounded-2xl">
                   <CalendarCheck2
@@ -315,14 +301,11 @@ const ConfirmedSessions = () => {
                   <h1 className="break-words text-xl font-bold leading-tight sm:text-2xl lg:text-3xl">
                     Confirmed Booking Sessions
                   </h1>
-
                   <p className="mt-1 text-sm leading-5 text-green-100 sm:mt-2 sm:text-base">
                     View and manage all confirmed mentorship sessions.
                   </p>
                 </div>
               </div>
-
-              {/* Right */}
 
               <div className="w-full rounded-xl border border-white/20 bg-white/15 px-4 py-3 backdrop-blur-md sm:w-auto sm:rounded-2xl sm:px-6 sm:py-4">
                 <div className="flex items-center justify-between gap-4">
@@ -330,7 +313,6 @@ const ConfirmedSessions = () => {
                     <p className="text-xs uppercase tracking-wider text-green-100">
                       Total
                     </p>
-
                     <h3 className="mt-1 text-lg font-semibold sm:text-xl">
                       Confirmed
                     </h3>
@@ -348,27 +330,22 @@ const ConfirmedSessions = () => {
         {/* ==================================================
             SEARCH
         ================================================== */}
-
         <section className="mb-5 sm:mb-8">
           <div className="mb-2">
             <h3 className="text-sm font-semibold text-gray-700">
               Search Sessions
             </h3>
-
             <p className="text-xs leading-5 text-gray-500">
               Search by student name, email or session type.
             </p>
           </div>
 
           <div className="flex flex-col gap-3 lg:flex-row">
-            {/* Search Input */}
-
             <div className="relative min-w-0 flex-1">
               <Search
                 size={19}
                 className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
               />
-
               <input
                 type="text"
                 placeholder="Search by student or session type..."
@@ -378,14 +355,11 @@ const ConfirmedSessions = () => {
               />
             </div>
 
-            {/* Result */}
-
             <div className="flex h-14 w-full items-center justify-between rounded-xl border border-emerald-200 bg-emerald-50 px-4 shadow-sm sm:h-16 sm:px-6 lg:w-[240px] lg:shrink-0 lg:rounded-2xl">
               <div>
                 <p className="text-xs font-medium uppercase tracking-wide text-emerald-600">
                   Search Results
                 </p>
-
                 <p className="text-xs text-gray-600 sm:text-sm">
                   Matching sessions
                 </p>
@@ -401,7 +375,6 @@ const ConfirmedSessions = () => {
         {/* ==================================================
             EMPTY STATE
         ================================================== */}
-
         {filteredSessions.length === 0 ? (
           <section className="rounded-2xl border border-gray-200 bg-white px-4 py-12 shadow-sm sm:rounded-3xl sm:p-14">
             <div className="flex flex-col items-center text-center">
@@ -415,7 +388,6 @@ const ConfirmedSessions = () => {
               <h2 className="mt-5 text-xl font-bold text-gray-800 sm:text-2xl">
                 No Confirmed Sessions
               </h2>
-
               <p className="mt-2 max-w-md text-sm leading-6 text-gray-500 sm:text-base">
                 There are currently no confirmed mentorship sessions. Once
                 students book and you confirm them, they will appear here.
@@ -426,7 +398,6 @@ const ConfirmedSessions = () => {
           /* ==================================================
               SESSION LIST
           ================================================== */
-
           <section className="space-y-4 sm:space-y-5">
             {filteredSessions.map((session) => {
               const { meetingEnd, joinTime } = getMeetingTimes(session);
@@ -446,18 +417,11 @@ const ConfirmedSessions = () => {
                   key={session._id}
                   className="w-full overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition hover:shadow-lg sm:rounded-2xl"
                 >
-                  {/* Accent */}
-
                   <div className="h-1 bg-emerald-500" />
 
                   <div className="p-4 sm:p-5 lg:p-6">
-                    {/* ==================================================
-                        STUDENT + FEE
-                    ================================================== */}
-
+                    {/* STUDENT + FEE */}
                     <div className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
-                      {/* Student */}
-
                       <div className="flex min-w-0 items-start gap-3 sm:gap-4">
                         <img
                           src={getProfileImage(session.student?.profileImage)}
@@ -507,27 +471,20 @@ const ConfirmedSessions = () => {
                         </div>
                       </div>
 
-                      {/* Fee */}
-
                       <div className="border-t border-gray-100 pt-4 xl:border-0 xl:pt-0 xl:text-right">
                         <p className="text-xs text-gray-500">Session Fee</p>
-
                         <h2 className="text-xl font-bold text-emerald-600 sm:text-2xl">
                           ₹{session.amount}
                         </h2>
                       </div>
                     </div>
 
-                    {/* ==================================================
-                        DETAILS
-                    ================================================== */}
-
+                    {/* DETAILS */}
                     <div className="mt-5 grid grid-cols-1 gap-3 min-[420px]:grid-cols-2 lg:grid-cols-4">
                       <div className="rounded-xl border border-gray-100 bg-gray-50 p-3 sm:p-4">
                         <p className="text-[10px] uppercase tracking-wide text-gray-500 sm:text-[11px]">
                           Session Date
                         </p>
-
                         <h3 className="mt-1 text-sm font-semibold text-gray-800 sm:text-base">
                           {new Date(session.sessionDate).toLocaleDateString()}
                         </h3>
@@ -537,11 +494,9 @@ const ConfirmedSessions = () => {
                         <p className="text-[10px] uppercase tracking-wide text-gray-500 sm:text-[11px]">
                           Time
                         </p>
-
                         <h3 className="mt-1 text-sm font-semibold text-gray-800 sm:text-base">
                           {session.startTime}
                         </h3>
-
                         <p className="text-xs text-gray-500 sm:text-sm">
                           {session.endTime}
                         </p>
@@ -551,7 +506,6 @@ const ConfirmedSessions = () => {
                         <p className="text-[10px] uppercase tracking-wide text-gray-500 sm:text-[11px]">
                           Duration
                         </p>
-
                         <h3 className="mt-1 text-sm font-semibold text-gray-800 sm:text-base">
                           {session.duration} mins
                         </h3>
@@ -561,29 +515,23 @@ const ConfirmedSessions = () => {
                         <p className="text-[10px] uppercase tracking-wide text-gray-500 sm:text-[11px]">
                           Booked On
                         </p>
-
                         <h3 className="mt-1 text-sm font-semibold text-gray-800 sm:text-base">
                           {new Date(session.createdAt).toLocaleDateString()}
                         </h3>
                       </div>
                     </div>
 
-                    {/* ==================================================
-                        NOTES
-                    ================================================== */}
-
+                    {/* NOTES */}
                     {session.notes && (
                       <div className="mt-4 overflow-hidden rounded-xl border border-amber-200 bg-gradient-to-r from-amber-50 to-yellow-50 shadow-sm sm:mt-5 sm:rounded-2xl">
                         <div className="flex items-center gap-3 border-b border-amber-200 bg-white/60 px-4 py-3 sm:px-5">
                           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-100 sm:h-10 sm:w-10">
                             <FileText size={19} className="text-amber-600" />
                           </div>
-
                           <div className="min-w-0">
                             <h3 className="text-sm font-bold text-gray-800">
                               Session Notes
                             </h3>
-
                             <p className="text-xs text-gray-500">
                               Instructions shared by the student
                             </p>
@@ -598,14 +546,9 @@ const ConfirmedSessions = () => {
                       </div>
                     )}
 
-                    {/* ==================================================
-                        MEETING STATUS
-                    ================================================== */}
-
+                    {/* MEETING STATUS */}
                     <div className="mt-4 rounded-xl border border-gray-200 bg-gradient-to-r from-slate-50 to-gray-100 p-4 sm:mt-5 sm:rounded-2xl sm:p-5">
                       <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-                        {/* Status */}
-
                         <div className="min-w-0">
                           <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">
                             Meeting Status
@@ -615,27 +558,23 @@ const ConfirmedSessions = () => {
                             <>
                               <div className="mt-2 flex items-center gap-2">
                                 <span className="h-3 w-3 shrink-0 animate-pulse rounded-full bg-emerald-500" />
-
                                 <span className="text-sm font-semibold text-emerald-700 sm:text-base">
                                   Live • Ready to Join
                                 </span>
                               </div>
-
                               <p className="mt-2 text-xs leading-5 text-gray-500 sm:text-sm">
                                 Your session is live now. Click the button to
-                                join the meeting.
+                                join Google Meet.
                               </p>
                             </>
                           ) : meetingExpired ? (
                             <>
                               <div className="mt-2 flex items-center gap-2">
                                 <span className="h-3 w-3 shrink-0 rounded-full bg-gray-500" />
-
                                 <span className="text-sm font-semibold text-gray-700 sm:text-base">
                                   Meeting Completed
                                 </span>
                               </div>
-
                               <p className="mt-2 text-xs leading-5 text-gray-500 sm:text-sm">
                                 This mentorship session has already ended.
                               </p>
@@ -644,7 +583,6 @@ const ConfirmedSessions = () => {
                             <>
                               <div className="mt-2 flex items-center gap-2">
                                 <span className="h-3 w-3 shrink-0 animate-pulse rounded-full bg-orange-500" />
-
                                 <span className="text-sm font-semibold text-orange-700 sm:text-base">
                                   Waiting for Meeting Window
                                 </span>
@@ -663,18 +601,17 @@ const ConfirmedSessions = () => {
                           )}
                         </div>
 
-                        {/* Actions */}
-
+                        {/* ACTIONS */}
                         <div className="flex w-full flex-col gap-3 sm:flex-row lg:w-auto">
                           {canJoin ? (
                             <button
                               onClick={() =>
-                                navigate(`/meeting/${session.meeting?.roomId}`)
+                                handleJoinGoogleMeet(session.meeting?.roomId)
                               }
                               className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 py-3 text-sm font-semibold text-white shadow-lg transition hover:bg-emerald-700 sm:w-auto sm:px-6"
                             >
                               <ExternalLink size={18} />
-                              Join Meeting
+                              Join Google Meet
                             </button>
                           ) : meetingExpired ? (
                             <button
@@ -716,12 +653,9 @@ const ConfirmedSessions = () => {
       {/* ==================================================
           CANCEL MODAL
       ================================================== */}
-
       {showCancelModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto bg-black/50 p-3 backdrop-blur-sm sm:p-5">
           <div className="my-auto w-full max-w-md rounded-2xl bg-white p-5 shadow-2xl sm:rounded-3xl sm:p-6">
-            {/* Header */}
-
             <div className="flex items-center justify-between gap-4">
               <h2 className="text-xl font-bold text-gray-800 sm:text-2xl">
                 Cancel Booking

@@ -4,25 +4,26 @@ import {
   CalendarDays,
   CheckCircle2,
   TrendingUp,
+  Receipt,
 } from "lucide-react";
 
 export default function StatsCards({ stats }) {
   const cards = [
     {
-      title: "Total Earnings",
+      title: "Your Net Earnings",
       value: `₹${stats?.totalEarnings?.toLocaleString() || 0}`,
-      subtitle: "Lifetime Earnings",
+      subtitle: `From Gross: ₹${stats?.grossEarnings?.toLocaleString() || 0}`,
       icon: IndianRupee,
       bg: "from-emerald-500 to-green-600",
-      iconBg: "bg-white/20",
+      iconBg: "bg-white/25",
     },
 
     {
-      title: "Total Students",
-      value: stats?.totalStudents || 0,
-      subtitle: "Students Mentored",
-      icon: Users,
-      bg: "from-blue-500 to-cyan-600",
+      title: "Platform Fees & Cut",
+      value: `₹${stats?.totalCommissionsPaid?.toLocaleString() || 0}`,
+      subtitle: "Platform & Admin Deductions",
+      icon: Receipt,
+      bg: "from-blue-600 to-indigo-700",
       iconBg: "bg-white/20",
     },
 
@@ -77,30 +78,20 @@ export default function StatsCards({ stats }) {
             `}
           >
             {/* Decorative Circle */}
-
             <div className="pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full bg-white/10 transition-transform duration-500 group-hover:scale-125 sm:h-32 sm:w-32" />
-
             <div className="pointer-events-none absolute -bottom-10 -left-10 h-24 w-24 rounded-full bg-white/5 sm:h-32 sm:w-32" />
 
             {/* Content */}
-
             <div className="relative z-10">
-              {/* Top */}
-
               <div className="flex items-start justify-between gap-3">
-                {/* Title & Value */}
-
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-xs font-medium text-white/85 sm:text-sm">
                     {card.title}
                   </p>
-
                   <h2 className="mt-2 break-words text-2xl font-bold tracking-tight sm:mt-3 sm:text-3xl lg:text-4xl">
                     {card.value}
                   </h2>
                 </div>
-
-                {/* Icon */}
 
                 <div
                   className={`
@@ -121,8 +112,6 @@ export default function StatsCards({ stats }) {
                 </div>
               </div>
 
-              {/* Bottom */}
-
               <div className="mt-5 flex items-center justify-between gap-2 sm:mt-7 lg:mt-8">
                 <p className="min-w-0 truncate text-xs text-white/85 sm:text-sm">
                   {card.subtitle}
@@ -130,7 +119,6 @@ export default function StatsCards({ stats }) {
 
                 <div className="flex shrink-0 items-center gap-1 rounded-full bg-white/20 px-2 py-1 text-[10px] backdrop-blur-sm sm:px-3 sm:text-xs">
                   <TrendingUp className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-
                   <span>Live</span>
                 </div>
               </div>

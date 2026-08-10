@@ -17,6 +17,9 @@ import {
   DollarSign,
   Layers,
   Sparkles,
+  ShieldCheck,
+  Receipt,
+  IndianRupee,
 } from "lucide-react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -222,23 +225,39 @@ const EventManagement = () => {
     });
   }, [events, searchTerm, selectedStatus, selectedDomain]);
 
+  // Calculations for Stats Overview Cards
+  const totalEventsCount = events.length;
   const upcomingCount = events.filter(
     (ev) => ev.status === "Published" || ev.computedStatus === "Upcoming"
   ).length;
-
   const liveCount = events.filter(
     (ev) => ev.computedStatus === "Live Now" || ev.status === "Live"
   ).length;
-
   const completedCount = events.filter(
     (ev) => ev.computedStatus === "Completed" || ev.status === "Completed"
   ).length;
+
+  const totalGrossRevenueCollected = events.reduce(
+    (sum, ev) => sum + (Number(ev.totalGrossRevenue) || 0),
+    0
+  );
+  const totalPlatformFeesCollected = events.reduce(
+    (sum, ev) => sum + (Number(ev.totalPlatformFees) || 0),
+    0
+  );
+  const totalAdminCommissionsCollected = events.reduce(
+    (sum, ev) => sum + (Number(ev.totalAdminCommissions) || 0),
+    0
+  );
+
+  const totalCombinedCuts =
+    totalPlatformFeesCollected + totalAdminCommissionsCollected;
 
   return (
     <div className="min-h-screen bg-[#f8fafc]">
       <ToastContainer position="top-right" autoClose={3000} theme="light" />
 
-      <div className="mx-auto max-w-[1400px] p-4 sm:p-6 lg:p-8">
+      <div className="mx-auto max-w-[1600px] p-4 sm:p-6 lg:p-8">
         {/* HEADER */}
         <div className="mb-8 flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
           <div>
@@ -265,60 +284,122 @@ const EventManagement = () => {
           </button>
         </div>
 
-        {/* STATS OVERVIEW */}
-        <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500">Total Events</p>
-                <h2 className="mt-2 text-2xl font-bold text-gray-900">
-                  {events.length}
-                </h2>
+        {/* STATS OVERVIEW CARDS (Arranged in 2 Rows: 4 Cards Top, 3 Cards Bottom) */}
+        <div className="mb-8 space-y-4">
+          {/* Row 1: Session counts & status metrics */}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-500">Total Events</p>
+                  <h2 className="mt-2 text-2xl font-bold text-gray-900">
+                    {totalEventsCount}
+                  </h2>
+                </div>
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
+                  <CalendarDays size={22} />
+                </div>
               </div>
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
-                <CalendarDays size={22} />
+            </div>
+
+            <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-500">Upcoming Sessions</p>
+                  <h2 className="mt-2 text-2xl font-bold text-gray-900">
+                    {upcomingCount}
+                  </h2>
+                </div>
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+                  <CalendarCheck2 size={22} />
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-500">Live Now</p>
+                  <h2 className="mt-2 text-2xl font-bold text-gray-900">
+                    {liveCount}
+                  </h2>
+                </div>
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+                  <Video size={22} />
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-500">Completed</p>
+                  <h2 className="mt-2 text-2xl font-bold text-gray-900">
+                    {completedCount}
+                  </h2>
+                </div>
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gray-100 text-gray-600">
+                  <CheckCircle2 size={22} />
+                </div>
               </div>
             </div>
           </div>
 
-          <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500">Upcoming Sessions</p>
-                <h2 className="mt-2 text-2xl font-bold text-gray-900">
-                  {upcomingCount}
-                </h2>
-              </div>
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
-                <CalendarCheck2 size={22} />
-              </div>
-            </div>
-          </div>
-
-          <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500">Live Now</p>
-                <h2 className="mt-2 text-2xl font-bold text-gray-900">
-                  {liveCount}
-                </h2>
-              </div>
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
-                <Video size={22} />
+          {/* Row 2: Financial metrics (Total Volume + Combined Fee/Commission Card with Total) */}
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            {/* Total Event Revenue Card */}
+            <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-500">Total Event Volume</p>
+                  <h2 className="mt-2 text-2xl font-bold text-gray-900">
+                    ₹{totalGrossRevenueCollected.toLocaleString("en-IN")}
+                  </h2>
+                </div>
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-purple-50 text-purple-600">
+                  <IndianRupee size={22} />
+                </div>
               </div>
             </div>
-          </div>
 
-          <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500">Completed</p>
-                <h2 className="mt-2 text-2xl font-bold text-gray-900">
-                  {completedCount}
-                </h2>
-              </div>
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gray-100 text-gray-600">
-                <CheckCircle2 size={22} />
+            {/* Combined Platform Fee & Admin Commission Card with Total */}
+            <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+              <div className="flex items-center justify-between">
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center justify-between pr-4">
+                    <p className="text-sm text-gray-500">
+                      Platform Cuts & Fees
+                    </p>
+                    <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700">
+                      Total: ₹{totalCombinedCuts.toLocaleString("en-IN")}
+                    </span>
+                  </div>
+                  <div className="mt-2 flex flex-wrap items-center gap-x-6 gap-y-1">
+                    <div>
+                      <span className="text-xs text-gray-400 font-medium">
+                        Platform Fee:{" "}
+                      </span>
+                      <span className="text-base font-bold text-teal-600">
+                        ₹{totalPlatformFeesCollected.toLocaleString("en-IN")}
+                      </span>
+                    </div>
+                    <div className="hidden sm:inline-block text-gray-300">
+                      |
+                    </div>
+                    <div>
+                      <span className="text-xs text-gray-400 font-medium">
+                        Admin Comm:{" "}
+                      </span>
+                      <span className="text-base font-bold text-amber-600">
+                        ₹
+                        {totalAdminCommissionsCollected.toLocaleString("en-IN")}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-teal-50 text-teal-600">
+                  <Receipt size={22} />
+                </div>
               </div>
             </div>
           </div>
@@ -411,13 +492,11 @@ const EventManagement = () => {
                 >
                   <div className="flex flex-col lg:flex-row">
                     {/* LEFT COLUMN: BANNER */}
-                    {/* LEFT COLUMN: BANNER */}
                     <div className="relative flex h-56 w-full shrink-0 items-center justify-center overflow-hidden bg-gray-900 lg:h-auto lg:min-h-[100%] lg:w-72 xl:w-80">
                       {bannerUrl ? (
                         <img
                           src={bannerUrl}
                           alt={event.title}
-                          // Note: Use 'object-cover' to fill the space, or change to 'object-contain' if you want zero cropping.
                           className="absolute inset-0 h-full w-full object-cover object-center transition duration-500 group-hover:scale-105 opacity-90"
                           onError={(e) => {
                             e.currentTarget.style.display = "none";
@@ -429,10 +508,8 @@ const EventManagement = () => {
                         </div>
                       )}
 
-                      {/* GRADIENT OVERLAY FOR TEXT READABILITY */}
                       <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent lg:bg-gradient-to-r lg:from-transparent lg:to-black/40" />
 
-                      {/* BADGES ON BANNER */}
                       <div className="absolute left-3 top-3 flex flex-wrap gap-1.5 z-10">
                         <span
                           className={`inline-flex rounded-full border px-2.5 py-0.5 text-[11px] font-semibold backdrop-blur-md ${getStatusStyle(
@@ -446,7 +523,6 @@ const EventManagement = () => {
                         </span>
                       </div>
 
-                      {/* FEATURED TAG */}
                       {event.isFeatured && (
                         <div className="absolute bottom-3 left-3 z-10 flex items-center gap-1 rounded-md bg-amber-500/90 px-2 py-0.5 text-[10px] font-bold text-white backdrop-blur-sm shadow-md">
                           <Sparkles size={11} /> Featured
@@ -454,10 +530,9 @@ const EventManagement = () => {
                       )}
                     </div>
 
-                    {/* MIDDLE COLUMN: CONTENT & UNCOMPRESSED METRICS */}
+                    {/* MIDDLE COLUMN: CONTENT & METRICS */}
                     <div className="flex flex-1 flex-col justify-between p-5 lg:p-6">
                       <div>
-                        {/* TYPE & TAGS */}
                         <div className="mb-1.5 flex items-center gap-2 text-xs font-semibold text-indigo-600">
                           <Layers size={14} />
                           <span>{event.eventType || "Guest Lecture"}</span>
@@ -471,20 +546,17 @@ const EventManagement = () => {
                           )}
                         </div>
 
-                        {/* TITLE */}
                         <h3 className="text-base font-bold text-gray-900 group-hover:text-indigo-600 sm:text-lg">
                           {event.title}
                         </h3>
 
-                        {/* SUMMARY */}
                         <p className="mt-1.5 line-clamp-2 text-xs leading-5 text-gray-600 sm:text-sm sm:leading-6">
                           {event.shortSummary || event.description}
                         </p>
                       </div>
 
-                      {/* UNCOMPRESSED 2-COLUMN METRICS GRID */}
+                      {/* METRICS GRID */}
                       <div className="mt-4 grid grid-cols-1 gap-2.5 border-t border-gray-100 pt-3.5 sm:grid-cols-2">
-                        {/* DATE & TIME */}
                         <div className="flex items-center gap-2.5 rounded-xl bg-gray-50/80 p-2.5">
                           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-indigo-100/70 text-indigo-600">
                             <CalendarDays size={16} />
@@ -503,7 +575,6 @@ const EventManagement = () => {
                           </div>
                         </div>
 
-                        {/* SEATS & REGISTRATIONS */}
                         <div className="flex items-center gap-2.5 rounded-xl bg-gray-50/80 p-2.5">
                           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-100/70 text-emerald-600">
                             <Users size={16} />
@@ -519,26 +590,47 @@ const EventManagement = () => {
                           </div>
                         </div>
 
-                        {/* REGISTRATION DEADLINE */}
-                        <div className="flex items-center gap-2.5 rounded-xl bg-gray-50/80 p-2.5 sm:col-span-2 lg:col-span-1">
-                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-orange-100/70 text-orange-600">
-                            <CalendarCheck2 size={16} />
+                        {/* FINANCIAL BREAKDOWN DISPLAY */}
+                        {event.isPaid && (
+                          <div className="flex items-center gap-2.5 rounded-xl bg-amber-50/50 p-2.5 sm:col-span-2">
+                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-700">
+                              <DollarSign size={16} />
+                            </div>
+                            <div className="min-w-0 flex-1 flex flex-wrap items-center justify-between gap-2">
+                              <div>
+                                <p className="text-[10px] font-bold uppercase tracking-wider text-amber-600/80">
+                                  Financial Breakdown
+                                </p>
+                                <p className="text-xs font-bold text-gray-900">
+                                  Gross: ₹
+                                  {Number(
+                                    event.totalGrossRevenue || 0
+                                  ).toLocaleString("en-IN")}
+                                </p>
+                              </div>
+                              <div className="text-right">
+                                <span className="text-[11px] font-medium text-gray-600">
+                                  Platform Fee:{" "}
+                                  <strong className="text-gray-900">
+                                    ₹{event.totalPlatformFees || 0}
+                                  </strong>
+                                </span>
+                                <span className="mx-2 text-gray-300">|</span>
+                                <span className="text-[11px] font-medium text-gray-600">
+                                  Admin Comm:{" "}
+                                  <strong className="text-gray-900">
+                                    ₹{event.totalAdminCommissions || 0}
+                                  </strong>
+                                </span>
+                              </div>
+                            </div>
                           </div>
-                          <div className="min-w-0">
-                            <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
-                              Registration Closes
-                            </p>
-                            <p className="truncate text-xs font-semibold text-gray-800">
-                              {formatDate(event.registrationDeadline)}
-                            </p>
-                          </div>
-                        </div>
+                        )}
                       </div>
                     </div>
 
-                    {/* RIGHT COLUMN: SPEAKER & ACTION SIDEBAR */}
+                    {/* RIGHT COLUMN: SPEAKER & ACTIONS */}
                     <div className="flex flex-col justify-between border-t border-gray-100 bg-gray-50/60 p-5 lg:w-72 xl:w-80 lg:border-l lg:border-t-0">
-                      {/* SPEAKER */}
                       <div>
                         <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-gray-400">
                           Guest Speaker
@@ -581,7 +673,6 @@ const EventManagement = () => {
                         )}
                       </div>
 
-                      {/* PRICING & ACTION BAR */}
                       <div className="mt-4 flex items-center justify-between border-t border-gray-200/70 pt-3.5">
                         <div>
                           {event.isPaid ? (
@@ -595,7 +686,6 @@ const EventManagement = () => {
                           )}
                         </div>
 
-                        {/* ACTIONS */}
                         <div className="flex items-center gap-1.5">
                           <button
                             onClick={(e) => {

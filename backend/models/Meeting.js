@@ -53,6 +53,23 @@ const meetingSchema = new mongoose.Schema(
       default: false,
     },
 
+    recordingUrl: {
+      type: String,
+      default: null,
+    },
+
+    sharedNotes: {
+      type: String,
+      default: "",
+    },
+
+    actionItems: [
+      {
+        task: String,
+        completed: { type: Boolean, default: false },
+      },
+    ],
+
     mentorJoinedAt: Date,
 
     studentJoinedAt: Date,

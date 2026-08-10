@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
 import {
   ShieldCheck,
   Search,
@@ -18,7 +17,10 @@ const AuditLogs = () => {
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // Search input state vs debounced search query
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+
   const [moduleFilter, setModuleFilter] = useState("");
   const [actionFilter, setActionFilter] = useState("");
   const [dateFilter, setDateFilter] = useState("");
@@ -37,10 +39,24 @@ const AuditLogs = () => {
     bookingLogs: 0,
   });
 
+  // Track total items matching the current active filter query
+  const [filteredTotal, setFilteredTotal] = useState(0);
+
+  // ==========================================
+  // DEBOUNCE SEARCH INPUT (Prevents rapid firing)
+  // ==========================================
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+      setPage(1); // Reset to page 1 on search change
+    }, 400);
+
+    return () => clearTimeout(timer);
+  }, [search]);
+
   // ==========================================
   // FETCH LOGS
   // ==========================================
-
   const fetchLogs = async () => {
     try {
       setLoading(true);
@@ -49,7 +65,7 @@ const AuditLogs = () => {
 
       const queryParams = new URLSearchParams({
         page,
-        search,
+        search: debouncedSearch,
         module: moduleFilter,
         action: actionFilter,
         date: dateFilter,
@@ -74,6 +90,8 @@ const AuditLogs = () => {
 
       setLogs(data.logs || []);
       setPages(data.pages || 1);
+      // Capture the total count matching the filters from backend response (supports data.total / data.totalLogs / data.count)
+      setFilteredTotal(data.total || data.totalLogs || data.logs?.length || 0);
 
       setStats({
         totalLogs: data.totalLogs || 0,
@@ -83,7 +101,6 @@ const AuditLogs = () => {
       });
     } catch (err) {
       console.error("Fetch audit logs error:", err);
-
       toast.error(err.message || "Failed to fetch audit logs.");
     } finally {
       setLoading(false);
@@ -91,17 +108,15 @@ const AuditLogs = () => {
   };
 
   // ==========================================
-  // FETCH WHEN FILTERS CHANGE
+  // FETCH WHEN FILTERS OR DEBOUNCED SEARCH CHANGE
   // ==========================================
-
   useEffect(() => {
     fetchLogs();
-  }, [page, search, moduleFilter, actionFilter, dateFilter]);
+  }, [page, debouncedSearch, moduleFilter, actionFilter, dateFilter]);
 
   // ==========================================
   // DELETE SINGLE LOG
   // ==========================================
-
   const handleDeleteLog = async () => {
     if (!selectedLogId) return;
 
@@ -135,55 +150,64 @@ const AuditLogs = () => {
       fetchLogs();
     } catch (err) {
       console.error("Delete audit log error:", err);
-
       toast.error(err.message || "Failed to delete audit log.");
     }
   };
 
   // ==========================================
-  // DELETE FILTERED LOGS
+  // DELETE FILTERED / CURRENTLY DISPLAYED LOGS
   // ==========================================
-
   const handleDeleteFiltered = async () => {
     if (logs.length === 0) return;
 
     try {
       const token = localStorage.getItem("AdminToken");
 
+      // Use the IDs of the currently filtered/displayed logs on screen
       const ids = logs.map((log) => log._id);
 
-      await axios.delete(`${API_BASE_URL}/api/admin/deleteFilterLogs`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        data: {
-          ids,
-        },
-      });
+      const response = await fetch(
+        `${API_BASE_URL}/api/admin/deleteFilterLogs`,
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ ids }),
+        }
+      );
 
-      toast.success(`${ids.length} audit logs deleted`);
+      const data = await response.json();
+      console.log(data);
 
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to delete logs");
+      }
+
+      toast.success(data.message || `${ids.length} audit logs deleted`);
+
+      // Reset state and all active filter parameters to clear the view completely
       setLogs([]);
-
       setSearch("");
+      setDebouncedSearch("");
       setModuleFilter("");
       setActionFilter("");
       setDateFilter("");
       setPage(1);
 
+      // Fetch fresh data post-deletion
       fetchLogs();
     } catch (err) {
       console.error("Delete filtered logs error:", err);
-
-      toast.error("Failed to delete logs");
+      toast.error(err.message || "Failed to delete logs");
     }
   };
 
   // ==========================================
   // LOADING SCREEN
   // ==========================================
-
-  if (loading) {
+  if (loading && logs.length === 0) {
     return (
       <div className="fixed inset-0 bg-white flex flex-col justify-center items-center px-6 text-center">
         <div className="relative">
@@ -206,7 +230,6 @@ const AuditLogs = () => {
   // ==========================================
   // MAIN UI
   // ==========================================
-
   return (
     <div className="min-h-screen w-full overflow-x-hidden bg-gray-50 p-3 sm:p-5 lg:p-6">
       <ToastContainer
@@ -219,16 +242,11 @@ const AuditLogs = () => {
       />
 
       <div className="w-full max-w-[1600px] mx-auto">
-        {/* ==========================================
-            HEADER
-        ========================================== */}
-
+        {/* HEADER */}
         <div className="mb-5 sm:mb-6">
           <div className="rounded-2xl sm:rounded-3xl overflow-hidden bg-gradient-to-r from-slate-800 via-slate-700 to-indigo-700 shadow-xl">
             <div className="px-4 py-5 sm:px-6 sm:py-7 lg:px-8 lg:py-8">
               <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-                {/* LEFT CONTENT */}
-
                 <div className="flex items-start sm:items-center gap-3 sm:gap-5 min-w-0">
                   <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-white/15 backdrop-blur-md border border-white/20 flex items-center justify-center shrink-0">
                     <ShieldCheck className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
@@ -247,8 +265,6 @@ const AuditLogs = () => {
                   </div>
                 </div>
 
-                {/* REFRESH BUTTON */}
-
                 <button
                   onClick={fetchLogs}
                   className="w-full lg:w-auto h-11 sm:h-12 px-5 sm:px-6 rounded-xl bg-white text-indigo-700 hover:bg-indigo-50 font-semibold flex items-center justify-center gap-2 shadow-lg transition shrink-0"
@@ -261,13 +277,8 @@ const AuditLogs = () => {
           </div>
         </div>
 
-        {/* ==========================================
-            STATS
-        ========================================== */}
-
+        {/* STATS */}
         <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-5 lg:gap-6 mb-5 sm:mb-7 lg:mb-8">
-          {/* TOTAL */}
-
           <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-5 lg:p-6">
             <div className="flex items-center justify-between gap-3">
               <div className="min-w-0">
@@ -284,8 +295,6 @@ const AuditLogs = () => {
             </div>
           </div>
 
-          {/* TODAY */}
-
           <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-5 lg:p-6">
             <div className="flex items-center justify-between gap-3">
               <div className="min-w-0">
@@ -301,8 +310,6 @@ const AuditLogs = () => {
               </div>
             </div>
           </div>
-
-          {/* AUTH */}
 
           <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-5 lg:p-6">
             <div className="flex items-center justify-between gap-3">
@@ -322,8 +329,6 @@ const AuditLogs = () => {
             </div>
           </div>
 
-          {/* BOOKING */}
-
           <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-5 lg:p-6">
             <div className="flex items-center justify-between gap-3">
               <div className="min-w-0">
@@ -341,14 +346,9 @@ const AuditLogs = () => {
           </div>
         </div>
 
-        {/* ==========================================
-            FILTERS
-        ========================================== */}
-
+        {/* FILTERS */}
         <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm border border-gray-100 p-3 sm:p-4 mb-5 sm:mb-7 lg:mb-8">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3">
-            {/* SEARCH */}
-
             <div className="relative sm:col-span-2 lg:col-span-2">
               <Search
                 className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
@@ -359,15 +359,10 @@ const AuditLogs = () => {
                 type="text"
                 placeholder="Search by user or email..."
                 value={search}
-                onChange={(e) => {
-                  setSearch(e.target.value);
-                  setPage(1);
-                }}
+                onChange={(e) => setSearch(e.target.value)}
                 className="w-full h-11 pl-10 pr-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-sm sm:text-base transition"
               />
             </div>
-
-            {/* MODULE */}
 
             <select
               value={moduleFilter}
@@ -387,8 +382,6 @@ const AuditLogs = () => {
               <option>Review</option>
               <option>Admin</option>
             </select>
-
-            {/* ACTION */}
 
             <select
               value={actionFilter}
@@ -411,8 +404,6 @@ const AuditLogs = () => {
               <option>Delete Student</option>
             </select>
 
-            {/* DATE */}
-
             <input
               type="date"
               value={dateFilter}
@@ -422,8 +413,6 @@ const AuditLogs = () => {
               }}
               className="w-full h-11 border border-gray-200 rounded-xl px-3 bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-sm sm:text-base"
             />
-
-            {/* DELETE FILTERED */}
 
             <button
               disabled={logs.length === 0}
@@ -435,18 +424,14 @@ const AuditLogs = () => {
               }`}
             >
               <Trash2 size={18} />
-
               <span className="truncate">
-                Delete Filtered ({stats.totalLogs})
+                Delete Filtered ({filteredTotal})
               </span>
             </button>
           </div>
         </div>
 
-        {/* ==========================================
-            LOGS
-        ========================================== */}
-
+        {/* LOGS LIST */}
         <div className="space-y-3 sm:space-y-5">
           {logs.length === 0 ? (
             <div className="bg-white rounded-xl sm:rounded-2xl border border-gray-100 p-10 sm:p-16 text-center">
@@ -457,8 +442,7 @@ const AuditLogs = () => {
               </h2>
 
               <p className="text-gray-500 mt-2 text-sm sm:text-base max-w-md mx-auto">
-                Try changing your filters or perform some actions in the
-                platform.
+                Try changing your search query or filters.
               </p>
             </div>
           ) : (
@@ -494,25 +478,13 @@ const AuditLogs = () => {
                   className="bg-white rounded-xl sm:rounded-2xl border border-gray-100 shadow-sm hover:shadow-lg hover:border-indigo-300 transition-all duration-300"
                 >
                   <div className="p-4 sm:p-5 lg:p-6">
-                    {/* ==========================================
-                        TOP SECTION
-                    ========================================== */}
-
                     <div className="flex flex-col lg:flex-row lg:justify-between gap-5">
-                      {/* USER INFO */}
-
                       <div className="flex items-start gap-3 sm:gap-5 min-w-0">
-                        {/* AVATAR */}
-
                         <div className="w-11 h-11 sm:w-14 sm:h-14 rounded-full bg-indigo-100 flex items-center justify-center text-base sm:text-xl font-bold text-indigo-700 shrink-0">
                           {log.userName?.charAt(0).toUpperCase() || "U"}
                         </div>
 
-                        {/* DETAILS */}
-
                         <div className="min-w-0 flex-1">
-                          {/* NAME + BADGES */}
-
                           <div className="flex items-center gap-2 flex-wrap">
                             <h2 className="text-base sm:text-lg font-semibold text-gray-800 break-words">
                               {log.userName || "Unknown User"}
@@ -537,13 +509,9 @@ const AuditLogs = () => {
                             </span>
                           </div>
 
-                          {/* EMAIL */}
-
                           <p className="text-gray-500 mt-2 text-sm break-all">
                             {log.email || "--"}
                           </p>
-
-                          {/* DESCRIPTION */}
 
                           <p className="mt-3 text-gray-700 text-sm sm:text-base leading-6 break-words">
                             {log.description || "--"}
@@ -551,17 +519,10 @@ const AuditLogs = () => {
                         </div>
                       </div>
 
-                      {/* ==========================================
-                          RIGHT ACTION AREA
-                      ========================================== */}
-
                       <div className="flex flex-row lg:flex-col items-center lg:items-end justify-between lg:justify-start gap-3 border-t lg:border-t-0 pt-4 lg:pt-0 shrink-0">
-                        {/* DELETE BUTTON */}
-
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-
                             setSelectedLog(log);
                             setSelectedLogId(log._id);
                             setShowDeleteModal(true);
@@ -569,11 +530,8 @@ const AuditLogs = () => {
                           className="flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition text-sm font-medium"
                         >
                           <Trash2 size={16} />
-
                           <span>Delete</span>
                         </button>
-
-                        {/* DATE */}
 
                         <div className="text-right">
                           <p className="text-xs sm:text-sm text-gray-500">
@@ -590,14 +548,8 @@ const AuditLogs = () => {
                       </div>
                     </div>
 
-                    {/* ==========================================
-                        META INFORMATION
-                    ========================================== */}
-
                     <div className="mt-5 sm:mt-6 border-t border-gray-100 pt-4">
                       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
-                        {/* USER TYPE */}
-
                         <div className="min-w-0">
                           <span className="text-xs text-gray-400">
                             User Type
@@ -608,8 +560,6 @@ const AuditLogs = () => {
                           </p>
                         </div>
 
-                        {/* TARGET */}
-
                         <div className="min-w-0">
                           <span className="text-xs text-gray-400">Target</span>
 
@@ -617,8 +567,6 @@ const AuditLogs = () => {
                             {log.targetType || "--"}
                           </p>
                         </div>
-
-                        {/* IP */}
 
                         <div className="min-w-0">
                           <span className="text-xs text-gray-400">
@@ -629,8 +577,6 @@ const AuditLogs = () => {
                             {log.ipAddress || "--"}
                           </p>
                         </div>
-
-                        {/* STATUS / MODULE */}
 
                         <div className="min-w-0">
                           <span className="text-xs text-gray-400">Module</span>
@@ -648,14 +594,9 @@ const AuditLogs = () => {
           )}
         </div>
 
-        {/* ==========================================
-            PAGINATION
-        ========================================== */}
-
+        {/* PAGINATION */}
         {pages > 1 && (
           <div className="mt-7 sm:mt-10 flex flex-wrap justify-center items-center gap-2 sm:gap-3">
-            {/* PREVIOUS */}
-
             <button
               disabled={page === 1}
               onClick={() => setPage(page - 1)}
@@ -667,8 +608,6 @@ const AuditLogs = () => {
             >
               Previous
             </button>
-
-            {/* PAGE NUMBERS */}
 
             <div className="flex flex-wrap justify-center gap-2">
               {[...Array(pages)].map((_, index) => (
@@ -686,8 +625,6 @@ const AuditLogs = () => {
               ))}
             </div>
 
-            {/* NEXT */}
-
             <button
               disabled={page === pages}
               onClick={() => setPage(page + 1)}
@@ -703,15 +640,10 @@ const AuditLogs = () => {
         )}
       </div>
 
-      {/* ==========================================
-          DELETE MODAL
-      ========================================== */}
-
+      {/* DELETE MODAL */}
       {showDeleteModal && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
           <div className="w-full max-w-md bg-white rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden">
-            {/* MODAL HEADER */}
-
             <div className="bg-red-50 flex flex-col items-center py-6 sm:py-8 px-5 sm:px-6 text-center">
               <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-red-100 flex items-center justify-center">
                 <Trash2 className="text-red-600" size={32} />
@@ -726,8 +658,6 @@ const AuditLogs = () => {
                 permanently removed.
               </p>
             </div>
-
-            {/* MODAL BUTTONS */}
 
             <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sm:gap-3 p-4 sm:p-6 border-t">
               <button

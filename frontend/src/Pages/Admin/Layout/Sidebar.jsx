@@ -17,6 +17,7 @@ import {
   HelpCircle,
   Star,
   MessageCircle,
+  ShieldAlert,
 } from "lucide-react";
 import { useAuth } from "../../../context/AuthContext";
 import { useState } from "react";
@@ -47,6 +48,11 @@ const menu = [
     name: "Mentor Chats",
     path: "/admin/mentor-chats",
     icon: MessageCircle,
+  },
+  {
+    name: "Disputes",
+    path: "/admin/disputes",
+    icon: ShieldAlert,
   },
   {
     name: "Bookings",
@@ -94,7 +100,6 @@ const menu = [
     icon: Star,
   },
 ];
-
 
 const Sidebar = () => {
   const navigate = useNavigate();

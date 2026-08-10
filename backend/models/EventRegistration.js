@@ -58,6 +58,14 @@ const eventRegistrationSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    platformFee: {
+      type: Number,
+      default: 0,
+    },
+    adminCommission: {
+      type: Number,
+      default: 0,
+    },
     // -------------------------------
 
     // Attendance Tracking

@@ -132,9 +132,12 @@ export default function MentorDashboard() {
             EARNINGS + SESSION ANALYTICS
         ========================================== */}
         <section className="grid grid-cols-1 gap-5 sm:gap-6 lg:gap-8 mb-5 sm:mb-6 lg:mb-8">
-          {/* Earnings Chart */}
+          {/* Earnings Chart - Passing both earnings and stats */}
           <div className="min-w-0 w-full">
-            <EarningsChart earnings={dashboardData.earningsByMonth} />
+            <EarningsChart
+              earnings={dashboardData.earningsByMonth}
+              stats={dashboardData.stats}
+            />
           </div>
 
           {/* Session Analytics */}
@@ -159,10 +162,6 @@ export default function MentorDashboard() {
         {/* ==========================================
             REVIEWS + STUDENTS
         ========================================== */}
-        {/* ==========================================
-    RECENT REVIEWS + RECENT STUDENTS
-========================================== */}
-
         <section className="grid grid-cols-1 gap-5 sm:gap-6 lg:gap-8 mb-5 sm:mb-6 lg:mb-8">
           {/* Recent Reviews */}
           <div className="min-w-0 w-full">
@@ -176,9 +175,8 @@ export default function MentorDashboard() {
         </section>
 
         {/* ==========================================
-    PROFILE COMPLETION + MENTOR INFO
-========================================== */}
-
+            PROFILE COMPLETION + MENTOR INFO
+        ========================================== */}
         <section className="grid grid-cols-1 gap-5 sm:gap-6 lg:gap-8 mb-5 sm:mb-6 lg:mb-8">
           {/* Profile Completion */}
           <div className="min-w-0 w-full">
@@ -199,16 +197,6 @@ export default function MentorDashboard() {
         <section className="mb-5 sm:mb-6 lg:mb-8">
           <QuickActions />
         </section>
-        {/* ==========================================
-            RECENT ACTIVITY
-        ========================================== */}
-        {/* 
-        <section>
-          <RecentActivity
-            activities={dashboardData.activities}
-          />
-        </section>
-        */}
       </main>
     </div>
   );

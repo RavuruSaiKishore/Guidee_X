@@ -108,10 +108,25 @@ const bookingSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
-    
+
     reviewSubmitted: {
       type: Boolean,
       default: false,
+    },
+
+    platformFee: {
+      type: Number,
+      default: 0,
+    },
+
+    adminCommission: {
+      type: Number,
+      default: 0,
+    },
+
+    mentorEarnings: {
+      type: Number,
+      default: 0,
     },
   },
   {

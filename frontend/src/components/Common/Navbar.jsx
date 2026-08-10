@@ -18,6 +18,7 @@ import {
   ChevronDown,
   MessageCircle,
   ClipboardList,
+  ShieldAlert,
 } from "lucide-react";
 
 import { useAuth } from "../../context/AuthContext";
@@ -102,6 +103,7 @@ const Navbar = () => {
       path: "/career-resources",
       icon: BookOpen,
     },
+   
   ];
 
   // ==========================================
@@ -124,10 +126,7 @@ const Navbar = () => {
   useEffect(() => {
     const handleClickOutside = (event) => {
       // Profile dropdown
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target)
-      ) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setShowDropdown(false);
       }
 
@@ -184,8 +183,7 @@ const Navbar = () => {
     }
 
     return (
-      location.pathname === path ||
-      location.pathname.startsWith(`${path}/`)
+      location.pathname === path || location.pathname.startsWith(`${path}/`)
     );
   };
 
@@ -207,8 +205,7 @@ const Navbar = () => {
 
   const isProfileActive = (path) => {
     return (
-      location.pathname === path ||
-      location.pathname.startsWith(`${path}/`)
+      location.pathname === path || location.pathname.startsWith(`${path}/`)
     );
   };
 
@@ -505,6 +502,24 @@ const Navbar = () => {
                       <span className="font-medium">My Registrations</span>
                     </Link>
 
+                    {/* DISPUTES */}
+
+                    <Link
+                      to="/disputes"
+                      onClick={() => setShowDropdown(false)}
+                      className={`mx-2 flex items-center gap-3 rounded-xl px-4 py-2.5 transition ${
+                        isProfileActive("/disputes")
+                          ? "bg-amber-50 text-amber-600"
+                          : "text-gray-700 hover:bg-amber-50 hover:text-amber-600"
+                      }`}
+                    >
+                      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-100 text-amber-600">
+                        <ShieldAlert size={18} />
+                      </div>
+
+                      <span className="font-medium">Disputes</span>
+                    </Link>
+
                     {/* MY EVENTS */}
 
                     <Link
@@ -783,6 +798,21 @@ const Navbar = () => {
               >
                 <ClipboardList size={20} />
                 My Registrations
+              </Link>
+
+              {/* DISPUTES */}
+
+              <Link
+                to="/disputes"
+                onClick={() => setMobileOpen(false)}
+                className={`flex items-center gap-4 px-5 py-4 rounded-2xl transition mb-2 ${
+                  isProfileActive("/disputes")
+                    ? "bg-amber-50 text-amber-600"
+                    : "hover:bg-amber-50 text-gray-700"
+                }`}
+              >
+                <ShieldAlert size={20} />
+                Disputes
               </Link>
 
               {/* MY EVENTS */}

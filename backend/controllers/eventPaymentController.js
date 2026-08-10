@@ -24,7 +24,6 @@ export const createEventOrder = async (req, res) => {
       });
     }
 
-    // Shorten receipt to stay well under 40 characters
     const shortReceipt = `evt_${Date.now().toString().slice(-8)}`;
 
     const options = {
@@ -86,6 +85,14 @@ export const verifyEventPayment = async (req, res) => {
         .json({ success: false, message: "Housefull! Maximum seats reached." });
     }
 
+    // ==========================================
+    // FINANCIAL SPLIT & COMMISSION CALCULATION
+    // ==========================================
+    const totalAmount = Number(event.ticketPrice);
+    const platformFee = 20; // Flat platform handling fee (₹20)
+    const remainingAmount = totalAmount - platformFee;
+    const adminCommission = Math.max(0, Math.round(remainingAmount * 0.1)); // 10% admin commission
+
     let registration = await EventRegistration.findOne({
       event: eventId,
       student: studentId,
@@ -95,12 +102,10 @@ export const verifyEventPayment = async (req, res) => {
 
     if (registration) {
       if (registration.status === "Registered") {
-        return res
-          .status(400)
-          .json({
-            success: false,
-            message: "You are already registered for this event",
-          });
+        return res.status(400).json({
+          success: false,
+          message: "You are already registered for this event",
+        });
       }
 
       if (registration.status === "Cancelled") {
@@ -110,7 +115,9 @@ export const verifyEventPayment = async (req, res) => {
         registration.paymentId = razorpay_payment_id;
         registration.orderId = razorpay_order_id;
         registration.paymentSignature = razorpay_signature;
-        registration.amountPaid = event.ticketPrice;
+        registration.amountPaid = totalAmount;
+        registration.platformFee = platformFee;
+        registration.adminCommission = adminCommission;
         registration.meetingLink = assignedMeetingLink;
         registration.attended = false;
         await registration.save();
@@ -144,7 +151,9 @@ export const verifyEventPayment = async (req, res) => {
       paymentId: razorpay_payment_id,
       orderId: razorpay_order_id,
       paymentSignature: razorpay_signature,
-      amountPaid: event.ticketPrice,
+      amountPaid: totalAmount,
+      platformFee,
+      adminCommission,
       meetingLink: assignedMeetingLink,
     });
 
@@ -174,9 +183,7 @@ export const verifyEventPayment = async (req, res) => {
             <div style="max-width:600px;margin:30px auto;padding:30px;font-family:Arial,sans-serif;background:#ffffff;border-radius:12px;border:1px solid #e5e7eb;">
               <h2 style="color:#111827;">Event Registration Successful 🎉</h2>
               <p>Hello <strong>${studentName}</strong>,</p>
-              <p>Your payment of <strong>₹${
-                event.ticketPrice
-              }</strong> was successful. You are officially registered!</p>
+              <p>Your payment of <strong>₹${totalAmount}</strong> was successful. You are officially registered!</p>
               <p><strong>Event:</strong> ${registration.event.title}</p>
               <p><strong>Speaker:</strong> ${leadSpeaker.name || "N/A"}</p>
               <p><strong>Starts:</strong> ${new Date(

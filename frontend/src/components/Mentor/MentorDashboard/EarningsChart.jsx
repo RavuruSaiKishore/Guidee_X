@@ -6,19 +6,23 @@ import {
   ResponsiveContainer,
   XAxis,
   YAxis,
+  Legend,
 } from "recharts";
 
-import { IndianRupee, TrendingUp, Wallet } from "lucide-react";
+import { IndianRupee, TrendingUp, Wallet, Receipt } from "lucide-react";
 
-export default function EarningsChart({ earnings = [] }) {
+export default function EarningsChart({ earnings = [], stats = {} }) {
   // =========================================================
-  // TOTAL EARNINGS
+  // TOTAL EARNINGS & COMMISSIONS FROM STATS OR FALLBACK
   // =========================================================
 
-  const totalEarnings = earnings.reduce(
-    (sum, item) => sum + (Number(item.earnings) || 0),
-    0
-  );
+  const totalEarnings =
+    stats.totalEarnings ??
+    earnings.reduce((sum, item) => sum + (Number(item.earnings) || 0), 0);
+
+  const totalCommissions =
+    stats.totalCommissionsPaid ??
+    earnings.reduce((sum, item) => sum + (Number(item.commission) || 0), 0);
 
   // =========================================================
   // HIGHEST EARNING MONTH
@@ -73,28 +77,43 @@ export default function EarningsChart({ earnings = [] }) {
 
         <div className="min-w-0">
           <h2 className="text-xl font-bold text-gray-800 sm:text-2xl">
-            Earnings Overview
+            Earnings & Fee Breakdown
           </h2>
 
           <p className="mt-1 max-w-2xl text-xs leading-5 text-gray-500 sm:text-sm">
-            Monthly revenue generated from mentorship sessions
+            Monthly net revenue and platform deductions overview
           </p>
         </div>
 
-        {/* TOTAL EARNINGS */}
-
-        <div className="w-full rounded-xl bg-amber-50 p-3 sm:rounded-2xl sm:p-4 lg:w-auto lg:min-w-[200px]">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-100 sm:h-11 sm:w-11">
-              <Wallet className="h-5 w-5 text-amber-600 sm:h-6 sm:w-6" />
+        {/* TOTAL CARDS CONTAINER */}
+        <div className="flex flex-col sm:flex-row gap-3">
+          {/* TOTAL NET EARNINGS */}
+          <div className="rounded-xl bg-amber-50 p-3 sm:rounded-2xl sm:p-4 min-w-[180px]">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-100">
+                <Wallet className="h-5 w-5 text-amber-600" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs text-gray-500">Total Net Earnings</p>
+                <h3 className="mt-0.5 truncate text-lg font-bold text-gray-800">
+                  ₹{totalEarnings.toLocaleString("en-IN")}
+                </h3>
+              </div>
             </div>
+          </div>
 
-            <div className="min-w-0">
-              <p className="text-xs text-gray-500 sm:text-sm">Total Earnings</p>
-
-              <h3 className="mt-0.5 truncate text-xl font-bold text-gray-800 sm:text-2xl">
-                ₹{totalEarnings.toLocaleString("en-IN")}
-              </h3>
+          {/* TOTAL COMMISSIONS / FEES */}
+          <div className="rounded-xl bg-blue-50 p-3 sm:rounded-2xl sm:p-4 min-w-[180px]">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-100">
+                <Receipt className="h-5 w-5 text-blue-600" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs text-gray-500">Platform Fees & Cuts</p>
+                <h3 className="mt-0.5 truncate text-lg font-bold text-gray-800">
+                  ₹{totalCommissions.toLocaleString("en-IN")}
+                </h3>
+              </div>
             </div>
           </div>
         </div>
@@ -104,36 +123,29 @@ export default function EarningsChart({ earnings = [] }) {
           SUMMARY CARDS
       ====================================================== */}
 
-      <div className="mt-5 grid grid-cols-1 gap-3 sm:mt-6 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
-        {/* ===================================================
-            CURRENT MONTH
-        ==================================================== */}
-
+      <div className="mt-5 grid grid-cols-1 gap-3 sm:mt-6 sm:grid-cols-3 sm:gap-4">
+        {/* CURRENT MONTH */}
         <div className="min-w-0 rounded-xl bg-green-50 p-4 sm:rounded-2xl sm:p-5">
           <div className="flex items-center justify-between gap-3">
             <div className="min-w-0">
-              <p className="text-xs text-gray-500 sm:text-sm">Current Month</p>
-
+              <p className="text-xs text-gray-500 sm:text-sm">
+                Current Month (Net)
+              </p>
               <h3 className="mt-1 truncate text-2xl font-bold text-gray-800 sm:mt-2 sm:text-3xl">
                 ₹{currentMonth.toLocaleString("en-IN")}
               </h3>
             </div>
-
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-green-100 sm:h-11 sm:w-11">
-              <IndianRupee className="h-5 w-5 text-green-600 sm:h-6 sm:w-6" />
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-green-100">
+              <IndianRupee className="h-5 w-5 text-green-600" />
             </div>
           </div>
         </div>
 
-        {/* ===================================================
-            MONTHLY GROWTH
-        ==================================================== */}
-
+        {/* MONTHLY GROWTH */}
         <div className="min-w-0 rounded-xl bg-blue-50 p-4 sm:rounded-2xl sm:p-5">
           <div className="flex items-center justify-between gap-3">
             <div className="min-w-0">
               <p className="text-xs text-gray-500 sm:text-sm">Monthly Growth</p>
-
               <h3
                 className={`mt-1 text-2xl font-bold sm:mt-2 sm:text-3xl ${
                   Number(growth) >= 0 ? "text-green-600" : "text-red-600"
@@ -143,24 +155,18 @@ export default function EarningsChart({ earnings = [] }) {
                 {growth}%
               </h3>
             </div>
-
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-100 sm:h-11 sm:w-11">
-              <TrendingUp className="h-5 w-5 text-blue-600 sm:h-6 sm:w-6" />
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-100">
+              <TrendingUp className="h-5 w-5 text-blue-600" />
             </div>
           </div>
         </div>
 
-        {/* ===================================================
-            BEST MONTH
-        ==================================================== */}
-
+        {/* BEST MONTH */}
         <div className="min-w-0 rounded-xl bg-orange-50 p-4 sm:rounded-2xl sm:p-5">
           <p className="text-xs text-gray-500 sm:text-sm">Best Month</p>
-
           <h3 className="mt-1 truncate text-xl font-bold text-gray-800 sm:mt-2 sm:text-2xl">
             {highestMonth?.month || "--"}
           </h3>
-
           <p className="mt-1 text-base font-semibold text-orange-600 sm:mt-2 sm:text-lg">
             ₹{Number(highestMonth?.earnings || 0).toLocaleString("en-IN")}
           </p>
@@ -176,17 +182,8 @@ export default function EarningsChart({ earnings = [] }) {
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart
               data={earnings}
-              margin={{
-                top: 10,
-                right: 5,
-                left: -15,
-                bottom: 5,
-              }}
+              margin={{ top: 10, right: 5, left: -15, bottom: 5 }}
             >
-              {/* =================================================
-                  GRADIENT
-              ================================================== */}
-
               <defs>
                 <linearGradient
                   id="earningGradient"
@@ -196,40 +193,33 @@ export default function EarningsChart({ earnings = [] }) {
                   y2="1"
                 >
                   <stop offset="0%" stopColor="#f59e0b" stopOpacity={0.8} />
-
                   <stop offset="100%" stopColor="#f59e0b" stopOpacity={0.05} />
+                </linearGradient>
+                <linearGradient
+                  id="commissionGradient"
+                  x1="0"
+                  y1="0"
+                  x2="0"
+                  y2="1"
+                >
+                  <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.6} />
+                  <stop offset="100%" stopColor="#3b82f6" stopOpacity={0.02} />
                 </linearGradient>
               </defs>
 
-              {/* =================================================
-                  GRID
-              ================================================== */}
-
               <CartesianGrid strokeDasharray="4 4" vertical={false} />
-
-              {/* =================================================
-                  X AXIS
-              ================================================== */}
 
               <XAxis
                 dataKey="month"
-                tick={{
-                  fontSize: 11,
-                }}
+                tick={{ fontSize: 11 }}
                 tickMargin={8}
                 axisLine={false}
                 tickLine={false}
                 interval="preserveStartEnd"
               />
 
-              {/* =================================================
-                  Y AXIS
-              ================================================== */}
-
               <YAxis
-                tick={{
-                  fontSize: 11,
-                }}
+                tick={{ fontSize: 11 }}
                 axisLine={false}
                 tickLine={false}
                 width={45}
@@ -238,14 +228,10 @@ export default function EarningsChart({ earnings = [] }) {
                 }
               />
 
-              {/* =================================================
-                  TOOLTIP
-              ================================================== */}
-
               <Tooltip
-                formatter={(value) => [
+                formatter={(value, name) => [
                   `₹${Number(value).toLocaleString("en-IN")}`,
-                  "Earnings",
+                  name === "earnings" ? "Net Earnings" : "Platform Fees",
                 ]}
                 contentStyle={{
                   borderRadius: "12px",
@@ -254,37 +240,40 @@ export default function EarningsChart({ earnings = [] }) {
                 }}
               />
 
-              {/* =================================================
-                  AREA
-              ================================================== */}
+              <Legend verticalAlign="top" height={36} />
 
+              {/* Net Earnings Area */}
               <Area
                 type="monotone"
                 dataKey="earnings"
+                name="Net Earnings"
                 stroke="#f59e0b"
                 strokeWidth={3}
                 fill="url(#earningGradient)"
-                activeDot={{
-                  r: 5,
-                }}
+                activeDot={{ r: 5 }}
+              />
+
+              {/* Platform Fees / Commissions Area */}
+              <Area
+                type="monotone"
+                dataKey="commission"
+                name="Platform Fees"
+                stroke="#3b82f6"
+                strokeWidth={2}
+                fill="url(#commissionGradient)"
+                activeDot={{ r: 4 }}
               />
             </AreaChart>
           </ResponsiveContainer>
         ) : (
-          /* =====================================================
-             EMPTY STATE
-          ====================================================== */
-
           <div className="flex h-full items-center justify-center rounded-2xl bg-gray-50">
             <div className="text-center">
               <Wallet className="mx-auto h-10 w-10 text-gray-300" />
-
               <p className="mt-3 text-sm font-medium text-gray-500">
                 No earnings data available
               </p>
-
               <p className="mt-1 text-xs text-gray-400">
-                Your earnings will appear here
+                Your financial metrics will appear here
               </p>
             </div>
           </div>
