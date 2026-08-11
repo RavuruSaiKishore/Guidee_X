@@ -74,7 +74,7 @@ app.use(
         connectSrc: [
           "'self'",
           "http://localhost:8080", // Replace or add your production backend URL
-          "https://project-guidex-backend.onrender.com",
+          "https://guidee-xbackend.onrender.com",
           "https://api.razorpay.com",
         ],
 
@@ -96,8 +96,9 @@ connectDB();
 // CORS HARDENING CONFIGURATION
 // ==========================================
 const allowedOrigins = [
-  process.env.FRONTEND_URL || "http://localhost:5173",
-  "http://localhost:3000", // Optional: Add alternative local ports if you use them
+  process.env.FRONTEND_URL,
+  "http://localhost:5173",
+  "http://localhost:3000",
 ];
 
 app.use(
