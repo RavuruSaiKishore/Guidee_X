@@ -2,23 +2,17 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import connectDB from "./config/db.js";
-import helmet from "helmet"; 
+import helmet from "helmet";
 import { validateEnv } from "./config/validateEnv.js";
 import compression from "compression";
-import {
-  setCsrfTokenCookie,
-  verifyCsrfToken,
-} from "./middleware/csrfMiddleware.js";
 import cookieParser from "cookie-parser";
 import mongoSanitize from "express-mongo-sanitize";
-
 
 import authRoutes from "./routes/authRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import mentorRoutes from "./routes/mentorRoutes.js";
 import bookingRoutes from "./routes/bookingRoutes.js";
-import path from "path";
 import paymentRoutes from "./routes/paymentRoutes.js";
 import meetingRoutes from "./routes/meetingRoutes.js";
 import notificacationRoutes from "./routes/notificationRoutes.js";
@@ -35,7 +29,7 @@ import mentorReviewRoutes from "./routes/mentorReviewRoutes.js";
 import mentorContactRoutes from "./routes/mentorContactRoutes.js";
 import eventPaymentRoutes from "./routes/eventPaymentRoutes.js";
 import disputeRoutes from "./routes/disputeRoutes.js";
-import chatRoutes from "./routes/chatRoutes.js"
+import chatRoutes from "./routes/chatRoutes.js";
 
 dotenv.config();
 validateEnv();
@@ -45,44 +39,41 @@ const app = express();
 // ==========================================
 // PERFORMANCE & SECURITY MIDDLEWARE
 // ==========================================
-app.use(compression()); 
+app.use(compression());
 
 app.use(
   helmet({
-    crossOriginResourcePolicy: { policy: "cross-origin" }, // Allows external frontend to load resources
+    crossOriginResourcePolicy: { policy: "cross-origin" },
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
-
-        // Allow scripts from your domain, plus trusted analytics/payment gateways if needed (e.g., Razorpay)
         scriptSrc: [
           "'self'",
-          "'unsafe-inline'", // Often required for certain UI libraries or Vite dev builds
+          "'unsafe-inline'",
           "https://checkout.razorpay.com",
+          "https://accounts.google.com",
         ],
-
-        // Allow stylesheets
         styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-
-        // Allow fonts
         fontSrc: ["'self'", "https://fonts.gstatic.com"],
-
-        // Allow images from your own server, data URIs, and external storage (like Cloudinary)
-        imgSrc: ["'self'", "data:", "blob:", "https://res.cloudinary.com"],
-
-        // Allow connections to your backend API and payment servers
+        imgSrc: [
+          "'self'",
+          "data:",
+          "blob:",
+          "https://res.cloudinary.com",
+          "https://*.googleusercontent.com",
+        ],
         connectSrc: [
           "'self'",
-          "http://localhost:8080", // Replace or add your production backend URL
+          "http://localhost:8080",
           "https://guidee-xbackend.onrender.com",
           "https://api.razorpay.com",
+          "https://accounts.google.com",
         ],
-
-        // Allow frames for payment gateways (e.g., Razorpay checkout iframe)
         frameSrc: [
           "'self'",
           "https://api.razorpay.com",
           "https://checkout.razorpay.com",
+          "https://accounts.google.com",
         ],
       },
     },
@@ -99,14 +90,17 @@ const allowedOrigins = [
   process.env.FRONTEND_URL,
   "http://localhost:5173",
   "http://localhost:3000",
-];
+].filter(Boolean);
 
 app.use(
   cors({
     origin: function (origin, callback) {
       if (!origin) return callback(null, true);
 
-      if (allowedOrigins.indexOf(origin) !== -1) {
+      if (
+        allowedOrigins.indexOf(origin) !== -1 ||
+        process.env.NODE_ENV !== "production"
+      ) {
         callback(null, true);
       } else {
         callback(new Error("Blocked by CORS: Unauthorized origin"));
@@ -118,11 +112,10 @@ app.use(
 
 // MIDDLEWARE
 app.use(express.json());
-
-app.use(cookieParser()); // Required for parsing cookies securely
+app.use(cookieParser());
 
 // ==========================================
-// 5. NoSQL INJECTION SANITIZATION
+// NoSQL INJECTION SANITIZATION
 // ==========================================
 app.use((req, res, next) => {
   if (req.body) mongoSanitize.sanitize(req.body);
@@ -131,8 +124,7 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use(setCsrfTokenCookie); // Sets the CSRF cookie on incoming sessions
-app.use("/api", verifyCsrfToken);
+// NOTE: CSRF middleware completely removed here!
 
 app.use("/uploads", express.static("uploads"));
 
