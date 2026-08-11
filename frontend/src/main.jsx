@@ -9,15 +9,8 @@ import "./index.css";
 import "react-toastify/dist/ReactToastify.css";
 
 // ============================================================
-// GLOBAL FETCH INTERCEPTOR (Automates CSRF & Credentials)
+// GLOBAL FETCH INTERCEPTOR (Automates Credentials)
 // ============================================================
-const getCookie = (name) => {
-  const value = `; ${document.cookie}`;
-  const parts = value.split(`; ${name}=`);
-  if (parts.length === 2) return parts.pop().split(";").shift();
-  return "";
-};
-
 const originalFetch = window.fetch;
 window.fetch = async (url, options = {}) => {
   options = options || {};
@@ -25,20 +18,6 @@ window.fetch = async (url, options = {}) => {
 
   // Always send cookies along with requests
   options.credentials = "include";
-
-  const method = (options.method || "GET").toUpperCase();
-
-  // Automatically inject x-csrf-token for state-changing requests
-  if (["POST", "PUT", "PATCH", "DELETE"].includes(method)) {
-    const csrfToken = getCookie("csrfToken");
-    if (csrfToken) {
-      if (options.headers instanceof Headers) {
-        options.headers.set("x-csrf-token", csrfToken);
-      } else {
-        options.headers["x-csrf-token"] = csrfToken;
-      }
-    }
-  }
 
   return originalFetch(url, options);
 };

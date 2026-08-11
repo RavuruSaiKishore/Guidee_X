@@ -6,12 +6,13 @@ import { useAuth } from "./context/AuthContext";
 // ================= PUBLIC PAGES (Eager Loaded) =================
 import Home from "./Pages/Home";
 import Login from "./Pages/Public/Login";
-import Courses from "./Pages/Public/Courses";
 import Mentors from "./Pages/Public/Mentors";
 import Pricing from "./Pages/Public/Pricing";
 import About from "./Pages/Public/About";
 import Contact from "./Pages/Public/Contact";
 import Blogs from "./Pages/Public/Blogs";
+import CoursePage from "./Pages/User/Courses/CoursesPage";
+import CourseDetailsPage from "./Pages/User/Courses/CourseDetailsPage";
 
 // Layouts & Protected Routes
 import UserLayout from "./layouts/UserLayout";
@@ -21,7 +22,6 @@ import ProtectedRoute from "./components/Auth/ProtectedRoute";
 // Student related pages
 const Profile = lazy(() => import("./Pages/User/Profile"));
 const Dashboard = lazy(() => import("./Pages/User/Dashboard"));
-const Mycourses = lazy(() => import("./Pages/User/My-courses"));
 const MyBookinsg = lazy(() => import("./Pages/User/MyBookings"));
 const MentorRegistration = lazy(() =>
   import("./Pages/Mentor/MentorRegistration")
@@ -66,14 +66,18 @@ const RescheduleRequests = lazy(() =>
 const StudentAnalytics = lazy(() =>
   import("./Pages/User/StudentAnalytics/StudentAnalytics")
 );
-
 const StudentDisputes = lazy(() =>
   import("./Pages/User/Disputes/StudentDisputes")
 );
-
 const DisputeChatPage = lazy(() =>
   import("./Pages/User/Disputes/DisputeChatPage")
 );
+const LearnCoursePage = lazy(() =>
+  import("./Pages/User/Courses/LearnCoursePage")
+);
+const MyCoursesPage = lazy(() => import("./Pages/User/Courses/MyCoursesPage"));
+
+
 
 // mentor routes
 const MentorLayout = lazy(() => import("./Pages/Mentor/Layout/MentorLayout"));
@@ -210,6 +214,21 @@ const AdminDisputes = lazy(() =>
 const AdminDisputeChatPage = lazy(() =>
   import("./Pages/Admin/Disputes/AdminDisputeChatPage")
 );
+const ManageCoursesPage = lazy(() =>
+  import("./Pages/Admin/Courses/ManageCoursesPage")
+);
+const CreateCoursePage = lazy(() =>
+  import("./Pages/Admin/Courses/CreateCoursePage")
+);
+const EditCoursePage = lazy(() =>
+  import("./Pages/Admin/Courses/EditCoursePage")
+);
+const CourseDetailsAdminPage = lazy(() =>
+  import("./Pages/Admin/Courses/CourseDetailsAdminPage")
+);
+const CourseStudentsPage = lazy(() =>
+  import("./Pages/Admin/Courses/CourseStudentsPage")
+);
 
 function App() {
   useAutoLogout();
@@ -234,12 +253,11 @@ function App() {
     >
       <Routes>
         <Route path="/meeting/:roomId" element={<MeetingPage />} />
-
         {/* ================= PUBLIC & STUDENT ROUTES ================= */}
         <Route element={<UserLayout />}>
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
-          <Route path="/courses" element={<Courses />} />
+          <Route path="/courses" element={<CoursePage />} />
           <Route path="/mentors" element={<Mentors />} />
           <Route path="/pricing" element={<Pricing />} />
           <Route path="/about" element={<About />} />
@@ -250,7 +268,6 @@ function App() {
           <Route element={<ProtectedRoute allowedRole="student" />}>
             <Route path="/profile" element={<Profile />} />
             <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/my-courses" element={<Mycourses />} />
             <Route path="/my-bookings" element={<MyBookinsg />} />
             <Route path="/mentor/register" element={<MentorRegistration />} />
             <Route path="/mentor/profile/:id" element={<MentorProfile />} />
@@ -281,6 +298,9 @@ function App() {
             <Route path="/analytics" element={<StudentAnalytics />} />
             <Route path="/disputes" element={<StudentDisputes />} />
             <Route path="/disputes/:disputeId" element={<DisputeChatPage />} />
+            <Route path="/courses/:id" element={<CourseDetailsPage />} />
+            <Route path="/courses/:id/learn" element={<LearnCoursePage />} />
+            <Route path="/my-courses" element={<MyCoursesPage />} />
           </Route>
         </Route>
 
@@ -332,7 +352,6 @@ function App() {
             />
           </Route>
         </Route>
-
         {/* ================= ADMIN ROUTES ================= */}
         <Route element={<ProtectedRoute allowedRole="admin" />}>
           <Route path="/admin" element={<AdminLayout />}>
@@ -411,10 +430,26 @@ function App() {
               path="/admin/disputes/:disputeId"
               element={<AdminDisputeChatPage />}
             />
+            <Route path="/admin/courses" element={<ManageCoursesPage />} />
+            <Route
+              path="/admin/courses/:id"
+              element={<CourseDetailsAdminPage />}
+            />
+            <Route
+              path="/admin/courses/create"
+              element={<CreateCoursePage />}
+            />
+            <Route
+              path="/admin/courses/edit/:id"
+              element={<EditCoursePage />}
+            />
+            <Route
+              path="/admin/courses/:id/students"
+              element={<CourseStudentsPage />}
+            />
           </Route>
         </Route>
       </Routes>
-
     </Suspense>
   );
 }

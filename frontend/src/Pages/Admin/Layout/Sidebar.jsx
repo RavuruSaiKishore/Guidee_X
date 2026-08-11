@@ -60,6 +60,11 @@ const menu = [
     icon: CalendarDays,
   },
   {
+    name: "Courses",
+    path: "/admin/courses",
+    icon: BookOpen,
+  },
+  {
     name: "Blogs",
     path: "/admin/blogs",
     icon: FileText,

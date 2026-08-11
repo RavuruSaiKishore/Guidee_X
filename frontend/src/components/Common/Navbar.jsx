@@ -19,6 +19,9 @@ import {
   MessageCircle,
   ClipboardList,
   ShieldAlert,
+  BarChart3,
+  Award,
+  Contact,
 } from "lucide-react";
 
 import { useAuth } from "../../context/AuthContext";
@@ -35,7 +38,6 @@ const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const [showMoreDropdown, setShowMoreDropdown] = useState(false);
-  const [showMobileMore, setShowMobileMore] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
   const API_BASE_URL =
@@ -66,9 +68,10 @@ const Navbar = () => {
       path: "/mentors",
       icon: Users,
     },
+   
     {
-      title: "Blogs",
-      path: "/blogs",
+      title: "Course",
+      path: "/courses",
       icon: BookOpen,
     },
     {
@@ -89,6 +92,11 @@ const Navbar = () => {
       icon: BadgeDollarSign,
     },
     {
+      title: "Blogs",
+      path: "/blogs",
+      icon: BookOpen,
+    },
+    {
       title: "About GuideX",
       path: "/about",
       icon: Info,
@@ -96,14 +104,13 @@ const Navbar = () => {
     {
       title: "Contact Us",
       path: "/contact",
-      icon: MessageCircle,
+      icon: Contact,
     },
     {
       title: "Resources",
       path: "/career-resources",
       icon: BookOpen,
     },
-   
   ];
 
   // ==========================================
@@ -169,7 +176,6 @@ const Navbar = () => {
   useEffect(() => {
     setMobileOpen(false);
     setShowMoreDropdown(false);
-    setShowMobileMore(false);
     setShowDropdown(false);
   }, [location.pathname]);
 
@@ -215,9 +221,9 @@ const Navbar = () => {
           DESKTOP / MAIN NAVBAR
       ========================================================= */}
 
-      <header className="fixed top-2 left-0 right-0 z-50 px-4 lg:px-8">
+      <header className="fixed top-2 left-0 right-0 z-50 px-3 sm:px-4 lg:px-8">
         <div
-          className={`max-w-7xl mx-auto h-20 rounded-3xl border backdrop-blur-3xl transition-all duration-500 flex items-center justify-between px-5 sm:px-8 ${
+          className={`max-w-7xl mx-auto h-16 sm:h-20 rounded-2xl sm:rounded-3xl border backdrop-blur-3xl transition-all duration-500 flex items-center justify-between px-4 sm:px-8 ${
             scrolled
               ? "bg-white/85 border-white/30 shadow-[0_20px_60px_rgba(0,0,0,0.18)]"
               : "bg-white/70 border-white/20 shadow-[0_15px_40px_rgba(0,0,0,0.12)]"
@@ -227,13 +233,16 @@ const Navbar = () => {
               LOGO
           ===================================================== */}
 
-          <Link to="/" className="flex items-center gap-3 group shrink-0">
-            <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-2xl bg-gradient-to-br from-blue-600 via-indigo-600 to-violet-600 flex items-center justify-center shadow-lg group-hover:rotate-6 transition duration-500">
-              <GraduationCap size={28} className="text-white sm:w-8 sm:h-8" />
+          <Link
+            to="/"
+            className="flex items-center gap-2.5 sm:gap-3 group shrink-0"
+          >
+            <div className="h-10 w-10 sm:h-14 sm:w-14 rounded-xl sm:rounded-2xl bg-gradient-to-br from-blue-600 via-indigo-600 to-violet-600 flex items-center justify-center shadow-lg group-hover:rotate-6 transition duration-500">
+              <GraduationCap size={22} className="text-white sm:w-8 sm:h-8" />
             </div>
 
-            <div className="hidden sm:block">
-              <h1 className="text-2xl sm:text-3xl font-black tracking-tight">
+            <div className="block">
+              <h1 className="text-xl sm:text-3xl font-black tracking-tight leading-none">
                 <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 bg-clip-text text-transparent">
                   Guide
                 </span>
@@ -241,7 +250,7 @@ const Navbar = () => {
                 <span className="text-gray-900">X</span>
               </h1>
 
-              <p className="text-[10px] sm:text-[11px] uppercase tracking-[0.3em] sm:tracking-[0.35em] text-gray-500 font-semibold">
+              <p className="hidden sm:block text-[10px] sm:text-[11px] uppercase tracking-[0.3em] sm:tracking-[0.35em] text-gray-500 font-semibold mt-0.5">
                 Learn • Connect • Grow
               </p>
             </div>
@@ -343,7 +352,7 @@ const Navbar = () => {
               RIGHT SIDE
           ===================================================== */}
 
-          <div className="flex items-center gap-3 sm:gap-4">
+          <div className="flex items-center gap-2.5 sm:gap-4">
             {loading ? null : !user ? (
               <Link
                 to="/login"
@@ -361,12 +370,12 @@ const Navbar = () => {
 
                 <button
                   onClick={() => setShowDropdown(!showDropdown)}
-                  className="flex items-center gap-3 rounded-full bg-white/70 border border-white/40 px-3 py-2 shadow-lg hover:shadow-xl transition-all duration-300"
+                  className="flex items-center gap-2 sm:gap-3 rounded-full bg-white/70 border border-white/40 p-1.5 sm:px-3 sm:py-2 shadow-sm hover:shadow-md transition-all duration-300"
                 >
                   <img
                     src={profileImage}
                     alt="Profile"
-                    className="w-12 h-12 rounded-full object-cover border-2 border-white ring-4 ring-blue-100"
+                    className="w-9 h-9 sm:w-12 sm:h-12 rounded-full object-cover border-2 border-white ring-2 sm:ring-4 ring-blue-100"
                   />
 
                   <div className="hidden xl:block text-left">
@@ -380,8 +389,8 @@ const Navbar = () => {
                   </div>
 
                   <ChevronDown
-                    size={18}
-                    className={`text-gray-500 transition-transform duration-300 ${
+                    size={16}
+                    className={`text-gray-500 hidden sm:block transition-transform duration-300 ${
                       showDropdown ? "rotate-180" : ""
                     }`}
                   />
@@ -482,9 +491,23 @@ const Navbar = () => {
                       <span className="font-medium">My Bookings</span>
                     </Link>
 
-                    {/* =================================================
-                        MY REGISTRATIONS
-                    ================================================= */}
+                    <Link
+                      to="/my-Courses"
+                      onClick={() => setShowDropdown(false)}
+                      className={`mx-2 flex items-center gap-3 rounded-xl px-4 py-2.5 transition ${
+                        isProfileActive("/my-courses")
+                          ? "bg-green-50 text-green-600"
+                          : "text-gray-700 hover:bg-green-50 hover:text-green-600"
+                      }`}
+                    >
+                      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-green-100 text-green-600">
+                        <CalendarCheck size={18} />
+                      </div>
+
+                      <span className="font-medium">My Courses</span>
+                    </Link>
+
+                    {/* MY REGISTRATIONS */}
 
                     <Link
                       to="/my-registrations"
@@ -520,7 +543,7 @@ const Navbar = () => {
                       <span className="font-medium">Disputes</span>
                     </Link>
 
-                    {/* MY EVENTS */}
+                    {/* RESCHEDULE REQUESTS */}
 
                     <Link
                       to="/rescheduleRequest"
@@ -550,23 +573,25 @@ const Navbar = () => {
                       }`}
                     >
                       <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-yellow-100 text-yellow-600">
-                        <BookOpen size={18} />
+                        <Award size={18} />
                       </div>
 
                       <span className="font-medium">My Achievements</span>
                     </Link>
+
+                    {/* ANALYTICS */}
 
                     <Link
                       to="/analytics"
                       onClick={() => setShowDropdown(false)}
                       className={`mx-2 flex items-center gap-3 rounded-xl px-4 py-2.5 transition ${
                         isProfileActive("/analytics")
-                          ? "bg-yellow-50 text-yellow-600"
-                          : "text-gray-700 hover:bg-yellow-50 hover:text-yellow-600"
+                          ? "bg-violet-50 text-violet-600"
+                          : "text-gray-700 hover:bg-violet-50 hover:text-violet-600"
                       }`}
                     >
-                      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-yellow-100 text-yellow-600">
-                        <BookOpen size={18} />
+                      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-violet-100 text-violet-600">
+                        <BarChart3 size={18} />
                       </div>
 
                       <span className="font-medium">My Analytics</span>
@@ -615,9 +640,9 @@ const Navbar = () => {
 
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
-              className="lg:hidden flex items-center justify-center w-12 h-12 rounded-2xl bg-white/70 border border-white/40 shadow-lg"
+              className="lg:hidden flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-white/70 border border-white/40 shadow-sm text-gray-700 hover:bg-white transition-all"
             >
-              {mobileOpen ? <X size={24} /> : <Menu size={24} />}
+              {mobileOpen ? <X size={22} /> : <Menu size={22} />}
             </button>
           </div>
         </div>
@@ -628,260 +653,254 @@ const Navbar = () => {
       ========================================================= */}
 
       <div
-        className={`fixed top-28 left-4 right-4 z-40 lg:hidden rounded-3xl bg-white/95 backdrop-blur-3xl border border-white/40 shadow-2xl transition-all duration-300 overflow-hidden ${
+        className={`fixed top-20 sm:top-24 left-3 right-3 sm:left-4 sm:right-4 z-40 lg:hidden rounded-3xl bg-white/95 backdrop-blur-3xl border border-white/60 shadow-[0_20px_50px_rgba(0,0,0,0.15)] transition-all duration-300 overflow-hidden ${
           mobileOpen
             ? "opacity-100 visible translate-y-0"
             : "opacity-0 invisible -translate-y-5"
         }`}
       >
-        <div className="p-4 max-h-[calc(100vh-140px)] overflow-y-auto">
-          {/* MAIN NAV */}
-
-          {navItems.map((item) => {
-            const Icon = item.icon;
-
-            const active = isMainNavActive(item.path);
-
-            return (
-              <Link
-                key={item.path}
-                to={item.path}
-                onClick={() => setMobileOpen(false)}
-                className={`flex items-center gap-4 px-5 py-4 rounded-2xl font-semibold transition-all duration-300 mb-2 ${
-                  active
-                    ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white"
-                    : "hover:bg-blue-50 text-gray-700"
-                }`}
-              >
-                <Icon size={20} />
-
-                {item.title}
-              </Link>
-            );
-          })}
-
-          {/* MOBILE MORE */}
-
-          <button
-            onClick={() => setShowMobileMore((prev) => !prev)}
-            className={`w-full flex items-center justify-between gap-4 px-5 py-4 rounded-2xl font-semibold transition-all duration-300 mb-2 ${
-              isMoreActive()
-                ? "bg-blue-50 text-blue-600"
-                : "hover:bg-blue-50 text-gray-700"
-            }`}
-          >
-            <span className="flex items-center gap-4">
-              <Info size={20} />
-              More
-            </span>
-
-            <ChevronDown
-              size={20}
-              className={`transition-transform duration-300 ${
-                showMobileMore ? "rotate-180" : ""
-              }`}
-            />
-          </button>
-
-          {/* MOBILE MORE ITEMS */}
-
-          <div
-            className={`overflow-hidden transition-all duration-300 ${
-              showMobileMore ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
-            }`}
-          >
-            <div className="ml-4 pl-3 border-l-2 border-blue-100">
-              {moreItems.map((item) => {
-                const Icon = item.icon;
-
-                const active =
-                  location.pathname === item.path ||
-                  location.pathname.startsWith(`${item.path}/`);
-
-                return (
-                  <Link
-                    key={item.path}
-                    to={item.path}
-                    onClick={() => setMobileOpen(false)}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition mb-2 ${
-                      active
-                        ? "bg-blue-50 text-blue-600"
-                        : "text-gray-600 hover:bg-blue-50 hover:text-blue-600"
-                    }`}
-                  >
-                    <Icon size={18} />
-
-                    {item.title}
-                  </Link>
-                );
-              })}
+        <div className="p-3 sm:p-5 max-h-[calc(100vh-120px)] overflow-y-auto scrollbar-none">
+          {/* USER MINI HEADER IF LOGGED IN */}
+          {!loading && user && (
+            <div className="flex items-center gap-3 p-3 mb-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl border border-blue-100/50">
+              <img
+                src={profileImage}
+                alt="profile"
+                className="w-11 h-11 rounded-full object-cover border-2 border-white shadow-sm flex-shrink-0"
+              />
+              <div className="min-w-0 flex-1">
+                <h4 className="text-sm font-bold text-gray-900 truncate">
+                  {user?.firstName} {user?.lastName}
+                </h4>
+                <p className="text-xs text-gray-500 truncate">{user?.email}</p>
+              </div>
+              <span className="px-2.5 py-0.5 rounded-full bg-blue-600 text-white text-[10px] font-semibold uppercase tracking-wider">
+                {user?.role}
+              </span>
             </div>
+          )}
+
+          {/* MAIN NAV ITEMS */}
+          <div className="space-y-1 mb-2">
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              const active = isMainNavActive(item.path);
+
+              return (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  onClick={() => setMobileOpen(false)}
+                  className={`flex items-center gap-3.5 px-4 py-3 rounded-xl font-semibold text-sm sm:text-base transition-all duration-200 ${
+                    active
+                      ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-200"
+                      : "hover:bg-blue-50/80 text-gray-700"
+                  }`}
+                >
+                  <Icon size={18} />
+                  {item.title}
+                </Link>
+              );
+            })}
           </div>
 
-          {/* MOBILE LOGIN */}
+          <div className="my-2 border-t border-gray-100"></div>
 
+          {/* MORE ITEMS (Directly integrated so no dropdown duplicate exists) */}
+          <div className="space-y-1 mb-2">
+            {moreItems.map((item) => {
+              const Icon = item.icon;
+              const active =
+                location.pathname === item.path ||
+                location.pathname.startsWith(`${item.path}/`);
+
+              return (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  onClick={() => setMobileOpen(false)}
+                  className={`flex items-center gap-3.5 px-4 py-2.5 rounded-xl text-sm font-medium transition ${
+                    active
+                      ? "bg-blue-50 text-blue-600 font-semibold"
+                      : "text-gray-700 hover:bg-blue-50/80"
+                  }`}
+                >
+                  <Icon size={18} />
+                  {item.title}
+                </Link>
+              );
+            })}
+          </div>
+
+          {/* MOBILE LOGIN BUTTON */}
           {!loading && !user && (
             <Link
               to="/login"
               onClick={() => setMobileOpen(false)}
-              className="mt-3 flex justify-center items-center rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 text-white py-4 font-semibold"
+              className="mt-4 flex justify-center items-center rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 text-white py-3.5 font-semibold shadow-md shadow-blue-200"
             >
-              Login
+              Login / Sign Up
             </Link>
           )}
 
           {/* =================================================
-              MOBILE AUTHENTICATED MENU
+              MOBILE AUTHENTICATED MENU (STUDENT PORTAL)
           ================================================= */}
 
           {!loading && user && (
             <>
-              <div className="my-4 border-t"></div>
+              <div className="my-3 border-t border-gray-100"></div>
 
-              {/* PROFILE */}
+              <div className="space-y-1 pb-1">
+                {/* PROFILE */}
+                <Link
+                  to="/profile"
+                  onClick={() => setMobileOpen(false)}
+                  className={`flex items-center gap-3.5 px-4 py-2.5 rounded-xl text-sm font-medium transition ${
+                    isProfileActive("/profile")
+                      ? "bg-blue-50 text-blue-600 font-semibold"
+                      : "text-gray-700 hover:bg-blue-50"
+                  }`}
+                >
+                  <User size={18} />
+                  My Profile
+                </Link>
 
-              <Link
-                to="/profile"
-                onClick={() => setMobileOpen(false)}
-                className={`flex items-center gap-4 px-5 py-4 rounded-2xl transition mb-2 ${
-                  isProfileActive("/profile")
-                    ? "bg-blue-50 text-blue-600"
-                    : "hover:bg-blue-50 text-gray-700"
-                }`}
-              >
-                <User size={20} />
-                Profile
-              </Link>
+                {/* DASHBOARD */}
+                <Link
+                  to="/dashboard"
+                  onClick={() => setMobileOpen(false)}
+                  className={`flex items-center gap-3.5 px-4 py-2.5 rounded-xl text-sm font-medium transition ${
+                    isProfileActive("/dashboard")
+                      ? "bg-indigo-50 text-indigo-600 font-semibold"
+                      : "text-gray-700 hover:bg-indigo-50"
+                  }`}
+                >
+                  <LayoutDashboard size={18} />
+                  Dashboard
+                </Link>
 
-              {/* DASHBOARD */}
+                {/* MY BOOKINGS */}
+                <Link
+                  to="/my-bookings"
+                  onClick={() => setMobileOpen(false)}
+                  className={`flex items-center gap-3.5 px-4 py-2.5 rounded-xl text-sm font-medium transition ${
+                    isProfileActive("/my-bookings")
+                      ? "bg-green-50 text-green-600 font-semibold"
+                      : "text-gray-700 hover:bg-green-50"
+                  }`}
+                >
+                  <CalendarCheck size={18} />
+                  My Bookings
+                </Link>
+                <Link
+                  to="//my-courses"
+                  onClick={() => setMobileOpen(false)}
+                  className={`flex items-center gap-3.5 px-4 py-2.5 rounded-xl text-sm font-medium transition ${
+                    isProfileActive("//my-courses")
+                      ? "bg-green-50 text-green-600 font-semibold"
+                      : "text-gray-700 hover:bg-green-50"
+                  }`}
+                >
+                  <CalendarCheck size={18} />
+                  My Courses
+                </Link>
 
-              <Link
-                to="/dashboard"
-                onClick={() => setMobileOpen(false)}
-                className={`flex items-center gap-4 px-5 py-4 rounded-2xl transition mb-2 ${
-                  isProfileActive("/dashboard")
-                    ? "bg-indigo-50 text-indigo-600"
-                    : "hover:bg-indigo-50 text-gray-700"
-                }`}
-              >
-                <LayoutDashboard size={20} />
-                Dashboard
-              </Link>
+                {/* MY REGISTRATIONS */}
+                <Link
+                  to="/my-registrations"
+                  onClick={() => setMobileOpen(false)}
+                  className={`flex items-center gap-3.5 px-4 py-2.5 rounded-xl text-sm font-medium transition ${
+                    isProfileActive("/my-registrations")
+                      ? "bg-orange-50 text-orange-600 font-semibold"
+                      : "text-gray-700 hover:bg-orange-50"
+                  }`}
+                >
+                  <ClipboardList size={18} />
+                  My Registrations
+                </Link>
 
-              {/* MY BOOKINGS */}
+                {/* DISPUTES */}
+                <Link
+                  to="/disputes"
+                  onClick={() => setMobileOpen(false)}
+                  className={`flex items-center gap-3.5 px-4 py-2.5 rounded-xl text-sm font-medium transition ${
+                    isProfileActive("/disputes")
+                      ? "bg-amber-50 text-amber-600 font-semibold"
+                      : "text-gray-700 hover:bg-amber-50"
+                  }`}
+                >
+                  <ShieldAlert size={18} />
+                  Disputes
+                </Link>
 
-              <Link
-                to="/my-bookings"
-                onClick={() => setMobileOpen(false)}
-                className={`flex items-center gap-4 px-5 py-4 rounded-2xl transition mb-2 ${
-                  isProfileActive("/my-bookings")
-                    ? "bg-green-50 text-green-600"
-                    : "hover:bg-green-50 text-gray-700"
-                }`}
-              >
-                <CalendarCheck size={20} />
-                My Bookings
-              </Link>
+                {/* RESCHEDULE REQUESTS */}
+                <Link
+                  to="/rescheduleRequest"
+                  onClick={() => setMobileOpen(false)}
+                  className={`flex items-center gap-3.5 px-4 py-2.5 rounded-xl text-sm font-medium transition ${
+                    isProfileActive("/rescheduleRequest")
+                      ? "bg-cyan-50 text-cyan-600 font-semibold"
+                      : "text-gray-700 hover:bg-cyan-50"
+                  }`}
+                >
+                  <CalendarDays size={18} />
+                  Reschedule Requests
+                </Link>
 
-              {/* =================================================
-                  MOBILE MY REGISTRATIONS
-              ================================================= */}
+                {/* BADGES */}
+                <Link
+                  to="/badges"
+                  onClick={() => setMobileOpen(false)}
+                  className={`flex items-center gap-3.5 px-4 py-2.5 rounded-xl text-sm font-medium transition ${
+                    isProfileActive("/badges")
+                      ? "bg-yellow-50 text-yellow-600 font-semibold"
+                      : "text-gray-700 hover:bg-yellow-50"
+                  }`}
+                >
+                  <Award size={18} />
+                  My Achievements
+                </Link>
 
-              <Link
-                to="/my-registrations"
-                onClick={() => setMobileOpen(false)}
-                className={`flex items-center gap-4 px-5 py-4 rounded-2xl transition mb-2 ${
-                  isProfileActive("/my-registrations")
-                    ? "bg-orange-50 text-orange-600"
-                    : "hover:bg-orange-50 text-gray-700"
-                }`}
-              >
-                <ClipboardList size={20} />
-                My Registrations
-              </Link>
+                {/* ANALYTICS */}
+                <Link
+                  to="/analytics"
+                  onClick={() => setMobileOpen(false)}
+                  className={`flex items-center gap-3.5 px-4 py-2.5 rounded-xl text-sm font-medium transition ${
+                    isProfileActive("/analytics")
+                      ? "bg-violet-50 text-violet-600 font-semibold"
+                      : "text-gray-700 hover:bg-violet-50"
+                  }`}
+                >
+                  <BarChart3 size={18} />
+                  My Analytics
+                </Link>
 
-              {/* DISPUTES */}
-
-              <Link
-                to="/disputes"
-                onClick={() => setMobileOpen(false)}
-                className={`flex items-center gap-4 px-5 py-4 rounded-2xl transition mb-2 ${
-                  isProfileActive("/disputes")
-                    ? "bg-amber-50 text-amber-600"
-                    : "hover:bg-amber-50 text-gray-700"
-                }`}
-              >
-                <ShieldAlert size={20} />
-                Disputes
-              </Link>
-
-              {/* MY EVENTS */}
-
-              <Link
-                to="/rescheduleRequest"
-                onClick={() => setMobileOpen(false)}
-                className={`flex items-center gap-4 px-5 py-4 rounded-2xl transition mb-2 ${
-                  isProfileActive("/rescheduleRequest")
-                    ? "bg-cyan-50 text-cyan-600"
-                    : "hover:bg-cyan-50 text-gray-700"
-                }`}
-              >
-                <CalendarDays size={20} />
-                Reschedule Requests
-              </Link>
-
-              {/* BADGES */}
-
-              <Link
-                to="/badges"
-                onClick={() => setMobileOpen(false)}
-                className={`flex items-center gap-4 px-5 py-4 rounded-2xl transition mb-2 ${
-                  isProfileActive("/badges")
-                    ? "bg-yellow-50 text-yellow-600"
-                    : "hover:bg-yellow-50 text-gray-700"
-                }`}
-              >
-                <BookOpen size={20} />
-                My Achievements
-              </Link>
-
-              <Link
-                to="/analytics"
-                onClick={() => setMobileOpen(false)}
-                className={`flex items-center gap-4 px-5 py-4 rounded-2xl transition mb-2 ${
-                  isProfileActive("/analytics")
-                    ? "bg-purple-50 text-purple-600"
-                    : "hover:bg-purple-50 text-gray-700"
-                }`}
-              >
-                <MessageCircle size={20} />
-                My Analytics
-              </Link>
-
-              {/* SUPPORT */}
-
-              <Link
-                to="/support-inbox"
-                onClick={() => setMobileOpen(false)}
-                className={`flex items-center gap-4 px-5 py-4 rounded-2xl transition mb-2 ${
-                  isProfileActive("/support-inbox")
-                    ? "bg-purple-50 text-purple-600"
-                    : "hover:bg-purple-50 text-gray-700"
-                }`}
-              >
-                <MessageCircle size={20} />
-                Student Support
-              </Link>
+                {/* SUPPORT */}
+                <Link
+                  to="/support-inbox"
+                  onClick={() => setMobileOpen(false)}
+                  className={`flex items-center gap-3.5 px-4 py-2.5 rounded-xl text-sm font-medium transition ${
+                    isProfileActive("/support-inbox")
+                      ? "bg-purple-50 text-purple-600 font-semibold"
+                      : "text-gray-700 hover:bg-purple-50"
+                  }`}
+                >
+                  <MessageCircle size={18} />
+                  Student Support
+                </Link>
+              </div>
 
               {/* LOGOUT */}
-
-              <button
-                onClick={handleLogout}
-                className="mt-3 w-full flex items-center justify-center gap-3 rounded-2xl bg-red-500 text-white py-4 font-semibold hover:bg-red-600 transition"
-              >
-                <LogOut size={20} />
-                Logout
-              </button>
+              <div className="mt-3 pt-3 border-t border-gray-100">
+                <button
+                  onClick={handleLogout}
+                  className="w-full flex items-center justify-center gap-2.5 rounded-xl bg-red-50 text-red-600 py-3 font-semibold text-sm hover:bg-red-100 transition"
+                >
+                  <LogOut size={18} />
+                  Logout
+                </button>
+              </div>
             </>
           )}
         </div>
