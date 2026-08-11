@@ -13,6 +13,7 @@ import userRoutes from "./routes/userRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import mentorRoutes from "./routes/mentorRoutes.js";
 import bookingRoutes from "./routes/bookingRoutes.js";
+import path from "path";
 import paymentRoutes from "./routes/paymentRoutes.js";
 import meetingRoutes from "./routes/meetingRoutes.js";
 import notificacationRoutes from "./routes/notificationRoutes.js";
@@ -66,6 +67,7 @@ app.use(
           "'self'",
           "http://localhost:8080",
           "https://guidee-xbackend.onrender.com",
+          "https://guidexbackendappli.onrender.com",
           "https://api.razorpay.com",
           "https://accounts.google.com",
         ],
@@ -124,7 +126,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// NOTE: CSRF middleware completely removed here!
+// (CSRF middleware completely removed here)
 
 app.use("/uploads", express.static("uploads"));
 
