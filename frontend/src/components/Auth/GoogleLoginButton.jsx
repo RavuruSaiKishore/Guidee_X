@@ -1,27 +1,28 @@
-
-import React, { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { toast } from "react-toastify";
-import { useAuth } from "../../context/AuthContext";
-
-export default function GoogleLoginButton() {
+// ============================================================
+// GOOGLE LOGIN BUTTON COMPONENT (WITH REF)
+// ============================================================
+const GoogleLoginButton = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
+  const buttonRef = React.useRef(null);
+
+  const API_BASE_URL =
+    import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
   const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
   useEffect(() => {
     /* global google */
-    if (window.google) {
+    if (window.google && buttonRef.current) {
       google.accounts.id.initialize({
         client_id: GOOGLE_CLIENT_ID,
         callback: handleCredentialResponse,
       });
 
-      google.accounts.id.renderButton(
-        document.getElementById("google-button-div"),
-        { theme: "outline", size: "large", width: "100%" }
-      );
+      google.accounts.id.renderButton(buttonRef.current, {
+        theme: "outline",
+        size: "large",
+        width: "100%",
+      });
     }
   }, [GOOGLE_CLIENT_ID]);
 
@@ -53,5 +54,10 @@ export default function GoogleLoginButton() {
     }
   };
 
-  return <div id="google-button-div" className="flex justify-center w-full my-2"></div>;
-}
+  return (
+    <div
+      ref={buttonRef}
+      className="flex justify-center w-full my-3 min-h-[40px]"
+    ></div>
+  );
+};

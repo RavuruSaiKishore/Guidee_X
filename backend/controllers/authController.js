@@ -761,12 +761,17 @@ export const googleAuth = async (req, res) => {
     }
 
     // Generate your application's JWT session token
-    const appToken = jwt.sign(
-      { id: user._id, role: user.role },
-      process.env.JWT_SECRET,
-      { expiresIn: "7d" }
-    );
+   const appToken = jwt.sign(
+     {
+       id: user._id,
+       role: user.role,
+       tokenVersion: user.tokenVersion, // <--- CRITICAL FIX
+     },
+     process.env.JWT_SECRET,
+     { expiresIn: "7d" }
+   );
 
+   
     // Determine redirection route based on role
     let redirectTo = "/";
     if (user.role === "admin") {
@@ -791,5 +796,72 @@ export const googleAuth = async (req, res) => {
       message: "Internal server error during Google authentication",
       error: error.message,
     });
+  }
+};
+
+
+// Resend or regenerate a fresh OTP when expired
+export const resendOtp = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ success: false, message: "Email is required" });
+    }
+
+    // Check if there's pending user registration data stored in an expired/existing record
+    const existingRecord = await OTP.findOne({ email });
+    
+    // If no record exists at all, they need to restart registration
+    if (!existingRecord || !existingRecord.userData) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Registration session expired. Please register again." 
+      });
+    }
+
+    const { firstName, lastName, password, role, phone } = existingRecord.userData;
+
+    // Generate a fresh 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const hashedOtp = crypto.createHash("sha256").update(otp).digest("hex");
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes fresh window
+
+    // Update the OTP document with the new code and extended expiration
+    await OTP.findOneAndUpdate(
+      { email },
+      {
+        otp: hashedOtp,
+        expiresAt,
+      },
+      { new: true }
+    );
+
+    // Send the fresh OTP via Brevo API
+    await axios.post(
+      "https://api.brevo.com/v3/smtp/email",
+      {
+        sender: { name: "GuideX", email: "ravurusaikishore@gmail.com" },
+        to: [{ email, name: `${firstName} ${lastName}` }],
+        subject: "Your New GuideX Verification OTP",
+        textContent: `Your new verification OTP is: ${otp}. It is valid for 10 minutes.`,
+        htmlContent: `<p>Your new verification OTP is: <strong>${otp}</strong>. Valid for 10 minutes.</p>`,
+      },
+      {
+        headers: {
+          accept: "application/json",
+          "api-key": process.env.BREVO_API_KEY,
+          "content-type": "application/json",
+        },
+      }
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "A new OTP has been sent to your email.",
+    });
+  } catch (error) {
+    console.error("Resend OTP Error:", error);
+    return res.status(500).json({ success: false, message: error.message });
   }
 };

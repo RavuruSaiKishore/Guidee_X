@@ -29,6 +29,14 @@ const getToken = () => {
     };
   }
 
+  // Fallback for general / Google token storage
+  if (localStorage.getItem("Token")) {
+    return {
+      token: localStorage.getItem("Token"),
+      role: "student", // Will be verified/adjusted upon profile fetch if needed
+    };
+  }
+
   return {
     token: null,
     role: null,
@@ -65,13 +73,9 @@ export const AuthProvider = ({ children }) => {
         break;
 
       case "student":
+      default:
         endpoint = `${API_BASE_URL}/api/user/userProfile`;
         break;
-
-      default:
-        setUser(null);
-        setLoading(false);
-        return;
     }
 
     try {
@@ -87,7 +91,7 @@ export const AuthProvider = ({ children }) => {
       // Catch session expiration from another device
       if (res.status === 401) {
         if (data.sessionExpired) {
-          alert("Session expired because you logged in from another device."); // Or use a toast library if preferred
+          alert("Session expired because you logged in from another device.");
         }
         logout();
         return;
@@ -99,19 +103,13 @@ export const AuthProvider = ({ children }) => {
         return;
       }
 
-      // Set the correct user object
-      switch (role) {
-        case "admin":
-          setUser(data.admin);
-          break;
-
-        case "mentor":
-          setUser(data.mentor);
-          break;
-
-        case "student":
-          setUser(data.user);
-          break;
+      // Set the correct user object based on role or response structure
+      if (data.admin) {
+        setUser(data.admin);
+      } else if (data.mentor) {
+        setUser(data.mentor);
+      } else {
+        setUser(data.user || data);
       }
 
       setToken(storedToken);
@@ -128,19 +126,20 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem("UserToken");
     localStorage.removeItem("MentorToken");
     localStorage.removeItem("AdminToken");
+    localStorage.removeItem("Token");
 
-    switch (userData.role) {
-      case "admin":
-        localStorage.setItem("AdminToken", jwtToken);
-        break;
+    const userRole = userData?.role || "student";
 
-      case "mentor":
-        localStorage.setItem("MentorToken", jwtToken);
-        break;
-
-      default:
-        localStorage.setItem("UserToken", jwtToken);
+    if (userRole === "admin") {
+      localStorage.setItem("AdminToken", jwtToken);
+    } else if (userRole === "mentor") {
+      localStorage.setItem("MentorToken", jwtToken);
+    } else {
+      localStorage.setItem("UserToken", jwtToken);
     }
+
+    // Also store general token for seamless compatibility
+    localStorage.setItem("Token", jwtToken);
 
     setToken(jwtToken);
     setUser(userData);
@@ -153,6 +152,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem("UserToken");
     localStorage.removeItem("MentorToken");
     localStorage.removeItem("AdminToken");
+    localStorage.removeItem("Token");
 
     setUser(null);
     setToken(null);
