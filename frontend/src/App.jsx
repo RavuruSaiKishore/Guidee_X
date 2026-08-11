@@ -211,7 +211,6 @@ const AdminDisputeChatPage = lazy(() =>
   import("./Pages/Admin/Disputes/AdminDisputeChatPage")
 );
 
-
 function App() {
   useAutoLogout();
 
@@ -235,7 +234,8 @@ function App() {
     >
       <Routes>
         <Route path="/meeting/:roomId" element={<MeetingPage />} />
-        {/* ================= PUBLIC ROUTES ================= */}
+
+        {/* ================= PUBLIC & STUDENT ROUTES ================= */}
         <Route element={<UserLayout />}>
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
@@ -246,10 +246,7 @@ function App() {
           <Route path="/contact" element={<Contact />} />
           <Route path="/blogs" element={<Blogs />} />
 
-          {/* Mentor Public Pages */}
-
-          {/* ================= STUDENT ROUTES ================= */}
-
+          {/* ================= STUDENT PROTECTED ROUTES ================= */}
           <Route element={<ProtectedRoute allowedRole="student" />}>
             <Route path="/profile" element={<Profile />} />
             <Route path="/dashboard" element={<Dashboard />} />
@@ -417,6 +414,7 @@ function App() {
           </Route>
         </Route>
       </Routes>
+
     </Suspense>
   );
 }

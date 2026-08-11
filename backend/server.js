@@ -35,6 +35,7 @@ import mentorReviewRoutes from "./routes/mentorReviewRoutes.js";
 import mentorContactRoutes from "./routes/mentorContactRoutes.js";
 import eventPaymentRoutes from "./routes/eventPaymentRoutes.js";
 import disputeRoutes from "./routes/disputeRoutes.js";
+import chatRoutes from "./routes/chatRoutes.js"
 
 dotenv.config();
 validateEnv();
@@ -156,6 +157,7 @@ app.use("/api/mentorReview", mentorReviewRoutes);
 app.use("/api/mentor-contact", mentorContactRoutes);
 app.use("/api/event-payment", eventPaymentRoutes);
 app.use("/api/disputes", disputeRoutes);
+app.use("/api/chat", chatRoutes);
 
 // SERVER
 const PORT = process.env.PORT || 8080;
