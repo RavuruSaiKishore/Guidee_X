@@ -150,6 +150,67 @@ const AdminBlogForm = () => {
   };
 
   // =====================================================
+  // LOAD SAMPLE BLOG DATA (TEST HELPER)
+  // =====================================================
+
+ const loadSampleBlogData = () => {
+   const sampleTitle =
+     "Understanding React Server Components: The Future of Web Architecture";
+
+   setFormData({
+     title: sampleTitle,
+     slug: generateSlug(sampleTitle),
+     excerpt:
+       "Dive deep into React Server Components (RSC), zero-bundle-size components, server-side data fetching, and how they change modern frontend development.",
+     content: `
+        <h2>The Paradigm Shift of React Server Components</h2>
+        <p>React Server Components (RSC) allow developers to build applications that span the server and client, combining the rich interactivity of client-side apps with the improved performance of traditional server rendering.</p>
+        
+        <h3>Zero Bundle Size on the Client</h3>
+        <p>Server components execute entirely on the server. Their code is never sent to the client browser, reducing JavaScript bundle size and accelerating initial page loads significantly.</p>
+        
+        <blockquote>"Server components represent a fundamental shift in how we think about component composition and data loading."</blockquote>
+        
+        <h3>When to Use Client vs. Server Components</h3>
+        <p>Use server components for heavy data fetching, direct database access, and rendering static content. Reserve client components strictly for interactivity, browser APIs, and stateful hooks.</p>
+      `,
+     category: "Technology",
+     tags: ["react", "server-components", "frontend", "web-dev", "performance"],
+     contentType: "Article",
+     difficulty: "Advanced",
+     authorName: "GuideX Core Architecture Team",
+     authorBio:
+       "Specializing in modern React architecture, SSR, and high-performance web apps.",
+     featured: true,
+     commentsEnabled: true,
+     seoTitle: "React Server Components Guide & Architecture",
+     seoDescription:
+       "Discover how React Server Components improve app performance with zero-bundle-size rendering and direct data fetching.",
+     seoKeywords: [
+       "react server components",
+       "rsc tutorial",
+       "react performance optimization",
+       "modern frontend architecture",
+     ],
+     scheduledAt: "",
+   });
+
+   // Mocking sample preview values and meta
+   setCoverImageAlt(
+     "Abstract visual representation of server-client communication and data flow networks"
+   );
+   setImagePreview("https://images.unsplash.com/photo-1555066931-4365d14bab8c");
+
+   // Create a dummy file object for submission check bypass
+   const dummyFile = new File(["dummy content"], "sample-cover.jpg", {
+     type: "image/jpeg",
+   });
+   setCoverImage(dummyFile);
+
+   toast.success("Sample blog data loaded successfully!");
+ };
+
+  // =====================================================
   // READING TIME
   // =====================================================
 
@@ -569,39 +630,50 @@ const AdminBlogForm = () => {
               </div>
             </div>
 
-            <div className="hidden md:flex items-center gap-3">
+            <div className="flex items-center gap-3">
               <button
                 type="button"
-                onClick={() => setShowPreview(true)}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-700 font-semibold hover:bg-gray-50"
+                onClick={loadSampleBlogData}
+                className="hidden sm:flex items-center gap-2 px-4 py-2.5 rounded-xl bg-purple-50 text-purple-700 text-sm font-bold hover:bg-purple-100 transition shadow-sm"
               >
-                <Eye size={17} />
-                Preview
+                <Sparkles size={16} />
+                Load Sample Blog Data
               </button>
 
-              <button
-                type="button"
-                disabled={loading}
-                onClick={() => handleSubmit("Draft")}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gray-900 text-white font-semibold hover:bg-gray-800 disabled:opacity-50"
-              >
-                <Save size={17} />
-                Save Draft
-              </button>
+              <div className="hidden md:flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowPreview(true)}
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-700 font-semibold hover:bg-gray-50"
+                >
+                  <Eye size={17} />
+                  Preview
+                </button>
 
-              <button
-                type="button"
-                disabled={loading}
-                onClick={() => handleSubmit("Published")}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 text-white font-semibold hover:bg-indigo-700 disabled:opacity-50 shadow-lg shadow-indigo-100"
-              >
-                {loading ? (
-                  <Loader2 size={17} className="animate-spin" />
-                ) : (
-                  <Send size={17} />
-                )}
-                Publish
-              </button>
+                <button
+                  type="button"
+                  disabled={loading}
+                  onClick={() => handleSubmit("Draft")}
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gray-900 text-white font-semibold hover:bg-gray-800 disabled:opacity-50"
+                >
+                  <Save size={17} />
+                  Save Draft
+                </button>
+
+                <button
+                  type="button"
+                  disabled={loading}
+                  onClick={() => handleSubmit("Published")}
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 text-white font-semibold hover:bg-indigo-700 disabled:opacity-50 shadow-lg shadow-indigo-100"
+                >
+                  {loading ? (
+                    <Loader2 size={17} className="animate-spin" />
+                  ) : (
+                    <Send size={17} />
+                  )}
+                  Publish
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -623,18 +695,31 @@ const AdminBlogForm = () => {
             ================================================= */}
 
             <section className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-              <div className="px-6 py-5 border-b border-gray-100 flex items-center gap-4">
-                <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
-                  <FileText size={20} />
+              <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                    <FileText size={20} />
+                  </div>
+
+                  <div>
+                    <h2 className="font-bold text-gray-900">
+                      Basic Information
+                    </h2>
+
+                    <p className="text-sm text-gray-400 mt-0.5">
+                      Define the title and introduction of your blog.
+                    </p>
+                  </div>
                 </div>
 
-                <div>
-                  <h2 className="font-bold text-gray-900">Basic Information</h2>
-
-                  <p className="text-sm text-gray-400 mt-0.5">
-                    Define the title and introduction of your blog.
-                  </p>
-                </div>
+                <button
+                  type="button"
+                  onClick={loadSampleBlogData}
+                  className="sm:hidden flex items-center gap-2 px-3 py-2 rounded-xl bg-purple-50 text-purple-700 text-xs font-bold hover:bg-purple-100 transition shadow-sm"
+                >
+                  <Sparkles size={14} />
+                  Load Sample
+                </button>
               </div>
 
               <div className="p-6 space-y-7">

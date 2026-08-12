@@ -455,6 +455,22 @@ const Navbar = () => {
                       <span className="font-medium">My Profile</span>
                     </Link>
 
+                    {/* <Link
+                      to="/studentpractice"
+                      onClick={() => setShowDropdown(false)}
+                      className={`mx-2 flex items-center gap-3 rounded-xl px-4 py-2.5 transition ${
+                        isProfileActive("/studentpractice")
+                          ? "bg-blue-50 text-blue-600"
+                          : "text-gray-700 hover:bg-blue-50 hover:text-blue-600"
+                      }`}
+                    >
+                      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-100 text-blue-600">
+                        <User size={18} />
+                      </div>
+
+                      <span className="font-medium"></span>
+                    </Link> */}
+
                     {/* DASHBOARD */}
 
                     <Link
@@ -765,6 +781,19 @@ const Navbar = () => {
                   <User size={18} />
                   My Profile
                 </Link>
+
+                {/* <Link
+                  to="/studentpractice"
+                  onClick={() => setMobileOpen(false)}
+                  className={`flex items-center gap-3.5 px-4 py-2.5 rounded-xl text-sm font-medium transition ${
+                    isProfileActive("/studentpractice")
+                      ? "bg-blue-50 text-blue-600 font-semibold"
+                      : "text-gray-700 hover:bg-blue-50"
+                  }`}
+                >
+                  <User size={18} />
+                  Career Navigator
+                </Link> */}
 
                 {/* DASHBOARD */}
                 <Link

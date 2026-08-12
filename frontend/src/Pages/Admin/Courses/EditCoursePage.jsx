@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import {
   Plus,
   Trash2,
@@ -7,6 +7,8 @@ import {
   Upload,
   ArrowLeft,
   FileText,
+  FileCheck,
+  Code,
 } from "lucide-react";
 import { toast } from "react-toastify";
 
@@ -48,6 +50,17 @@ const EditCoursePage = () => {
           type: "video",
         },
       ],
+      assignment: {
+        title: "Module Assessment",
+        description: "10 MCQ Assessment",
+        questions: [],
+      },
+      codingProblem: {
+        title: "",
+        problemSlug: "",
+        difficulty: "Medium",
+        description: "",
+      },
     },
   ]);
 
@@ -55,6 +68,44 @@ const EditCoursePage = () => {
 
   const API_BASE_URL =
     import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
+
+  // Helper function to check if the course or module is coding/technical related
+  const isCodingRelated = () => {
+    const cat = form.category.toLowerCase();
+    const sub = form.subCategory.toLowerCase();
+    const title = form.title.toLowerCase();
+    const desc = form.description.toLowerCase();
+
+    const codingKeywords = [
+      "dsa",
+      "coding",
+      "programming",
+      "web",
+      "full-stack",
+      "frontend",
+      "backend",
+      "react",
+      "node",
+      "javascript",
+      "python",
+      "java",
+      "c++",
+      "algorithm",
+      "data structures",
+      "software",
+      "development",
+      "cybersecurity",
+      "ethical hacking",
+    ];
+
+    return codingKeywords.some(
+      (keyword) =>
+        cat.includes(keyword) ||
+        sub.includes(keyword) ||
+        title.includes(keyword) ||
+        desc.includes(keyword)
+    );
+  };
 
   useEffect(() => {
     const fetchCourseData = async () => {
@@ -97,6 +148,17 @@ const EditCoursePage = () => {
                 mod.notes && mod.notes.length > 0
                   ? mod.notes[0].title || "Existing PDF Notes"
                   : "",
+              assignment: mod.assignment || {
+                title: "Module Assessment",
+                description: "10 MCQ Assessment",
+                questions: [],
+              },
+              codingProblem: mod.codingProblem || {
+                title: "",
+                problemSlug: "",
+                difficulty: "Medium",
+                description: "",
+              },
             }));
             setModules(formattedModules);
           }
@@ -151,6 +213,17 @@ const EditCoursePage = () => {
             type: "video",
           },
         ],
+        assignment: {
+          title: "Module Assessment",
+          description: "10 MCQ Assessment",
+          questions: [],
+        },
+        codingProblem: {
+          title: "",
+          problemSlug: "",
+          difficulty: "Medium",
+          description: "",
+        },
       },
     ]);
   };
@@ -178,6 +251,21 @@ const EditCoursePage = () => {
       (_, i) => i !== lesIndex
     );
     setModules(updated);
+  };
+
+  const addMCQ = (modIdx) => {
+    const updated = [...modules];
+    if (updated[modIdx].assignment.questions.length < 10) {
+      updated[modIdx].assignment.questions.push({
+        questionText: "",
+        options: ["", "", "", ""],
+        correctOptionIndex: 0,
+        explanation: "",
+      });
+      setModules(updated);
+    } else {
+      toast.warning("Max 10 questions reached");
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -216,6 +304,8 @@ const EditCoursePage = () => {
             ]
           : mod.notes || [],
         lessons: mod.lessons,
+        assignment: mod.assignment,
+        codingProblem: isCodingRelated() ? mod.codingProblem : undefined,
       }));
 
       formData.append("modules", JSON.stringify(cleanModules));
@@ -269,8 +359,8 @@ const EditCoursePage = () => {
             <BookOpen className="text-blue-600" /> Edit Professional Course
           </h1>
           <p className="text-gray-500 text-sm mt-1">
-            Modify and update your educational course curriculum & module PDF
-            notes.
+            Modify and update your educational course curriculum, module PDF
+            notes, assignments, and coding problems.
           </p>
         </div>
       </div>
@@ -527,6 +617,9 @@ const EditCoursePage = () => {
                 </div>
 
                 <div className="space-y-3 pl-4 border-l-2 border-blue-200">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-gray-500">
+                    Lessons
+                  </h4>
                   {mod.lessons.map((lesson, lesIdx) => (
                     <div
                       key={lesIdx}
@@ -624,6 +717,167 @@ const EditCoursePage = () => {
                     + Add Lesson
                   </button>
                 </div>
+
+                {/* Module MCQ Assessment Builder (Up to 10 Questions) */}
+                <div className="mt-4 p-4 bg-white rounded-2xl border border-indigo-100 shadow-sm space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-sm font-bold flex items-center gap-2 text-indigo-900">
+                      <FileCheck size={16} className="text-indigo-600" /> Module
+                      Assessment (Max 10 MCQs)
+                    </h4>
+                    <span className="text-xs font-bold text-gray-400">
+                      {mod.assignment.questions.length} / 10 Questions
+                    </span>
+                  </div>
+
+                  {mod.assignment.questions.map((q, qIdx) => (
+                    <div
+                      key={qIdx}
+                      className="p-3 border rounded-xl bg-slate-50 text-xs space-y-2"
+                    >
+                      <div className="flex justify-between items-center">
+                        <span className="font-bold text-indigo-600">
+                          Question #{qIdx + 1}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const up = [...modules];
+                            up[modIdx].assignment.questions = up[
+                              modIdx
+                            ].assignment.questions.filter((_, i) => i !== qIdx);
+                            setModules(up);
+                          }}
+                          className="text-red-500 hover:text-red-700 font-bold"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                      <input
+                        type="text"
+                        placeholder="Enter question statement..."
+                        value={q.questionText}
+                        className="w-full p-2 border rounded bg-white font-semibold"
+                        onChange={(e) => {
+                          const up = [...modules];
+                          up[modIdx].assignment.questions[qIdx].questionText =
+                            e.target.value;
+                          setModules(up);
+                        }}
+                      />
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                        {q.options.map((opt, optIdx) => (
+                          <div key={optIdx} className="flex items-center gap-2">
+                            <input
+                              type="radio"
+                              name={`correct-mod-${modIdx}-q-${qIdx}`}
+                              checked={q.correctOptionIndex === optIdx}
+                              onChange={() => {
+                                const up = [...modules];
+                                up[modIdx].assignment.questions[
+                                  qIdx
+                                ].correctOptionIndex = optIdx;
+                                setModules(up);
+                              }}
+                              title="Mark as correct answer"
+                            />
+                            <input
+                              type="text"
+                              placeholder={`Option ${optIdx + 1}`}
+                              value={opt}
+                              className="w-full p-1.5 border rounded bg-white"
+                              onChange={(e) => {
+                                const up = [...modules];
+                                up[modIdx].assignment.questions[qIdx].options[
+                                  optIdx
+                                ] = e.target.value;
+                                setModules(up);
+                              }}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+
+                  <button
+                    type="button"
+                    onClick={() => addMCQ(modIdx)}
+                    className="text-xs font-bold text-indigo-600 hover:underline inline-flex items-center gap-1"
+                  >
+                    + Add MCQ Question ({mod.assignment.questions.length}/10)
+                  </button>
+                </div>
+
+                {/* Conditionally rendered Coding Practice Integration */}
+                {isCodingRelated() ? (
+                  <div className="p-4 bg-white rounded-2xl border border-emerald-100 shadow-sm space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-sm font-bold flex items-center gap-2 text-emerald-900">
+                        <Code size={16} className="text-emerald-600" />{" "}
+                        Topic-Based Coding Problem (DSA / Programming)
+                      </h4>
+                      <span className="text-[10px] font-extrabold uppercase bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full">
+                        Active for Coding Topic
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      <input
+                        type="text"
+                        placeholder="Problem Title (e.g. Two Sum)"
+                        value={mod.codingProblem.title}
+                        className="p-2 border rounded text-xs font-semibold"
+                        onChange={(e) => {
+                          const up = [...modules];
+                          up[modIdx].codingProblem.title = e.target.value;
+                          setModules(up);
+                        }}
+                      />
+                      <input
+                        type="text"
+                        placeholder="Problem Slug (e.g. two-sum)"
+                        value={mod.codingProblem.problemSlug}
+                        className="p-2 border rounded text-xs font-semibold"
+                        onChange={(e) => {
+                          const up = [...modules];
+                          up[modIdx].codingProblem.problemSlug = e.target.value;
+                          setModules(up);
+                        }}
+                      />
+                      <select
+                        value={mod.codingProblem.difficulty}
+                        className="p-2 border rounded text-xs font-semibold bg-white"
+                        onChange={(e) => {
+                          const up = [...modules];
+                          up[modIdx].codingProblem.difficulty = e.target.value;
+                          setModules(up);
+                        }}
+                      >
+                        <option value="Easy">Easy</option>
+                        <option value="Medium">Medium</option>
+                        <option value="Hard">Hard</option>
+                      </select>
+                    </div>
+                    <textarea
+                      rows="2"
+                      placeholder="Short description of the coding challenge relevant to this module..."
+                      value={mod.codingProblem.description}
+                      className="w-full p-2 border rounded text-xs"
+                      onChange={(e) => {
+                        const up = [...modules];
+                        up[modIdx].codingProblem.description = e.target.value;
+                        setModules(up);
+                      }}
+                    />
+                  </div>
+                ) : (
+                  <div className="p-3 rounded-xl bg-slate-100 border border-slate-200 text-xs text-slate-500 italic flex items-center gap-2">
+                    <span>
+                      💡 Note: Coding practice inputs are hidden because the
+                      course topic/category is non-coding.
+                    </span>
+                  </div>
+                )}
               </div>
             ))}
           </div>

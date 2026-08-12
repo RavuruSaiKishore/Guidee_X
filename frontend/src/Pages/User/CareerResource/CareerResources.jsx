@@ -33,10 +33,13 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const categories = [
   "All",
-  "DSA & Coding",
+  "Interview Preparation",
+  "Coding Roadmaps",
+  "Resume Templates",
+  "Career Guidance",
+  "Skill Development",
   "System Design",
   "Mock Interviews",
-  "Resume Reviews",
   "Aptitude & Reasoning",
   "Core CS Subjects",
   "Behavioral & HR",

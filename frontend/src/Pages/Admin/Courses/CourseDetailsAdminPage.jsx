@@ -14,6 +14,8 @@ import {
   ChevronRight,
   ChevronDown,
   Clock,
+  FileCheck,
+  Code,
 } from "lucide-react";
 import { toast } from "react-toastify";
 
@@ -27,32 +29,26 @@ const CourseDetailsAdminPage = () => {
 
   // State to track expanded modules for showing all lessons
   const [expandedModules, setExpandedModules] = useState({});
+  // State to track dropdown visibility for MCQ questions per module
+  const [expandedAssignments, setExpandedAssignments] = useState({});
 
   const API_BASE_URL =
     import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
 
-  // Helper to convert standard watch URLs or raw links into valid iframe embed URLs
   const getEmbedUrl = (url) => {
     if (!url) return "";
-
-    if (url.includes("/embed/")) {
-      return url;
-    }
-
+    if (url.includes("/embed/")) return url;
     if (url.includes("youtube.com/watch?v=")) {
       const videoId = url.split("watch?v=")[1]?.split("&")[0];
       return videoId ? `https://www.youtube.com/embed/${videoId}` : url;
     }
-
     if (url.includes("youtu.be/")) {
       const videoId = url.split("youtu.be/")[1]?.split("?")[0];
       return videoId ? `https://www.youtube.com/embed/${videoId}` : url;
     }
-
     return url;
   };
 
-  // Helper to construct absolute URL for PDFs
   const getPdfUrl = (fileUrl) => {
     if (!fileUrl) return "";
     if (fileUrl.startsWith("http://") || fileUrl.startsWith("https://")) {
@@ -128,6 +124,13 @@ const CourseDetailsAdminPage = () => {
 
   const toggleModuleExpand = (modIdx) => {
     setExpandedModules((prev) => ({
+      ...prev,
+      [modIdx]: !prev[modIdx],
+    }));
+  };
+
+  const toggleAssignmentExpand = (modIdx) => {
+    setExpandedAssignments((prev) => ({
       ...prev,
       [modIdx]: !prev[modIdx],
     }));
@@ -292,15 +295,15 @@ const CourseDetailsAdminPage = () => {
       {/* Course Curriculum Syllabus & Module Notes Section */}
       <div className="bg-white rounded-3xl border border-gray-100 shadow-xl p-6 sm:p-8 space-y-6">
         <h2 className="text-xl font-black text-gray-900 flex items-center gap-2">
-          <Layers className="text-blue-600" /> Course Curriculum Syllabus &
-          Module Notes
+          <Layers className="text-blue-600" /> Course Curriculum Syllabus,
+          Assignments & Coding Arena
         </h2>
 
-        {/* Grid container set to stretch items to equal height */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
           {course.modules?.map((mod, modIdx) => {
             const lessons = mod.lessons || [];
             const isExpanded = expandedModules[modIdx];
+            const isAssignmentExpanded = expandedAssignments[modIdx];
             const hasMultipleLessons = lessons.length > 1;
 
             const visibleLessons =
@@ -322,7 +325,7 @@ const CourseDetailsAdminPage = () => {
                     </span>
                   </div>
 
-                  {/* Module PDF Notes Section with Open in New Tab Button */}
+                  {/* Module PDF Notes Section */}
                   {mod.notes && mod.notes.length > 0 && (
                     <div className="space-y-2 bg-blue-50/50 p-4 rounded-xl border border-blue-100 mt-4">
                       <span className="text-xs font-bold text-blue-800 uppercase tracking-wider block">
@@ -358,6 +361,7 @@ const CourseDetailsAdminPage = () => {
                     </div>
                   )}
 
+                  {/* Lessons List */}
                   <div className="space-y-4 pt-4">
                     {visibleLessons.map((lesson, lesIdx) => {
                       const actualLesIdx =
@@ -379,7 +383,6 @@ const CourseDetailsAdminPage = () => {
                             </span>
 
                             <div className="flex items-center gap-2">
-                              {/* Duration Badge */}
                               <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-lg bg-gray-100 text-gray-600 flex items-center gap-1">
                                 <Clock size={12} className="text-gray-400" />
                                 {lesson.duration || 10} mins
@@ -416,9 +419,98 @@ const CourseDetailsAdminPage = () => {
                       );
                     })}
                   </div>
+
+                  {/* 🔑 MODULE ASSIGNMENTS (MCQs) & CODING PRACTICE SECTION */}
+                  <div className="mt-6 space-y-4 pt-4 border-t border-gray-200">
+                    {/* MCQ Assignment Dropdown Section */}
+                    {mod.assignment &&
+                      mod.assignment.questions &&
+                      mod.assignment.questions.length > 0 && (
+                        <div className="bg-indigo-50/60 p-4 rounded-2xl border border-indigo-100 space-y-3">
+                          <div className="flex items-center justify-between">
+                            <h4 className="text-xs font-black text-indigo-900 flex items-center gap-2">
+                              <FileCheck
+                                size={16}
+                                className="text-indigo-600"
+                              />{" "}
+                              {mod.assignment.title} (
+                              {mod.assignment.questions.length} Questions)
+                            </h4>
+                            <button
+                              type="button"
+                              onClick={() => toggleAssignmentExpand(modIdx)}
+                              className="text-xs font-bold text-indigo-700 hover:text-indigo-900 flex items-center gap-1 bg-white px-3 py-1 rounded-lg border border-indigo-200 shadow-2xs"
+                            >
+                              {isAssignmentExpanded
+                                ? "Hide Questions"
+                                : "View Questions"}{" "}
+                              <ChevronDown
+                                size={14}
+                                className={`transition-transform ${
+                                  isAssignmentExpanded ? "rotate-180" : ""
+                                }`}
+                              />
+                            </button>
+                          </div>
+
+                          {/* Collapsible Questions List */}
+                          {isAssignmentExpanded && (
+                            <div className="space-y-3 pt-2">
+                              {mod.assignment.questions.map((q, qIdx) => (
+                                <div
+                                  key={qIdx}
+                                  className="bg-white p-3 rounded-xl border border-indigo-100 shadow-2xs space-y-2"
+                                >
+                                  <p className="text-xs font-bold text-gray-900">
+                                    {qIdx + 1}. {q.questionText}
+                                  </p>
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                                    {q.options.map((opt, optIdx) => (
+                                      <div
+                                        key={optIdx}
+                                        className={`text-[11px] p-2 rounded-lg border ${
+                                          optIdx === q.correctOptionIndex
+                                            ? "bg-emerald-50 border-emerald-300 text-emerald-900 font-bold"
+                                            : "bg-gray-50 border-gray-200 text-gray-600"
+                                        }`}
+                                      >
+                                        {opt}{" "}
+                                        {optIdx === q.correctOptionIndex && "✓"}
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                    {/* Coding Practice Section */}
+                    {mod.codingProblem && mod.codingProblem.problemSlug && (
+                      <div className="bg-emerald-50/60 p-4 rounded-2xl border border-emerald-100 flex items-center justify-between gap-3">
+                        <div className="flex items-start gap-3 min-w-0">
+                          <div className="p-2 bg-emerald-100 rounded-xl shrink-0">
+                            <Code size={18} className="text-emerald-700" />
+                          </div>
+                          <div className="min-w-0">
+                            <h4 className="text-xs font-black text-emerald-900 truncate">
+                              {mod.codingProblem.title}
+                            </h4>
+                            <p className="text-[11px] text-emerald-800 mt-0.5 line-clamp-1">
+                              {mod.codingProblem.description}
+                            </p>
+                            <span className="inline-block mt-2 text-[10px] font-bold px-2 py-0.5 bg-emerald-200 text-emerald-900 rounded-md">
+                              Difficulty: {mod.codingProblem.difficulty}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
-                {/* Dropdown Toggle Button pushed cleanly to the bottom */}
+                {/* Dropdown Toggle Button for Lessons */}
                 {hasMultipleLessons && (
                   <div className="pt-3 border-t border-gray-200/60 mt-4">
                     <button

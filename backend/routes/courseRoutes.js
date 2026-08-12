@@ -13,6 +13,8 @@ import {
   updateCourse,
   getEnrollmentByCourseId,
   getStudentEnrolledCourses,
+  submitAssessmentScore,
+  solveCodingProblem,
 } from "../controllers/courseController.js";
 import { protect } from "../middleware/authMiddleware.js"; 
 import { upload } from "../middleware/upload.js";
@@ -33,6 +35,8 @@ router.delete("/:id", protect, deleteCourse);
 router.get("/:id/details-with-students", protect, getCourseDetailsWithStudents);
 router.get("/:id/enroll", protect, getEnrollmentByCourseId);
 router.get("/student/enrolled", protect, getStudentEnrolledCourses);
+router.put("/:id/assessment", protect, submitAssessmentScore);
+router.put("/:id/coding-solved", protect, solveCodingProblem);
 
 
 export default router;

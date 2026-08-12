@@ -106,7 +106,21 @@ export const createCourse = async (req, res) => {
             },
           ];
         }
-        return mod;
+
+        // Ensure assignment and codingProblem structures are mapped cleanly
+        return {
+          title: mod.title,
+          notes: mod.notes || [],
+          lessons: mod.lessons || [],
+          assignment: mod.assignment || {
+            title: "Module Assessment",
+            questions: [],
+          },
+          codingProblem:
+            mod.codingProblem && mod.codingProblem.title
+              ? mod.codingProblem
+              : undefined,
+        };
       });
     }
 
@@ -337,15 +351,6 @@ export const deleteCourse = async (req, res) => {
 
 export const updateCourse = async (req, res) => {
   try {
-    const { id } = req.params;
-
-    let course = await Course.findById(id);
-    if (!course) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Course not found" });
-    }
-
     const {
       title,
       subtitle,
@@ -361,8 +366,18 @@ export const updateCourse = async (req, res) => {
       modules,
     } = req.body;
 
-    // 1. Handle course thumbnail image update
-    let thumbnailUrl = course.thumbnail;
+    const courseId = req.params.id;
+    const existingCourse = await Course.findById(courseId);
+
+    if (!existingCourse) {
+      return res.status(404).json({
+        success: false,
+        message: "Course not found",
+      });
+    }
+
+    // Handle thumbnail update or keep existing thumbnail
+    let thumbnailUrl = existingCourse.thumbnail;
     if (req.files && req.files.length > 0) {
       const thumbFile = req.files.find(
         (file) => file.fieldname === "thumbnail"
@@ -370,66 +385,45 @@ export const updateCourse = async (req, res) => {
       if (thumbFile) {
         thumbnailUrl = `/uploads/${thumbFile.filename}`;
       }
-    } else if (req.body.thumbnail && typeof req.body.thumbnail === "string") {
-      thumbnailUrl = req.body.thumbnail;
     }
 
-    // 2. Parse modules JSON string
     let parsedModules =
       typeof modules === "string" ? JSON.parse(modules) : modules;
 
-    // 3. Handle module PDF note uploads and ensure existing notes/duration are preserved safely
-    if (parsedModules) {
+    // Match uploaded PDF files (fieldnames like module_pdf_0, module_pdf_1, etc.) to modules
+    if (req.files && req.files.length > 0 && parsedModules) {
       parsedModules = parsedModules.map((mod, index) => {
-        // 🔑 Capture the existing module reference FIRST before modifying `mod`
-        const existingMod = course.modules[index];
-
-        // Check if a new file was uploaded for this specific module index
-        const pdfFile =
-          req.files && req.files.length > 0
-            ? req.files.find((file) => file.fieldname === `module_pdf_${index}`)
-            : null;
-
+        const pdfFile = req.files.find(
+          (file) => file.fieldname === `module_pdf_${index}`
+        );
         if (pdfFile) {
-          // If a new PDF is uploaded, assign the new file path
           mod.notes = [
             {
               title: `${mod.title} Notes`,
               fileUrl: `/uploads/${pdfFile.filename}`,
             },
           ];
-        } else {
-          // If no new file is uploaded, retain existing notes securely
-          if (!mod.notes || mod.notes.length === 0) {
-            if (existingMod && existingMod.notes) {
-              mod.notes = existingMod.notes;
-            }
-          }
         }
 
-        // Ensure lesson durations are preserved or defaulted properly if undefined
-        if (mod.lessons) {
-          mod.lessons = mod.lessons.map((lesson, lIdx) => {
-            const existingLesson =
-              existingMod && existingMod.lessons
-                ? existingMod.lessons[lIdx]
-                : null;
-            return {
-              ...lesson,
-              duration:
-                lesson.duration ??
-                (existingLesson ? existingLesson.duration : 10),
-            };
-          });
-        }
-
-        return mod;
+        // Ensure assignment and codingProblem structures are mapped cleanly
+        return {
+          title: mod.title,
+          notes: mod.notes || [],
+          lessons: mod.lessons || [],
+          assignment: mod.assignment || {
+            title: "Module Assessment",
+            questions: [],
+          },
+          codingProblem:
+            mod.codingProblem && mod.codingProblem.title
+              ? mod.codingProblem
+              : undefined,
+        };
       });
     }
 
-    // 4. Update database record
-    course = await Course.findByIdAndUpdate(
-      id,
+    const updatedCourse = await Course.findByIdAndUpdate(
+      courseId,
       {
         title,
         subtitle,
@@ -443,27 +437,26 @@ export const updateCourse = async (req, res) => {
         price,
         compareAtPrice,
         isPublished,
-        modules: parsedModules || course.modules,
+        modules: parsedModules || [],
       },
       { new: true, runValidators: true }
     );
 
     res.status(200).json({
       success: true,
-      message: "Course updated successfully",
-      course,
+      message: "Course updated successfully!",
+      course: updatedCourse,
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 };
 
-
 export const getCourseDetailsWithStudents = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Find course by ID
+    // 1. Fetch the course
     const course = await Course.findById(id);
     if (!course) {
       return res
@@ -471,21 +464,26 @@ export const getCourseDetailsWithStudents = async (req, res) => {
         .json({ success: false, message: "Course not found" });
     }
 
-    // Find all students enrolled in this course and populate student details (name, email)
+    // 2. Fetch all enrollments for this course
+    // 💡 FIXED: Explicitly set model: "Student" to prevent the MissingSchemaError
     const enrollments = await Enrollment.find({ course: id })
-      .populate("student", "firstName lastName email avatar createdAt")
+      .populate({
+        path: "student",
+        model: "Student", // Matches export default mongoose.model("Student", userSchema)
+        select: "firstName lastName email profileImage",
+      })
       .sort({ createdAt: -1 });
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       course,
       enrollments,
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    console.error("Admin Course Details Error:", error);
+    return res.status(500).json({ success: false, message: error.message });
   }
 };
-
 
 export const getEnrollmentByCourseId = async (req, res) => {
   try {
@@ -535,5 +533,111 @@ export const getStudentEnrolledCourses = async (req, res) => {
   } catch (error) {
     console.error("Fetch Student Enrollments Error:", error);
     return res.status(500).json({ success: false, message: error.message });
+  }
+};
+export const submitAssessmentScore = async (req, res) => {
+  try {
+    const courseId = req.params.id; // This is the Course ID from the URL (/api/courses/:id/assessment)
+    const { moduleIndex, score, totalQuestions } = req.body;
+
+    // Catch whichever property your auth middleware uses for the user id
+    const studentId = req.user?.id || req.user?._id;
+
+    console.log("Debugging Enrollment Lookup:");
+    console.log("Student ID from Token:", studentId);
+    console.log("Course ID from URL:", courseId);
+
+    if (!studentId) {
+      return res
+        .status(401)
+        .json({
+          success: false,
+          message: "Unauthorized: User not authenticated properly.",
+        });
+    }
+
+    // Query using course and student
+    const enrollment = await Enrollment.findOne({
+      student: studentId,
+      course: courseId,
+    });
+
+    if (!enrollment) {
+      return res.status(404).json({
+        success: false,
+        message: `Enrollment not found for student ${studentId} and course ${courseId}`,
+      });
+    }
+
+    // Update or push assessment submission score
+    if (!enrollment.assessmentSubmissions) {
+      enrollment.assessmentSubmissions = [];
+    }
+
+    const existingIndex = enrollment.assessmentSubmissions.findIndex(
+      (sub) => sub.moduleIndex === Number(moduleIndex)
+    );
+
+    if (existingIndex > -1) {
+      enrollment.assessmentSubmissions[existingIndex].score = score;
+      enrollment.assessmentSubmissions[existingIndex].submittedAt = Date.now();
+    } else {
+      enrollment.assessmentSubmissions.push({
+        moduleIndex: Number(moduleIndex),
+        score,
+        totalQuestions,
+      });
+    }
+
+    await enrollment.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Assessment score saved successfully!",
+      enrollment,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+
+
+export const solveCodingProblem = async (req, res) => {
+  try {
+    const courseId = req.params.id;
+    const { problemSlug } = req.body;
+    const studentId = req.user?.id || req.user?._id;
+    // console.log(courseId);
+    // console.log(studentId);
+
+    const enrollment = await Enrollment.findOne({
+      student: studentId,
+      course: courseId,
+    });
+
+    if (!enrollment) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Enrollment not found." });
+    }
+
+    if (!enrollment.solvedCodingProblems) {
+      enrollment.solvedCodingProblems = [];
+    }
+
+    // Add problemSlug if not already recorded as solved
+    if (!enrollment.solvedCodingProblems.includes(problemSlug)) {
+      enrollment.solvedCodingProblems.push(problemSlug);
+      await enrollment.save();
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Coding problem marked as solved!",
+      enrollment,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
   }
 };

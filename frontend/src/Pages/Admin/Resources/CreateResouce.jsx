@@ -36,7 +36,6 @@ import {
 } from "lucide-react";
 import { toast } from "react-toastify";
 
-
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 // =====================================================
@@ -154,6 +153,79 @@ export default function CreateResource() {
   // Chip Inputs
   const [skillInput, setSkillInput] = useState("");
   const [tagInput, setTagInput] = useState("");
+
+
+
+  const loadSampleResourceData = () => {
+    setForm({
+      title: "Behavioral & HR Interview Masterclass: The STAR Method",
+      slug: "behavioral-hr-interview-masterclass-star-method",
+      subtitle:
+        "Master behavioral interview questions using the STAR framework and land culture-fit approval.",
+      description:
+        "Learn how to structure compelling stories around leadership, conflict resolution, failure, and teamwork.",
+      bodyContent: `
+# Behavioral & HR Interview Success
+
+HR and behavioral rounds evaluate your soft skills, emotional intelligence, and alignment with company culture.
+
+## The STAR Method Framework
+* **S (Situation):** Set the context and background.
+* **T (Task):** Describe your responsibility or challenge.
+* **A (Action):** Explain the specific steps *you* took to solve it.
+* **R (Result):** Share the quantifiable outcome or lesson learned.
+
+## Common Questions
+* "Tell me about a time you disagreed with a teammate."
+* "Describe a situation where a project failed and how you handled it."
+    `,
+      category: "Career Guidance",
+      subcategory: "Behavioral Interviews",
+      resourceType: "Interactive Guide",
+      difficulty: "Beginner",
+      estimatedDuration: "3 Hours",
+      targetAudience: ["Job Seekers", "College Students", "Career Switchers"],
+      authorName: "GuideX HR Team",
+      authorRole: "Talent Acquisition Leads",
+      authorBio:
+        "Guiding candidates through corporate HR and culture-fit rounds.",
+      externalUrl: "https://glassdoor.com",
+      videoProvider: "youtube",
+      videoUrl: "https://www.youtube.com/watch?v=Ke90Tje7VS0",
+      videoDurationInSeconds: 1200,
+      status: "Published",
+      isFeatured: false,
+      isPremium: false,
+      seoTitle: "Behavioral & HR Interview Masterclass | GuideX",
+      seoDescription: "Master behavioral interviews using the STAR method.",
+      seoKeywords: ["behavioral interview", "hr interview", "star method"],
+      whatYouWillLearn: [
+        "Structure answers using the STAR method",
+        "Handle tricky culture-fit questions",
+      ],
+      prerequisites: ["Past project or internship experience"],
+      keyTakeaways: ["Behavioral question story bank template"],
+      skills: ["Communication", "Leadership", "Teamwork", "HR Interview"],
+      tags: ["behavioral", "hr", "interviews"],
+      attachments: [],
+      modules: [
+        {
+          title: "Module 1: Mastering the STAR Framework",
+          description: "Structuring your stories.",
+          content: "Examples of stellar STAR responses.",
+          videoUrl: "https://www.youtube.com/watch?v=Ke90Tje7VS0",
+          durationInMinutes: 30,
+          isFreePreview: true,
+        },
+      ],
+      thumbnail: null,
+      bannerImage: null,
+    });
+    setThumbnailPreview(
+      "https://images.unsplash.com/photo-1521737604893-d14cc237f11d"
+    );
+    toast.success("Behavioral & HR sample resource loaded!");
+  };
 
   // =====================================================
   // HANDLE INPUT CHANGES
@@ -479,8 +551,8 @@ export default function CreateResource() {
         throw new Error(data.message || "Failed to create resource");
       }
 
-         toast.success("Resource Created successfully..!");
-      
+      toast.success("Resource Created successfully..!");
+
       setTimeout(() => {
         navigate("/admin/careerResources");
       }, 1200);
@@ -531,6 +603,15 @@ export default function CreateResource() {
           <div className="flex items-center gap-2">
             <button
               type="button"
+              onClick={loadSampleResourceData}
+              className="hidden h-10 items-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50 px-4 text-sm font-bold text-indigo-700 transition hover:bg-indigo-100 sm:flex"
+            >
+              <Sparkles size={16} />
+              Load Sample
+            </button>
+
+            <button
+              type="button"
               onClick={() => setActivePreview(true)}
               className="hidden h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 sm:flex"
             >
@@ -561,7 +642,6 @@ export default function CreateResource() {
           </div>
         </div>
       </div>
-
       {/* ================================================= */}
       {/* MAIN CONTAINER */}
       {/* ================================================= */}
@@ -577,12 +657,12 @@ export default function CreateResource() {
         </div>
 
         {/* NOTIFICATIONS */}
-        {success && (
+        {/* {success && (
           <div className="mb-6 flex items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm font-semibold text-emerald-700">
             <CheckCircle2 size={19} />
             {success}
           </div>
-        )}
+        )} */}
 
         {error && (
           <div className="mb-6 flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm font-medium text-red-700">

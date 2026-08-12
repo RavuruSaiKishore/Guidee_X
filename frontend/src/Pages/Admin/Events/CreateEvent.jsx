@@ -95,6 +95,74 @@ const CreateEvent = () => {
     isFeatured: false,
   };
 
+  // Add this inside the CreateEvent component
+
+const loadSampleEventData = () => {
+  const sampleTitle =
+    "Biotechnology & Bioinformatics: Decoding Genomics and Computational Biology";
+
+  setFormData({
+    title: sampleTitle,
+    slug: "biotechnology-bioinformatics-genomics-computational-biology",
+    shortSummary:
+      "An interdisciplinary masterclass for Biotechnology, Biomedical, and Life Science students exploring DNA sequencing, genomics, and drug discovery.",
+    description: `
+        <h2>The Intersection of Biology, Data Science, and Medicine</h2>
+        <p>Modern biotechnology is no longer confined to wet labs alone. The explosion of biological data has made computational biology and bioinformatics crucial drivers of personalized medicine, vaccine development, and agricultural innovation.</p>
+        
+        <h3>Key Learning Modules:</h3>
+        <ul>
+          <li><strong>Genomics & Next-Gen Sequencing (NGS):</strong> Processing high-throughput DNA and RNA sequencing datasets.</li>
+          <li><strong>Computational Drug Discovery:</strong> Utilizing molecular docking and structural bioinformatics to accelerate pharmaceutical research.</li>
+          <li><strong>Biological Data Pipelines:</strong> Applying Python and R for statistical analysis of biological networks and gene expression profiling.</li>
+        </ul>
+        
+        <h3>Career Horizons:</h3>
+        <p>Explore high-impact career pathways in pharmaceutical R&D, clinical genomics, biotech startups, and global research institutions.</p>
+      `,
+    domain: "Research & Academia",
+    tags: "biotechnology, bioinformatics, genomics, computational-biology, life-sciences",
+    bannerImage: null,
+    createdByAdmin: "Guideex Admin",
+
+    speakers: [
+      {
+        name: "Dr. Jonathan Sterling",
+        title: "Chair of Computational Genomics & Bioinformatics",
+        organization: "Institute of Biomedical Sciences",
+        bio: "Pioneering algorithms for gene expression analysis and computational drug discovery.",
+        linkedinUrl: "https://linkedin.com/in/jonathan-sterling",
+        profileImage: null,
+        previewUrl: "",
+        existingImage: "",
+      },
+    ],
+
+    experienceLevel: "Intermediate",
+    prerequisites:
+      "Background in Biotechnology, Biomedical Engineering, Biology, or related sciences",
+    eventType: "Guest Lecture",
+    meetingUrl: "https://meet.google.com/biotech-bioinformatics-seminar",
+    recordingUrl: "",
+
+    startDateTime: "2027-03-15T14:00",
+    endDateTime: "2027-03-15T16:30",
+    registrationDeadline: "2027-03-14T23:59",
+
+    maxSeats: 650,
+    registeredStudentsCount: 125,
+    isPaid: false,
+    ticketPrice: 0,
+    status: "Draft",
+    isFeatured: true,
+  });
+
+  setBannerPreview(
+    "https://images.unsplash.com/photo-1532187863486-abf9dbad1b69"
+  );
+  toast.success("Biotechnology & Bioinformatics event sample data loaded!");
+};
+
   const [formData, setFormData] = useState(initialFormData);
   const [loading, setLoading] = useState(isEditMode);
   const [saving, setSaving] = useState(false);
@@ -565,6 +633,15 @@ const CreateEvent = () => {
       <ToastContainer position="top-right" autoClose={3000} theme="light" />
 
       <div className="mx-auto max-w-[1000px] p-4 sm:p-6 lg:p-8">
+        {/* Add this inside your Header section */}
+        <button
+          type="button"
+          onClick={loadSampleEventData}
+          className="flex items-center gap-2 rounded-xl bg-purple-50 px-4 py-2 text-sm font-bold text-purple-700 hover:bg-purple-100 transition shadow-sm"
+        >
+          <Sparkles size={16} />
+          Load Sample Event
+        </button>
         {/* TOP HEADER */}
         <div className="mb-8">
           <button

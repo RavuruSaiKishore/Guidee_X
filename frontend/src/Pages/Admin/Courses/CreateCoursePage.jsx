@@ -8,6 +8,8 @@ import {
   Sparkles,
   ArrowLeft,
   FileText,
+  FileCheck,
+  Code,
 } from "lucide-react";
 import { toast } from "react-toastify";
 
@@ -46,70 +48,306 @@ const CreateCoursePage = () => {
           type: "video",
         },
       ],
+      assignment: {
+        title: "Module Assessment",
+        description: "10 MCQ Assessment",
+        questions: [],
+      },
+      codingProblem: {
+        title: "",
+        problemSlug: "",
+        difficulty: "Medium",
+        description: "",
+      },
     },
   ]);
 
   const API_BASE_URL =
     import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
 
-  // Helper to load sample test data instantly
-  const loadSampleData = () => {
-    setForm({
-      title: "Full-Stack Web Development Bootcamp 2026",
-      subtitle: "Master HTML, CSS, JavaScript, React, Node.js, and MongoDB.",
-      description:
-        "This comprehensive bootcamp is designed to take you from absolute beginner to a job-ready full-stack engineer with real-world production projects.",
-      previewVideoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
-      category: "Development",
-      subCategory: "Web Development",
-      level: "Beginner",
-      language: "English",
-      price: 49,
-      compareAtPrice: 199,
-      isPublished: true,
-    });
+  // Helper function to check if the course or module is coding/technical related
+  const isCodingRelated = () => {
+    const cat = form.category.toLowerCase();
+    const sub = form.subCategory.toLowerCase();
+    const title = form.title.toLowerCase();
+    const desc = form.description.toLowerCase();
 
-    setModules([
-      {
-        title: "Module 1: Introduction & HTML/CSS",
-        notesFile: null,
-        notesFileName: "html-css-cheatsheet.pdf",
-        lessons: [
-          {
-            title: "Welcome to the Bootcamp",
-            description: "Course orientation and roadmap setup.",
-            videoUrl: "https://www.youtube.com/embed/mU6anWqZJcc",
-            duration: 15,
-            isPreviewFree: true,
-            type: "video",
-          },
-          {
-            title: "HTML5 Semantic Tags",
-            description: "Structuring modern web pages properly.",
-            videoUrl: "https://www.youtube.com/embed/kUMe1FH4CDg",
-            duration: 25,
-            isPreviewFree: false,
-            type: "video",
-          },
-        ],
-      },
-      {
-        title: "Module 2: React.js Frontend Architecture",
-        notesFile: null,
-        notesFileName: "react-hooks-guide.pdf",
-        lessons: [
-          {
-            title: "Components, Props & State",
-            description: "Core foundations of React development.",
-            videoUrl: "https://www.youtube.com/embed/SqcY05GJWAo",
-            duration: 35,
-            isPreviewFree: true,
-            type: "video",
-          },
-        ],
-      },
-    ]);
+    const codingKeywords = [
+      "dsa",
+      "coding",
+      "programming",
+      "web",
+      "full-stack",
+      "frontend",
+      "backend",
+      "react",
+      "node",
+      "javascript",
+      "python",
+      "java",
+      "c++",
+      "algorithm",
+      "data structures",
+      "software",
+      "development",
+      "cybersecurity",
+      "ethical hacking",
+    ];
+
+    return codingKeywords.some(
+      (keyword) =>
+        cat.includes(keyword) ||
+        sub.includes(keyword) ||
+        title.includes(keyword) ||
+        desc.includes(keyword)
+    );
   };
+
+  // Helper to load sample test data instantly
+ const loadSampleData = () => {
+   setForm({
+     title: "Data Structures & Algorithms Masterclass (DSA)",
+     subtitle:
+       "Master arrays, strings, linked lists, trees, graphs, and dynamic programming.",
+     description:
+       "Comprehensive technical curriculum for computer science students.",
+     previewVideoUrl: "https://www.youtube.com/embed/8hly31xKli0",
+     category: "Coding Roadmaps",
+     subCategory: "Data Structures & Algorithms",
+     level: "Intermediate",
+     language: "English",
+     price: 49,
+     compareAtPrice: 199,
+     isPublished: true,
+   });
+
+   // Helper to generate distinct, realistic looking questions
+   const generateMCQs = (topic) => {
+     const questions = [
+       {
+         q: `Which of the following is true about ${topic} time complexity?`,
+         opts: [
+           "O(N) is always best",
+           "O(1) is constant time",
+           "O(N^2) is faster than O(N)",
+           "None of the above",
+         ],
+         ans: 1,
+       },
+       {
+         q: `In the context of ${topic}, what is the main advantage of using a pointer?`,
+         opts: [
+           "Memory reduction",
+           "Faster access",
+           "Direct memory manipulation",
+           "All of the above",
+         ],
+         ans: 3,
+       },
+       {
+         q: `What data structure best supports ${topic} operations?`,
+         opts: ["Stack", "Queue", "Hash Table", "All of the above"],
+         ans: 2,
+       },
+       {
+         q: `When is ${topic} typically utilized in industry?`,
+         opts: [
+           "Data indexing",
+           "UI Rendering",
+           "Database queries",
+           "All of the above",
+         ],
+         ans: 3,
+       },
+       {
+         q: `What is the space complexity of ${topic} recursive approach?`,
+         opts: ["O(N)", "O(1)", "O(log N)", "O(N^2)"],
+         ans: 0,
+       },
+       {
+         q: `How does ${topic} improve performance?`,
+         opts: [
+           "Cache locality",
+           "Reducing redundant calculations",
+           "Decreasing memory usage",
+           "All of the above",
+         ],
+         ans: 3,
+       },
+       {
+         q: `Which algorithm is best suited for ${topic}?`,
+         opts: ["Dijkstra", "QuickSort", "Kadane's", "Depends on use case"],
+         ans: 3,
+       },
+       {
+         q: `What is the worst-case scenario for ${topic}?`,
+         opts: [
+           "Sorted input",
+           "Empty input",
+           "Reverse sorted input",
+           "All of the above",
+         ],
+         ans: 2,
+       },
+       {
+         q: `Does ${topic} require extra space?`,
+         opts: ["Always", "Never", "Sometimes", "Only on heap"],
+         ans: 2,
+       },
+       {
+         q: `Is ${topic} stable?`,
+         opts: ["Yes", "No", "Depends on implementation", "Only in Java"],
+         ans: 2,
+       },
+     ];
+
+     return questions.map((item) => ({
+       questionText: item.q,
+       options: item.opts,
+       correctOptionIndex: item.ans,
+       explanation: `The correct answer is index ${item.ans} based on standard algorithm analysis.`,
+     }));
+   };
+
+   setModules([
+     {
+       title: "Module 1: Array & String Manipulation",
+       notesFile: null,
+       notesFileName: "dsa-arrays.pdf",
+       lessons: [
+         {
+           title: "Time Complexity Analysis",
+           description: "Big O basics.",
+           videoUrl: "https://www.youtube.com/embed/8hly31xKli0",
+           duration: 30,
+           isPreviewFree: true,
+           type: "video",
+         },
+         {
+           title: "Sliding Window Pattern",
+           description: "Optimizing subarray problems.",
+           videoUrl: "https://www.youtube.com/embed/8hly31xKli0",
+           duration: 40,
+           isPreviewFree: false,
+           type: "video",
+         },
+       ],
+       assignment: {
+         title: "Arrays Assessment",
+         description: "10 MCQs on Array logic",
+         questions: generateMCQs("Arrays"),
+       },
+       codingProblem: {
+         title: "Two Sum",
+         problemSlug: "two-sum",
+         difficulty: "Easy",
+         description: "Find two numbers that add to target.",
+       },
+     },
+     {
+       title: "Module 2: Linked Lists & Recursion",
+       notesFile: null,
+       notesFileName: "linked-lists.pdf",
+       lessons: [
+         {
+           title: "Singly Linked List",
+           description: "Node traversal.",
+           videoUrl: "https://www.youtube.com/embed/8hly31xKli0",
+           duration: 35,
+           isPreviewFree: false,
+           type: "video",
+         },
+         {
+           title: "Recursive Backtracking",
+           description: "Solving maze.",
+           videoUrl: "https://www.youtube.com/embed/8hly31xKli0",
+           duration: 45,
+           isPreviewFree: false,
+           type: "video",
+         },
+       ],
+       assignment: {
+         title: "Linked List Assessment",
+         description: "10 MCQs on Pointers",
+         questions: generateMCQs("Linked Lists"),
+       },
+       codingProblem: {
+         title: "Reverse Linked List",
+         problemSlug: "reverse-ll",
+         difficulty: "Medium",
+         description: "Reverse list in-place.",
+       },
+     },
+     {
+       title: "Module 3: Trees & Graphs",
+       notesFile: null,
+       notesFileName: "trees-graphs.pdf",
+       lessons: [
+         {
+           title: "BST Properties",
+           description: "Binary Search Tree.",
+           videoUrl: "https://www.youtube.com/embed/8hly31xKli0",
+           duration: 40,
+           isPreviewFree: false,
+           type: "video",
+         },
+         {
+           title: "BFS Traversal",
+           description: "Level-order traversal.",
+           videoUrl: "https://www.youtube.com/embed/8hly31xKli0",
+           duration: 50,
+           isPreviewFree: false,
+           type: "video",
+         },
+       ],
+       assignment: {
+         title: "Trees Assessment",
+         description: "10 MCQs on Nodes",
+         questions: generateMCQs("Trees"),
+       },
+       codingProblem: {
+         title: "Invert Binary Tree",
+         problemSlug: "invert-tree",
+         difficulty: "Medium",
+         description: "Swap left and right children.",
+       },
+     },
+     {
+       title: "Module 4: Dynamic Programming",
+       notesFile: null,
+       notesFileName: "dp-guide.pdf",
+       lessons: [
+         {
+           title: "Memoization",
+           description: "Top-down approach.",
+           videoUrl: "https://www.youtube.com/embed/8hly31xKli0",
+           duration: 45,
+           isPreviewFree: false,
+           type: "video",
+         },
+         {
+           title: "Knapsack Problem",
+           description: "Weight optimization.",
+           videoUrl: "https://www.youtube.com/embed/8hly31xKli0",
+           duration: 55,
+           isPreviewFree: false,
+           type: "video",
+         },
+       ],
+       assignment: {
+         title: "DP Assessment",
+         description: "10 MCQs on DP",
+         questions: generateMCQs("DP"),
+       },
+       codingProblem: {
+         title: "Climbing Stairs",
+         problemSlug: "climbing-stairs",
+         difficulty: "Easy",
+         description: "Count distinct ways to top.",
+       },
+     },
+   ]);
+ };
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -148,6 +386,17 @@ const CreateCoursePage = () => {
             type: "video",
           },
         ],
+        assignment: {
+          title: "Module Assessment",
+          description: "10 MCQ Assessment",
+          questions: [],
+        },
+        codingProblem: {
+          title: "",
+          problemSlug: "",
+          difficulty: "Medium",
+          description: "",
+        },
       },
     ]);
   };
@@ -177,6 +426,21 @@ const CreateCoursePage = () => {
     setModules(updated);
   };
 
+  const addMCQ = (modIdx) => {
+    const updated = [...modules];
+    if (updated[modIdx].assignment.questions.length < 10) {
+      updated[modIdx].assignment.questions.push({
+        questionText: "",
+        options: ["", "", "", ""],
+        correctOptionIndex: 0,
+        explanation: "",
+      });
+      setModules(updated);
+    } else {
+      toast.warning("Max 10 questions reached");
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -186,7 +450,7 @@ const CreateCoursePage = () => {
     }
 
     const loadingToast = toast.loading(
-      "Publishing your course and PDF notes..."
+      "Publishing your course, assignments, and notes..."
     );
 
     try {
@@ -197,7 +461,6 @@ const CreateCoursePage = () => {
         formData.append(key, form[key]);
       });
 
-      // Append module PDF files using unique index keys
       modules.forEach((mod, idx) => {
         if (mod.notesFile) {
           formData.append(`module_pdf_${idx}`, mod.notesFile);
@@ -215,6 +478,9 @@ const CreateCoursePage = () => {
             ]
           : [],
         lessons: mod.lessons,
+        assignment: mod.assignment,
+        // Only include coding problem if the course topic is coding-related
+        codingProblem: isCodingRelated() ? mod.codingProblem : undefined,
       }));
 
       formData.append("modules", JSON.stringify(cleanModules));
@@ -262,7 +528,8 @@ const CreateCoursePage = () => {
             <BookOpen className="text-blue-600" /> Create Professional Course
           </h1>
           <p className="text-gray-500 text-sm mt-1">
-            Build and publish your educational course curriculum.
+            Build and publish your educational course curriculum with dynamic
+            topic-based coding integration.
           </p>
         </div>
         <button
@@ -270,7 +537,7 @@ const CreateCoursePage = () => {
           onClick={loadSampleData}
           className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-purple-50 text-purple-700 text-sm font-bold hover:bg-purple-100 transition shadow-sm"
         >
-          <Sparkles size={16} /> Load Sample Bootcamp Data
+          <Sparkles size={16} /> Load Sample DSA Bootcamp Data
         </button>
       </div>
 
@@ -287,7 +554,7 @@ const CreateCoursePage = () => {
                 value={form.title}
                 onChange={(e) => setForm({ ...form, title: e.target.value })}
                 className="w-full px-4 py-3 rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-blue-600"
-                placeholder="e.g., Full-Stack React Bootcamp"
+                placeholder="e.g., Data Structures & Algorithms"
               />
             </div>
             <div>
@@ -299,7 +566,7 @@ const CreateCoursePage = () => {
                 value={form.subtitle}
                 onChange={(e) => setForm({ ...form, subtitle: e.target.value })}
                 className="w-full px-4 py-3 rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-blue-600"
-                placeholder="e.g., Master web development from scratch"
+                placeholder="e.g., Master problem solving from scratch"
               />
             </div>
           </div>
@@ -347,7 +614,7 @@ const CreateCoursePage = () => {
                 value={form.category}
                 onChange={(e) => setForm({ ...form, category: e.target.value })}
                 className="w-full px-4 py-3 rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-blue-600"
-                placeholder="Development"
+                placeholder="Coding Roadmaps"
               />
             </div>
             <div>
@@ -361,7 +628,7 @@ const CreateCoursePage = () => {
                   setForm({ ...form, subCategory: e.target.value })
                 }
                 className="w-full px-4 py-3 rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-blue-600"
-                placeholder="Web Dev"
+                placeholder="DSA"
               />
             </div>
             <div>
@@ -460,7 +727,7 @@ const CreateCoursePage = () => {
           <div className="space-y-4 pt-4 border-t border-gray-100">
             <div className="flex justify-between items-center">
               <h3 className="text-lg font-bold text-gray-900">
-                Curriculum Modules & Lessons
+                Curriculum Modules, Lessons & Assessments
               </h3>
               <button
                 type="button"
@@ -523,7 +790,11 @@ const CreateCoursePage = () => {
                   </label>
                 </div>
 
+                {/* Lessons Section */}
                 <div className="space-y-3 pl-4 border-l-2 border-blue-200">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-gray-500">
+                    Lessons
+                  </h4>
                   {mod.lessons.map((lesson, lesIdx) => (
                     <div
                       key={lesIdx}
@@ -621,6 +892,169 @@ const CreateCoursePage = () => {
                     + Add Lesson
                   </button>
                 </div>
+
+                {/* Module MCQ Assessment Builder (Up to 10 Questions) */}
+                <div className="mt-4 p-4 bg-white rounded-2xl border border-indigo-100 shadow-sm space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-sm font-bold flex items-center gap-2 text-indigo-900">
+                      <FileCheck size={16} className="text-indigo-600" /> Module
+                      Assessment (Max 10 MCQs)
+                    </h4>
+                    <span className="text-xs font-bold text-gray-400">
+                      {mod.assignment.questions.length} / 10 Questions
+                    </span>
+                  </div>
+
+                  {mod.assignment.questions.map((q, qIdx) => (
+                    <div
+                      key={qIdx}
+                      className="p-3 border rounded-xl bg-slate-50 text-xs space-y-2"
+                    >
+                      <div className="flex justify-between items-center">
+                        <span className="font-bold text-indigo-600">
+                          Question #{qIdx + 1}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const up = [...modules];
+                            up[modIdx].assignment.questions = up[
+                              modIdx
+                            ].assignment.questions.filter((_, i) => i !== qIdx);
+                            setModules(up);
+                          }}
+                          className="text-red-500 hover:text-red-700 font-bold"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                      <input
+                        type="text"
+                        placeholder="Enter question statement..."
+                        value={q.questionText}
+                        className="w-full p-2 border rounded bg-white font-semibold"
+                        onChange={(e) => {
+                          const up = [...modules];
+                          up[modIdx].assignment.questions[qIdx].questionText =
+                            e.target.value;
+                          setModules(up);
+                        }}
+                      />
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                        {q.options.map((opt, optIdx) => (
+                          <div key={optIdx} className="flex items-center gap-2">
+                            <input
+                              type="radio"
+                              name={`correct-mod-${modIdx}-q-${qIdx}`}
+                              checked={q.correctOptionIndex === optIdx}
+                              onChange={() => {
+                                const up = [...modules];
+                                up[modIdx].assignment.questions[
+                                  qIdx
+                                ].correctOptionIndex = optIdx;
+                                setModules(up);
+                              }}
+                              title="Mark as correct answer"
+                            />
+                            <input
+                              type="text"
+                              placeholder={`Option ${optIdx + 1}`}
+                              value={opt}
+                              className="w-full p-1.5 border rounded bg-white"
+                              onChange={(e) => {
+                                const up = [...modules];
+                                up[modIdx].assignment.questions[qIdx].options[
+                                  optIdx
+                                ] = e.target.value;
+                                setModules(up);
+                              }}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+
+                  <button
+                    type="button"
+                    onClick={() => addMCQ(modIdx)}
+                    className="text-xs font-bold text-indigo-600 hover:underline inline-flex items-center gap-1"
+                  >
+                    + Add MCQ Question ({mod.assignment.questions.length}/10)
+                  </button>
+                </div>
+
+                {/* 🔑 CONDITIONAL CODING PRACTICE INTEGRATION: Only shown if course is related to coding/programming */}
+                {isCodingRelated() ? (
+                  <div className="p-4 bg-white rounded-2xl border border-emerald-100 shadow-sm space-y-3 animate-fade-in">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-sm font-bold flex items-center gap-2 text-emerald-900">
+                        <Code size={16} className="text-emerald-600" />{" "}
+                        Topic-Based Coding Problem (DSA / Programming)
+                      </h4>
+                      <span className="text-[10px] font-extrabold uppercase bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full">
+                        Active for Coding Topic
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      <input
+                        type="text"
+                        placeholder="Problem Title (e.g. Two Sum)"
+                        value={mod.codingProblem.title}
+                        className="p-2 border rounded text-xs font-semibold"
+                        onChange={(e) => {
+                          const up = [...modules];
+                          up[modIdx].codingProblem.title = e.target.value;
+                          setModules(up);
+                        }}
+                      />
+                      <input
+                        type="text"
+                        placeholder="Problem Slug (e.g. two-sum)"
+                        value={mod.codingProblem.problemSlug}
+                        className="p-2 border rounded text-xs font-semibold"
+                        onChange={(e) => {
+                          const up = [...modules];
+                          up[modIdx].codingProblem.problemSlug = e.target.value;
+                          setModules(up);
+                        }}
+                      />
+                      <select
+                        value={mod.codingProblem.difficulty}
+                        className="p-2 border rounded text-xs font-semibold bg-white"
+                        onChange={(e) => {
+                          const up = [...modules];
+                          up[modIdx].codingProblem.difficulty = e.target.value;
+                          setModules(up);
+                        }}
+                      >
+                        <option value="Easy">Easy</option>
+                        <option value="Medium">Medium</option>
+                        <option value="Hard">Hard</option>
+                      </select>
+                    </div>
+                    <textarea
+                      rows="2"
+                      placeholder="Short description of the coding challenge relevant to this module..."
+                      value={mod.codingProblem.description}
+                      className="w-full p-2 border rounded text-xs"
+                      onChange={(e) => {
+                        const up = [...modules];
+                        up[modIdx].codingProblem.description = e.target.value;
+                        setModules(up);
+                      }}
+                    />
+                  </div>
+                ) : (
+                  <div className="p-3 rounded-xl bg-slate-100 border border-slate-200 text-xs text-slate-500 italic flex items-center gap-2">
+                    <span>
+                      💡 Note: Coding practice inputs are hidden because the
+                      course topic/category is non-coding (e.g., theory,
+                      management, or design). Update the course category/title
+                      to a coding topic to enable code challenges.
+                    </span>
+                  </div>
+                )}
               </div>
             ))}
           </div>

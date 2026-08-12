@@ -20,12 +20,42 @@ const lessonSchema = new mongoose.Schema({
 });
 
 // ==========================================
-// 2. MODULE / SECTION SCHEMA
+// 1. NEW SUB-SCHEMAS FOR ASSIGNMENTS & CODING
+// ==========================================
+const mcqQuestionSchema = new mongoose.Schema({
+  questionText: { type: String, required: true },
+  options: [{ type: String, required: true }], // 4 options
+  correctOptionIndex: { type: Number, required: true, min: 0, max: 3 },
+  explanation: { type: String, default: "" },
+});
+
+const moduleAssignmentSchema = new mongoose.Schema({
+  title: { type: String, required: true, default: "Module Assessment" },
+  description: {
+    type: String,
+    default: "10 Multiple Choice Questions to test module proficiency.",
+  },
+  questions: [mcqQuestionSchema], // Enforces up to 10 questions
+});
+
+const moduleCodingProblemSchema = new mongoose.Schema({
+  title: { type: String, required: true },
+  problemSlug: { type: String, required: true }, // Links directly to PracticeArena
+  difficulty: {
+    type: String,
+    enum: ["Easy", "Medium", "Hard"],
+    default: "Medium",
+  },
+  description: { type: String, required: true },
+});
+
+// ==========================================
+// 2. MODULE / SECTION SCHEMA (UPDATED)
 // ==========================================
 const moduleSchema = new mongoose.Schema({
   title: { type: String, required: true },
 
-  // 🔑 Added notes field for each module (can store markdown, text, or URLs)
+  // Notes field for each module
   notes: [
     {
       title: { type: String },
@@ -34,6 +64,10 @@ const moduleSchema = new mongoose.Schema({
   ],
 
   lessons: [lessonSchema],
+
+  // 🔑 Added module-level assignment (10 MCQs) and coding problem integration
+  assignment: moduleAssignmentSchema,
+  codingProblem: moduleCodingProblemSchema,
 });
 
 // ==========================================
@@ -118,6 +152,15 @@ const enrollmentSchema = new mongoose.Schema(
     isCompleted: { type: Boolean, default: false },
     certificateIssuedAt: { type: Date },
     lastAccessedLesson: { type: mongoose.Schema.Types.ObjectId },
+    assessmentSubmissions: [
+      {
+        moduleIndex: { type: Number, required: true },
+        score: { type: Number, required: true },
+        totalQuestions: { type: Number, required: true },
+        submittedAt: { type: Date, default: Date.now },
+      },
+    ],
+    solvedCodingProblems: [{ type: String }], // Stores solved problem slugs e.g., ["two-sum"]
 
     paymentStatus: {
       type: String,
@@ -126,7 +169,7 @@ const enrollmentSchema = new mongoose.Schema(
     },
     amountPaid: { type: Number, default: 0 },
 
-    // 💳 Added Razorpay Payment Tracking Fields
+    // Razorpay Payment Tracking Fields
     razorpayOrderId: { type: String },
     razorpayPaymentId: { type: String },
     razorpaySignature: { type: String },

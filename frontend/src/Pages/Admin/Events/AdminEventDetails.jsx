@@ -553,13 +553,21 @@ const AdminEventDetails = () => {
           {/* LEFT 2-COLUMNS: ABOUT, SCHEDULE & GUEST SPEAKERS */}
           <div className="space-y-6 lg:col-span-2">
             {/* ABOUT EVENT */}
+            {/* ABOUT EVENT */}
             <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
               <h2 className="text-base font-bold text-gray-900">
                 About This Session
               </h2>
-              <p className="mt-3 whitespace-pre-line text-sm leading-7 text-gray-600">
-                {event.description || "No description available."}
-              </p>
+              {event.description ? (
+                <div
+                  className="prose prose-sm mt-3 max-w-none text-gray-600 leading-7 [&>h2]:text-base [&>h2]:font-bold [&>h2]:text-gray-900 [&>h2]:mt-4 [&>h2]:mb-2 [&>h3]:text-sm [&>h3]:font-bold [&>h3]:text-gray-900 [&>h3]:mt-3 [&>h3]:mb-1 [&>ul]:list-disc [&>ul]:pl-5 [&>ul]:space-y-1 [&>p]:mb-3"
+                  dangerouslySetInnerHTML={{ __html: event.description }}
+                />
+              ) : (
+                <p className="mt-3 text-sm text-gray-400">
+                  No description available.
+                </p>
+              )}
 
               {/* TAGS & PREREQUISITES */}
               {((event.tags && event.tags.length > 0) ||

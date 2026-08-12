@@ -85,6 +85,10 @@ const resourceSchema = new mongoose.Schema(
         "Career Guidance",
         "Skill Development",
         "System Design",
+        "Mock Interviews",
+        "Aptitude & Reasoning",
+        "Core CS Subjects",
+        "Behavioral & HR",
       ],
     },
     subcategory: {

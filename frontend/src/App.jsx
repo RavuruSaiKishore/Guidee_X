@@ -76,7 +76,9 @@ const LearnCoursePage = lazy(() =>
   import("./Pages/User/Courses/LearnCoursePage")
 );
 const MyCoursesPage = lazy(() => import("./Pages/User/Courses/MyCoursesPage"));
-
+const StudentPracticeArena = lazy(() =>
+  import("./Pages/User/RoadMap/StudentPracticeArena")
+);
 
 
 // mentor routes
@@ -215,7 +217,7 @@ const AdminDisputeChatPage = lazy(() =>
   import("./Pages/Admin/Disputes/AdminDisputeChatPage")
 );
 const ManageCoursesPage = lazy(() =>
-  import("./Pages/Admin/Courses/ManageCoursesPage")
+  import("./Pages/Admin/Courses/CourseManagement")
 );
 const CreateCoursePage = lazy(() =>
   import("./Pages/Admin/Courses/CreateCoursePage")
@@ -301,6 +303,10 @@ function App() {
             <Route path="/courses/:id" element={<CourseDetailsPage />} />
             <Route path="/courses/:id/learn" element={<LearnCoursePage />} />
             <Route path="/my-courses" element={<MyCoursesPage />} />
+            <Route
+              path="/student/practice/:problemId"
+              element={<StudentPracticeArena />}
+            />
           </Route>
         </Route>
 

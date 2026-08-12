@@ -32,7 +32,7 @@ import eventPaymentRoutes from "./routes/eventPaymentRoutes.js";
 import disputeRoutes from "./routes/disputeRoutes.js";
 import chatRoutes from "./routes/chatRoutes.js";
 import courseRoutes from "./routes/courseRoutes.js";
-import CoursePaymentRoutes from "./routes/CoursePaymentRoutes.js"
+import CoursePaymentRoutes from "./routes/CoursePaymentRoutes.js";
 
 dotenv.config();
 validateEnv();

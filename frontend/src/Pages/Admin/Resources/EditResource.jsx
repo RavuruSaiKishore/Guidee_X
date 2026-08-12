@@ -50,6 +50,7 @@ const categories = [
   "Career Guidance",
   "Skill Development",
   "System Design",
+  "Behavioral & HR",
 ];
 
 const resourceTypes = [

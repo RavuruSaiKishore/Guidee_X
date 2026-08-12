@@ -11,6 +11,7 @@ import {
   Copy,
   Download,
   ExternalLink,
+  Sparkles,
   Eye,
   File,
   FileText,
