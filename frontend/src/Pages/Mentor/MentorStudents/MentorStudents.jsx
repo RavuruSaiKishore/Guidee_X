@@ -58,8 +58,6 @@ const MentorStudents = () => {
 
       const data = await res.json();
 
-      console.log("MENTOR STUDENTS:", data);
-
       if (!res.ok) {
         throw new Error(data.message || "Failed to fetch students.");
       }
@@ -141,443 +139,420 @@ const MentorStudents = () => {
 
   if (loading) {
     return (
-      <main className="lg:ml-64 min-h-screen bg-slate-50 pt-16 lg:pt-0 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 rounded-2xl bg-cyan-50 flex items-center justify-center mx-auto shadow-sm">
-            <Loader2 size={34} className="animate-spin text-cyan-600" />
+      <div
+        className="min-h-screen bg-slate-50 pt-20 lg:ml-64 lg:pt-0 text-slate-900"
+        style={{ fontFamily: "'Poppins', sans-serif" }}
+      >
+        <div className="flex min-h-[70vh] flex-col items-center justify-center px-5">
+          <div className="relative">
+            <div className="h-14 w-14 rounded-full border-4 border-slate-200" />
+            <div className="absolute inset-0 h-14 w-14 animate-spin rounded-full border-4 border-transparent border-t-blue-600" />
           </div>
-
-          <p className="mt-5 font-semibold text-slate-700">
+          <p
+            className="mt-5 text-center text-xs font-semibold tracking-tight"
+            style={{ fontWeight: 600 }}
+          >
             Loading your students...
           </p>
-
-          <p className="text-sm text-slate-400 mt-1">
+          <p
+            className="mt-1 text-center text-[11px] text-slate-400 font-medium"
+            style={{ fontWeight: 600 }}
+          >
             Fetching students you have interacted with.
           </p>
         </div>
-      </main>
+      </div>
     );
   }
 
   return (
-    <>
+    <div
+      className="min-h-screen bg-slate-50 pt-16 sm:pt-20 lg:ml-64 lg:pt-0 text-slate-900 pb-16"
+      style={{ fontFamily: "'Poppins', sans-serif", fontStyle: "normal" }}
+    >
       <ToastContainer position="top-right" autoClose={2500} />
 
-      <main className="lg:ml-64 min-h-screen bg-slate-50 pt-16 lg:pt-0">
-        <div className="max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-10">
-          {/* =================================================
-              PREMIUM HEADER
-          ================================================== */}
+      <main className="w-full max-w-[1600px] mx-auto p-4 sm:p-6 lg:p-8 space-y-4 sm:space-y-6">
+        {/* =================================================
+            HEADER
+        ================================================== */}
+        <section className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-black p-5 sm:p-8 text-white shadow-md">
+          <div className="absolute -right-16 -top-16 h-48 w-48 rounded-full bg-blue-600/20 blur-3xl" />
+          <div className="absolute -bottom-20 left-1/4 h-40 w-40 rounded-full bg-blue-400/10 blur-2xl" />
 
-          <div className="mb-6 sm:mb-8">
-            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-cyan-700 via-teal-600 to-blue-700 p-5 text-white shadow-xl sm:rounded-3xl sm:p-7 lg:p-8">
-              {/* Background Decorations */}
+          <div className="relative z-10 flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-start sm:items-center gap-3.5 sm:gap-5 min-w-0">
+              <div
+                className="flex h-12 w-12 sm:h-14 sm:w-14 shrink-0 items-center justify-center rounded-2xl border border-white/15 bg-white/10 backdrop-blur shadow-inner text-blue-400"
+                style={{ fontWeight: 600 }}
+              >
+                <Users size={24} className="sm:w-[26px] sm:h-[26px]" />
+              </div>
 
-              <div className="absolute -right-10 -top-10 h-36 w-36 rounded-full bg-white/10 blur-3xl sm:h-44 sm:w-44" />
-
-              <div className="absolute -bottom-16 -left-10 h-48 w-48 rounded-full bg-white/10 blur-3xl sm:h-56 sm:w-56" />
-
-              {/* Header Content */}
-
-              <div className="relative flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between lg:gap-8">
-                {/* Left */}
-
-                <div className="flex min-w-0 items-start gap-3 sm:gap-5">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-white/20 bg-white/20 backdrop-blur-md sm:h-16 sm:w-16 sm:rounded-2xl">
-                    <Users
-                      size={26}
-                      className="text-white sm:h-[34px] sm:w-[34px]"
-                    />
-                  </div>
-
-                  <div className="min-w-0">
-                    <h1 className="text-2xl font-bold leading-tight sm:text-3xl lg:text-4xl">
-                      My Students
-                    </h1>
-
-                    <p className="mt-2 max-w-2xl text-sm leading-6 text-cyan-100 sm:text-base">
-                      Manage and track all students you have mentored.
-                    </p>
-                  </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <span
+                    className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[10px] sm:text-[11px] font-semibold text-blue-300 backdrop-blur"
+                    style={{ fontWeight: 600 }}
+                  >
+                    <Sparkles size={12} className="text-blue-400" />
+                    Student Roster
+                  </span>
                 </div>
 
-                {/* Total */}
+                <h1
+                  className="mt-1.5 sm:mt-2 text-xl sm:text-3xl font-semibold tracking-tight text-white"
+                  style={{ fontWeight: 600 }}
+                >
+                  My Students
+                </h1>
 
-                <div className="w-full rounded-2xl border border-white/20 bg-white/15 px-4 py-4 backdrop-blur-md sm:px-6 sm:py-5 lg:w-auto lg:min-w-[220px]">
-                  <div className="flex items-center justify-between gap-4">
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white text-xl font-bold text-cyan-700 sm:h-14 sm:w-14 sm:text-2xl">
-                      {students.length}
-                    </div>
+                <p
+                  className="mt-0.5 sm:mt-1 text-[11px] sm:text-sm text-slate-300 font-medium leading-relaxed"
+                  style={{ fontWeight: 600 }}
+                >
+                  Manage and track all students you have mentored.
+                </p>
+              </div>
+            </div>
 
-                    <div>
-                      <p className="text-xs uppercase tracking-wider text-cyan-100 sm:text-sm">
-                        Total
-                      </p>
-
-                      <h3 className="text-lg font-semibold sm:text-xl">
-                        Students
-                      </h3>
-                    </div>
-                  </div>
-                </div>
+            <div
+              className="flex items-center gap-3.5 sm:gap-4 rounded-2xl border border-white/15 bg-white/10 px-4 sm:px-5 py-3.5 sm:py-4 backdrop-blur shadow-inner shrink-0"
+              style={{ fontWeight: 600 }}
+            >
+              <div className="flex h-10 w-10 sm:h-11 sm:w-11 shrink-0 items-center justify-center rounded-xl bg-white text-sm sm:text-base font-semibold text-black shadow-xs">
+                {students.length}
+              </div>
+              <div>
+                <p className="text-[10px] uppercase tracking-wider text-slate-400">
+                  Total
+                </p>
+                <h3 className="text-xs sm:text-sm font-semibold text-white">
+                  Students
+                </h3>
               </div>
             </div>
           </div>
+        </section>
 
-          {/* =================================================
-              SEARCH
-          ================================================== */}
-
-          <div className="bg-white border border-slate-200 rounded-2xl p-4 mb-7 shadow-sm">
-            <div className="relative">
+        {/* =================================================
+            SEARCH
+        ================================================== */}
+        <section className="space-y-3">
+          <div className="flex flex-col lg:flex-row items-center gap-3 bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200 shadow-xs">
+            <div className="relative min-w-0 flex-1 w-full">
               <Search
-                size={20}
-                className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+                size={16}
+                className="absolute left-3.5 sm:left-4 top-1/2 -translate-y-1/2 text-slate-400"
               />
-
               <input
                 type="text"
-                placeholder="Search students by name, email, education or career goal..."
+                placeholder="Search students by name, email, education..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-12 pr-4 py-3.5 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition text-sm sm:text-base"
+                className="w-full h-10 sm:h-11 pl-10 sm:pl-11 pr-3 sm:pr-4 rounded-xl border border-slate-200 bg-slate-50 text-xs font-semibold text-slate-800 outline-none transition-all placeholder:text-slate-400 focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                style={{ fontWeight: 600 }}
               />
             </div>
-          </div>
 
-          {/* =================================================
-              EMPTY STATE
-          ================================================== */}
-
-          {filteredStudents.length === 0 ? (
-            <div className="bg-white rounded-3xl border border-slate-200 p-12 text-center">
-              <Users size={60} className="mx-auto text-slate-300" />
-
-              <h2 className="text-xl font-bold text-slate-800 mt-5">
-                No students found
-              </h2>
-
-              <p className="text-slate-500 mt-2">
-                Students you interact with will appear here.
-              </p>
+            <div
+              className="flex h-10 sm:h-11 w-full lg:w-64 items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-3.5 sm:px-4 text-xs font-semibold text-slate-700 shrink-0"
+              style={{ fontWeight: 600 }}
+            >
+              <span className="text-slate-500 uppercase tracking-wide text-[10px]">
+                Matching Students
+              </span>
+              <span className="flex h-5 w-5 sm:h-6 sm:w-6 items-center justify-center rounded-lg bg-black text-white text-[11px] sm:text-xs">
+                {filteredStudents.length}
+              </span>
             </div>
-          ) : (
-            /* =================================================
-               HORIZONTAL STUDENT CARDS
-            ================================================== */
+          </div>
+        </section>
 
-            <div className="space-y-6">
-              {filteredStudents.map((item) => {
-                const student = item?.student || {};
+        {/* =================================================
+            EMPTY STATE
+        ================================================== */}
+        {filteredStudents.length === 0 ? (
+          <section className="flex min-h-[350px] w-full flex-col items-center justify-center rounded-3xl border border-slate-200 bg-white px-5 py-12 text-center shadow-xs">
+            <div className="flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 mb-3 sm:mb-4">
+              <Users size={24} />
+            </div>
 
-                const stats = item?.statistics || {};
+            <h2
+              className="text-sm sm:text-base font-semibold text-slate-900 tracking-tight"
+              style={{ fontWeight: 600 }}
+            >
+              No students found
+            </h2>
+            <p
+              className="mt-1 max-w-sm text-center text-[11px] sm:text-xs text-slate-500 font-medium leading-relaxed"
+              style={{ fontWeight: 600 }}
+            >
+              Students you interact with will appear here.
+            </p>
+          </section>
+        ) : (
+          /* =================================================
+             STUDENT CARDS (RESPONSIVE STACK FOR SMALL SCREENS)
+          ================================================== */
+          <section className="w-full space-y-4">
+            {filteredStudents.map((item) => {
+              const student = item?.student || {};
 
-                const studentName =
-                  `${student?.firstName || ""} ${
-                    student?.lastName || ""
-                  }`.trim() || "Student";
+              const stats = item?.statistics || {};
 
-                const profileImage = student?.profileImage
-                  ? student.profileImage.startsWith("http")
-                    ? student.profileImage
-                    : `${API_BASE_URL}${student.profileImage}`
-                  : null;
+              const studentName =
+                `${student?.firstName || ""} ${
+                  student?.lastName || ""
+                }`.trim() || "Student";
 
-                return (
-                  <div
-                    key={student?._id}
-                    className="group w-full overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition-all duration-300 hover:border-cyan-200 hover:shadow-xl"
-                  >
-                    {/* =================================================
-                        MAIN CARD
-                    ================================================== */}
+              const profileImage = student?.profileImage
+                ? student.profileImage.startsWith("http")
+                  ? student.profileImage
+                  : `${API_BASE_URL}${student.profileImage}`
+                : null;
 
-                    <div className="p-5 sm:p-6 lg:p-7">
-                      <div className="flex flex-col gap-7">
-                        {/* =================================================
-                            TOP HORIZONTAL ROW
-                        ================================================== */}
-
-                        <div className="flex flex-col xl:flex-row xl:items-center gap-7">
-                          {/* =================================================
-                              PROFILE
-                          ================================================== */}
-
-                          <div className="flex items-center gap-5 xl:w-[310px] xl:flex-shrink-0">
-                            {profileImage ? (
-                              <img
-                                src={profileImage}
-                                alt={studentName}
-                                className="h-20 w-20 flex-shrink-0 rounded-2xl object-cover border border-slate-200 shadow-sm"
-                                onError={(e) => {
-                                  e.currentTarget.style.display = "none";
-                                }}
-                              />
-                            ) : (
-                              <div className="h-20 w-20 flex-shrink-0 rounded-2xl bg-gradient-to-br from-cyan-100 to-blue-100 flex items-center justify-center">
-                                <UserRound
-                                  size={34}
-                                  className="text-cyan-700"
-                                />
-                              </div>
-                            )}
-
-                            <div className="min-w-0">
-                              <h2 className="text-lg sm:text-xl font-bold text-slate-900 truncate">
-                                {studentName}
-                              </h2>
-
-                              <p className="mt-1 text-sm text-slate-500 truncate">
-                                {student?.email || "No email available"}
-                              </p>
-
-                              {student?.phone && (
-                                <p className="mt-1 text-xs text-slate-400">
-                                  {student.phone}
-                                </p>
-                              )}
-                            </div>
-                          </div>
-
-                          {/* Divider */}
-
-                          <div className="hidden xl:block h-16 w-px bg-slate-200" />
-
-                          {/* =================================================
-                              EDUCATION
-                          ================================================== */}
-
-                          <div className="flex items-start gap-3 xl:flex-1 min-w-0">
-                            <div className="h-11 w-11 flex-shrink-0 rounded-xl bg-indigo-50 flex items-center justify-center">
-                              <GraduationCap
-                                size={21}
-                                className="text-indigo-600"
-                              />
-                            </div>
-
-                            <div className="min-w-0">
-                              <p className="text-xs font-medium uppercase tracking-wider text-slate-400">
-                                Education
-                              </p>
-
-                              <p
-                                title={student?.education || "Not provided"}
-                                className="mt-1 text-sm font-semibold text-slate-700 line-clamp-2"
-                              >
-                                {student?.education || "Not provided"}
-                              </p>
-                            </div>
-                          </div>
-
-                          {/* =================================================
-                              CAREER GOAL
-                          ================================================== */}
-
-                          <div className="flex items-start gap-3 xl:flex-1 min-w-0">
-                            <div className="h-11 w-11 flex-shrink-0 rounded-xl bg-purple-50 flex items-center justify-center">
-                              <Sparkles size={21} className="text-purple-600" />
-                            </div>
-
-                            <div className="min-w-0">
-                              <p className="text-xs font-medium uppercase tracking-wider text-slate-400">
-                                Career Goal
-                              </p>
-
-                              <p
-                                title={student?.careerGoal || "Not provided"}
-                                className="mt-1 text-sm font-semibold text-slate-700 line-clamp-2"
-                              >
-                                {student?.careerGoal || "Not provided"}
-                              </p>
-                            </div>
-                          </div>
-
-                          {/* =================================================
-                              VIEW PROFILE BUTTON
-                          ================================================== */}
-
-                          <button
-                            type="button"
-                            onClick={() =>
-                              navigate(`/mentor/students/${student?._id}`)
-                            }
-                            className="w-full xl:w-[190px] xl:flex-shrink-0 flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-6 py-3.5 text-sm font-bold text-white shadow-md transition-all duration-200 hover:bg-indigo-700 hover:shadow-lg active:scale-[0.98]"
+              return (
+                <article
+                  key={student?._id}
+                  className="group w-full overflow-hidden rounded-2xl sm:rounded-3xl border border-slate-200 bg-white shadow-xs transition duration-200 hover:border-blue-300 hover:shadow-md p-4 sm:p-6"
+                >
+                  <div className="w-full space-y-4 sm:space-y-5">
+                    {/* TOP ROW: AVATAR, INFO & VIEW PROFILE BUTTON */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3.5 sm:pb-4 border-b border-slate-100">
+                      <div className="flex items-center gap-3 min-w-0">
+                        {profileImage ? (
+                          <img
+                            src={profileImage}
+                            alt={studentName}
+                            className="h-11 w-11 sm:h-14 sm:w-14 shrink-0 rounded-xl sm:rounded-2xl border border-slate-200 object-cover shadow-2xs"
+                            onError={(e) => {
+                              e.currentTarget.style.display = "none";
+                            }}
+                          />
+                        ) : (
+                          <div
+                            className="flex h-11 w-11 sm:h-14 sm:w-14 shrink-0 items-center justify-center rounded-xl sm:rounded-2xl bg-black text-white text-xs font-semibold shadow-2xs"
+                            style={{ fontWeight: 600 }}
                           >
-                            <span>View Profile</span>
-
-                            <ArrowRight
-                              size={19}
-                              className="transition-transform duration-200 group-hover:translate-x-1"
+                            <UserRound
+                              size={16}
+                              className="text-blue-400 sm:w-[18px] sm:h-[18px]"
                             />
-                          </button>
+                          </div>
+                        )}
+
+                        <div className="min-w-0 flex-1">
+                          <h2
+                            className="text-xs sm:text-sm font-semibold text-slate-900 tracking-tight truncate"
+                            style={{ fontWeight: 600 }}
+                          >
+                            {studentName}
+                          </h2>
+                          <p
+                            className="mt-0.5 text-[10px] sm:text-[11px] text-slate-500 font-medium truncate"
+                            style={{ fontWeight: 600 }}
+                          >
+                            {student?.email || "No email available"}
+                          </p>
+                          {student?.phone && (
+                            <p
+                              className="mt-0.5 text-[10px] text-slate-400 font-medium truncate"
+                              style={{ fontWeight: 600 }}
+                            >
+                              {student.phone}
+                            </p>
+                          )}
                         </div>
+                      </div>
 
-                        {/* =================================================
-                            SESSION STATISTICS
-                        ================================================== */}
+                      {/* VIEW PROFILE BUTTON */}
+                      <button
+                        type="button"
+                        onClick={() =>
+                          navigate(`/mentor/students/${student?._id}`)
+                        }
+                        className="w-full sm:w-auto shrink-0 flex items-center justify-center gap-1.5 rounded-xl bg-black hover:bg-slate-800 px-4 py-2.5 text-xs font-semibold text-white transition shadow-xs"
+                        style={{ fontWeight: 600 }}
+                      >
+                        <span>View Profile</span>
+                        <ArrowRight
+                          size={13}
+                          className="text-blue-400 transition-transform group-hover:translate-x-0.5"
+                        />
+                      </button>
+                    </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                          {/* Completed */}
-
-                          <div className="flex items-center gap-4 rounded-2xl border border-emerald-100 bg-emerald-50/70 p-4">
-                            <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-white shadow-sm">
-                              <CheckCircle2
-                                size={21}
-                                className="text-emerald-600"
-                              />
-                            </div>
-
-                            <div>
-                              <p className="text-xs font-medium text-emerald-600">
-                                Completed Sessions
-                              </p>
-
-                              <p className="mt-1 text-xl font-bold text-emerald-700">
-                                {stats?.completedSessions ?? 0}
-                              </p>
-                            </div>
-                          </div>
-
-                          {/* Upcoming */}
-
-                          <div className="flex items-center gap-4 rounded-2xl border border-indigo-100 bg-indigo-50/70 p-4">
-                            <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-white shadow-sm">
-                              <Clock3 size={21} className="text-indigo-600" />
-                            </div>
-
-                            <div>
-                              <p className="text-xs font-medium text-indigo-600">
-                                Upcoming Sessions
-                              </p>
-
-                              <p className="mt-1 text-xl font-bold text-indigo-700">
-                                {stats?.upcomingSessions ?? 0}
-                              </p>
-                            </div>
-                          </div>
-
-                          {/* Total */}
-
-                          <div className="flex items-center gap-4 rounded-2xl border border-purple-100 bg-purple-50/70 p-4">
-                            <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-white shadow-sm">
-                              <CalendarDays
-                                size={21}
-                                className="text-purple-600"
-                              />
-                            </div>
-
-                            <div>
-                              <p className="text-xs font-medium text-purple-600">
-                                Total Sessions
-                              </p>
-
-                              <p className="mt-1 text-xl font-bold text-purple-700">
-                                {stats?.totalSessions ?? 0}
-                              </p>
-                            </div>
-                          </div>
+                    {/* EDUCATION & CAREER GOAL TAGS / BOXES */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                      <div className="flex items-start gap-2.5 bg-slate-50 p-3 rounded-xl border border-slate-200">
+                        <div className="h-7 w-7 shrink-0 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-blue-600 mt-0.5">
+                          <GraduationCap size={14} />
                         </div>
+                        <div className="min-w-0">
+                          <p
+                            className="text-[9px] sm:text-[10px] font-semibold uppercase tracking-wider text-slate-400"
+                            style={{ fontWeight: 600 }}
+                          >
+                            Education
+                          </p>
+                          <p
+                            title={student?.education || "Not provided"}
+                            className="mt-0.5 text-[11px] sm:text-xs font-semibold text-slate-800 truncate"
+                            style={{ fontWeight: 600 }}
+                          >
+                            {student?.education || "Not provided"}
+                          </p>
+                        </div>
+                      </div>
 
-                        {/* =================================================
-                            BOTTOM DETAILS
-                        ================================================== */}
-
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 border-t border-slate-100 pt-6">
-                          {/* Last Session */}
-
-                          <div className="flex items-center gap-3">
-                            <div className="h-11 w-11 flex-shrink-0 rounded-xl bg-cyan-50 flex items-center justify-center">
-                              <CalendarCheck2
-                                size={20}
-                                className="text-cyan-600"
-                              />
-                            </div>
-
-                            <div className="min-w-0">
-                              <p className="text-xs text-slate-400">
-                                Last Session
-                              </p>
-
-                              <p className="mt-1 text-sm font-semibold text-slate-700 truncate">
-                                {formatDate(item?.lastSession?.date)}
-                              </p>
-                            </div>
-                          </div>
-
-                          {/* Session Type */}
-
-                          <div className="flex items-center gap-3">
-                            <div className="h-11 w-11 flex-shrink-0 rounded-xl bg-indigo-50 flex items-center justify-center">
-                              <Video size={20} className="text-indigo-600" />
-                            </div>
-
-                            <div className="min-w-0">
-                              <p className="text-xs text-slate-400">
-                                Session Type
-                              </p>
-
-                              <p className="mt-1 text-sm font-semibold text-slate-700 truncate">
-                                {item?.lastSession?.sessionType ||
-                                  "No session yet"}
-                              </p>
-                            </div>
-                          </div>
-
-                          {/* Last Status */}
-
-                          <div className="flex items-center gap-3">
-                            <div className="h-11 w-11 flex-shrink-0 rounded-xl bg-emerald-50 flex items-center justify-center">
-                              <CircleCheck
-                                size={20}
-                                className="text-emerald-600"
-                              />
-                            </div>
-
-                            <div className="min-w-0">
-                              <p className="text-xs text-slate-400">
-                                Last Status
-                              </p>
-
-                              <p className="mt-1 text-sm font-semibold text-slate-700 truncate">
-                                {item?.lastSession?.status || "No session yet"}
-                              </p>
-                            </div>
-                          </div>
-
-                          {/* Mentoring Activity */}
-
-                          <div className="flex items-center gap-3">
-                            <div className="h-11 w-11 flex-shrink-0 rounded-xl bg-purple-50 flex items-center justify-center">
-                              <CalendarDays
-                                size={20}
-                                className="text-purple-600"
-                              />
-                            </div>
-
-                            <div className="min-w-0">
-                              <p className="text-xs text-slate-400">
-                                Mentoring Activity
-                              </p>
-
-                              <p className="mt-1 text-sm font-semibold text-slate-700 truncate">
-                                {stats?.totalSessions ?? 0}{" "}
-                                {stats?.totalSessions === 1
-                                  ? "session"
-                                  : "sessions"}
-                              </p>
-                            </div>
-                          </div>
+                      <div className="flex items-start gap-2.5 bg-slate-50 p-3 rounded-xl border border-slate-200">
+                        <div className="h-7 w-7 shrink-0 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-blue-600 mt-0.5">
+                          <Sparkles size={14} />
+                        </div>
+                        <div className="min-w-0">
+                          <p
+                            className="text-[9px] sm:text-[10px] font-semibold uppercase tracking-wider text-slate-400"
+                            style={{ fontWeight: 600 }}
+                          >
+                            Career Goal
+                          </p>
+                          <p
+                            title={student?.careerGoal || "Not provided"}
+                            className="mt-0.5 text-[11px] sm:text-xs font-semibold text-slate-800 truncate"
+                            style={{ fontWeight: 600 }}
+                          >
+                            {student?.careerGoal || "Not provided"}
+                          </p>
                         </div>
                       </div>
                     </div>
+
+                    {/* SESSION STATISTICS (STACKED ON MOBILE, 3-COL ON DESKTOP) */}
+                    <div className="grid grid-cols-3 gap-2 sm:gap-3.5 text-xs font-semibold">
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 rounded-xl sm:rounded-2xl border border-slate-200 bg-slate-50 p-2.5 sm:p-3.5 text-center sm:text-left">
+                        <div className="mx-auto sm:mx-0 flex h-7 w-7 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-lg sm:rounded-xl bg-white border border-slate-200 text-emerald-600">
+                          <CheckCircle2 size={14} className="sm:w-4 sm:h-4" />
+                        </div>
+                        <div className="min-w-0">
+                          <p
+                            className="text-[9px] sm:text-[10px] uppercase tracking-wide text-slate-400 truncate"
+                            style={{ fontWeight: 600 }}
+                          >
+                            Completed
+                          </p>
+                          <p
+                            className="text-xs sm:text-base font-semibold text-emerald-600"
+                            style={{ fontWeight: 600 }}
+                          >
+                            {stats?.completedSessions ?? 0}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 rounded-xl sm:rounded-2xl border border-slate-200 bg-slate-50 p-2.5 sm:p-3.5 text-center sm:text-left">
+                        <div className="mx-auto sm:mx-0 flex h-7 w-7 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-lg sm:rounded-xl bg-white border border-slate-200 text-blue-600">
+                          <Clock3 size={14} className="sm:w-4 sm:h-4" />
+                        </div>
+                        <div className="min-w-0">
+                          <p
+                            className="text-[9px] sm:text-[10px] uppercase tracking-wide text-slate-400 truncate"
+                            style={{ fontWeight: 600 }}
+                          >
+                            Upcoming
+                          </p>
+                          <p
+                            className="text-xs sm:text-base font-semibold text-blue-600"
+                            style={{ fontWeight: 600 }}
+                          >
+                            {stats?.upcomingSessions ?? 0}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 rounded-xl sm:rounded-2xl border border-slate-200 bg-slate-50 p-2.5 sm:p-3.5 text-center sm:text-left">
+                        <div className="mx-auto sm:mx-0 flex h-7 w-7 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-lg sm:rounded-xl bg-white border border-slate-200 text-slate-800">
+                          <CalendarDays size={14} className="sm:w-4 sm:h-4" />
+                        </div>
+                        <div className="min-w-0">
+                          <p
+                            className="text-[9px] sm:text-[10px] uppercase tracking-wide text-slate-400 truncate"
+                            style={{ fontWeight: 600 }}
+                          >
+                            Total
+                          </p>
+                          <p
+                            className="text-xs sm:text-base font-semibold text-slate-900"
+                            style={{ fontWeight: 600 }}
+                          >
+                            {stats?.totalSessions ?? 0}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* BOTTOM DETAILS (GRID WRAPPED FOR SMALL SCREENS) */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3 pt-1 text-[11px] sm:text-xs font-semibold text-slate-500">
+                      <div className="flex items-center gap-2 bg-slate-50/70 p-2.5 sm:p-3 rounded-xl border border-slate-200">
+                        <CalendarCheck2
+                          size={14}
+                          className="text-blue-600 shrink-0"
+                        />
+                        <span className="truncate">
+                          Last Session:{" "}
+                          <strong className="text-slate-800 font-semibold">
+                            {formatDate(item?.lastSession?.date)}
+                          </strong>
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-2 bg-slate-50/70 p-2.5 sm:p-3 rounded-xl border border-slate-200">
+                        <Video size={14} className="text-blue-600 shrink-0" />
+                        <span className="truncate">
+                          Type:{" "}
+                          <strong className="text-slate-800 font-semibold">
+                            {item?.lastSession?.sessionType || "No session yet"}
+                          </strong>
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-2 bg-slate-50/70 p-2.5 sm:p-3 rounded-xl border border-slate-200">
+                        <CircleCheck
+                          size={14}
+                          className="text-emerald-600 shrink-0"
+                        />
+                        <span className="truncate">
+                          Status:{" "}
+                          <strong className="text-slate-800 font-semibold">
+                            {item?.lastSession?.status || "No session yet"}
+                          </strong>
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-2 bg-slate-50/70 p-2.5 sm:p-3 rounded-xl border border-slate-200">
+                        <CalendarDays
+                          size={14}
+                          className="text-blue-600 shrink-0"
+                        />
+                        <span className="truncate">
+                          Activity:{" "}
+                          <strong className="text-slate-800 font-semibold">
+                            {stats?.totalSessions ?? 0}{" "}
+                            {stats?.totalSessions === 1
+                              ? "session"
+                              : "sessions"}
+                          </strong>
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
+                </article>
+              );
+            })}
+          </section>
+        )}
       </main>
-    </>
+    </div>
   );
 };
 

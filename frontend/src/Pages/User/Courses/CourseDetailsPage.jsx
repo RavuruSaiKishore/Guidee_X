@@ -11,6 +11,7 @@ import {
   ArrowRight,
   X,
   ChevronDown,
+  ChevronUp,
   ShieldCheck,
   CreditCard,
   Lock,
@@ -38,7 +39,7 @@ const CourseDetailsPage = () => {
   // State to handle PDF modal viewer popups
   const [selectedPdf, setSelectedPdf] = useState(null);
 
-  // State to track expanded lessons within modules (stores lesson ID or index key)
+  // State to track expanded modules/lessons
   const [expandedLessons, setExpandedLessons] = useState({});
 
   const API_BASE_URL =
@@ -103,120 +104,120 @@ const CourseDetailsPage = () => {
     fetchCourse();
   }, [id, API_BASE_URL]);
 
- const handleEnroll = async () => {
-   const token = localStorage.getItem("UserToken");
-   setEnrolling(true);
+  const handleEnroll = async () => {
+    const token = localStorage.getItem("UserToken");
+    setEnrolling(true);
 
-   try {
-     // 1. Free Course Enrollment
-     if (course.price === 0) {
-       const response = await fetch(
-         `${API_BASE_URL}/api/courses/${id}/enroll`,
-         {
-           method: "POST",
-           headers: {
-             "Content-Type": "application/json",
-             ...(token && { Authorization: `Bearer ${token}` }),
-           },
-           credentials: "include",
-         }
-       );
+    try {
+      // 1. Free Course Enrollment
+      if (course.price === 0) {
+        const response = await fetch(
+          `${API_BASE_URL}/api/courses/${id}/enroll`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              ...(token && { Authorization: `Bearer ${token}` }),
+            },
+            credentials: "include",
+          }
+        );
 
-       const data = await response.json();
-       if (response.ok && data.success) {
-         toast.success("Successfully enrolled!");
-         // Update state to show "Go to Classroom"
-         setEnrollmentStatus({ isEnrolled: true, paymentStatus: "paid" });
-       } else {
-         toast.error(data.message || "Enrollment failed");
-       }
-       setEnrolling(false);
-       return;
-     }
+        const data = await response.json();
+        if (response.ok && data.success) {
+          toast.success("Successfully enrolled!");
+          // Update state to show "Go to Classroom"
+          setEnrollmentStatus({ isEnrolled: true, paymentStatus: "paid" });
+        } else {
+          toast.error(data.message || "Enrollment failed");
+        }
+        setEnrolling(false);
+        return;
+      }
 
-     // 2. Paid Course - Create Order
-     const orderResponse = await fetch(
-       `${API_BASE_URL}/api/coursePayment/create-order`,
-       {
-         method: "POST",
-         headers: {
-           "Content-Type": "application/json",
-           ...(token && { Authorization: `Bearer ${token}` }),
-         },
-         body: JSON.stringify({ courseId: id }),
-         credentials: "include",
-       }
-     );
+      // 2. Paid Course - Create Order
+      const orderResponse = await fetch(
+        `${API_BASE_URL}/api/coursePayment/create-order`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
+          body: JSON.stringify({ courseId: id }),
+          credentials: "include",
+        }
+      );
 
-     const orderData = await orderResponse.json();
+      const orderData = await orderResponse.json();
 
-     if (!orderResponse.ok || !orderData.success) {
-       toast.error(orderData.message || "Failed to initiate payment");
-       setEnrolling(false);
-       return;
-     }
+      if (!orderResponse.ok || !orderData.success) {
+        toast.error(orderData.message || "Failed to initiate payment");
+        setEnrolling(false);
+        return;
+      }
 
-     // 3. Razorpay Options
-     const options = {
-       key: orderData.key || import.meta.env.VITE_RAZORPAY_KEY_ID,
-       amount: orderData.order.amount,
-       currency: orderData.order.currency,
-       name: "Professional Learning Academy",
-       description: `Enrollment for ${course.title}`,
-       image: course.thumbnail,
-       order_id: orderData.order.id,
-       handler: async function (response) {
-         try {
-           const verifyResponse = await fetch(
-             `${API_BASE_URL}/api/coursePayment/verify-payment`,
-             {
-               method: "POST",
-               headers: {
-                 "Content-Type": "application/json",
-                 ...(token && { Authorization: `Bearer ${token}` }),
-               },
-               body: JSON.stringify({
-                 razorpay_order_id: response.razorpay_order_id,
-                 razorpay_payment_id: response.razorpay_payment_id,
-                 razorpay_signature: response.razorpay_signature,
-                 courseId: id,
-               }),
-               credentials: "include",
-             }
-           );
+      // 3. Razorpay Options
+      const options = {
+        key: orderData.key || import.meta.env.VITE_RAZORPAY_KEY_ID,
+        amount: orderData.order.amount,
+        currency: orderData.order.currency,
+        name: "Professional Learning Academy",
+        description: `Enrollment for ${course.title}`,
+        image: course.thumbnail,
+        order_id: orderData.order.id,
+        handler: async function (response) {
+          try {
+            const verifyResponse = await fetch(
+              `${API_BASE_URL}/api/coursePayment/verify-payment`,
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  ...(token && { Authorization: `Bearer ${token}` }),
+                },
+                body: JSON.stringify({
+                  razorpay_order_id: response.razorpay_order_id,
+                  razorpay_payment_id: response.razorpay_payment_id,
+                  razorpay_signature: response.razorpay_signature,
+                  courseId: id,
+                }),
+                credentials: "include",
+              }
+            );
 
-           const verifyData = await verifyResponse.json();
+            const verifyData = await verifyResponse.json();
 
-           if (verifyResponse.ok && verifyData.success) {
-             // ✅ SUCCESS: Trigger Toast and Update UI state
-             toast.success("Payment successful! You are now enrolled.");
+            if (verifyResponse.ok && verifyData.success) {
+              // ✅ SUCCESS: Trigger Toast and Update UI state
+              toast.success("Payment successful! You are now enrolled.");
 
-             setEnrollmentStatus({
-               isEnrolled: true,
-               paymentStatus: "paid",
-             });
-           } else {
-             toast.error(verifyData.message || "Payment verification failed");
-           }
-         } catch (err) {
-           toast.error("Something went wrong during payment verification.");
-         }
-       },
-       prefill: {
-         name: orderData.userName || "",
-         email: orderData.userEmail || "",
-       },
-       theme: { color: "#2563eb" },
-     };
+              setEnrollmentStatus({
+                isEnrolled: true,
+                paymentStatus: "paid",
+              });
+            } else {
+              toast.error(verifyData.message || "Payment verification failed");
+            }
+          } catch (err) {
+            toast.error("Something went wrong during payment verification.");
+          }
+        },
+        prefill: {
+          name: orderData.userName || "",
+          email: orderData.userEmail || "",
+        },
+        theme: { color: "#2563eb" },
+      };
 
-     const rzp = new window.Razorpay(options);
-     rzp.open();
-   } catch (error) {
-     toast.error("Something went wrong during enrollment.");
-   } finally {
-     setEnrolling(false);
-   }
- };
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+    } catch (error) {
+      toast.error("Something went wrong during enrollment.");
+    } finally {
+      setEnrolling(false);
+    }
+  };
 
   const toggleLessonExpand = (modIdx, lesIdx) => {
     const key = `${modIdx}-${lesIdx}`;
@@ -403,28 +404,132 @@ const CourseDetailsPage = () => {
         </div>
       )}
 
-      {/* SYLLABUS LOCKED BANNER FOR NON-ENROLLED USERS */}
-      {!enrollmentStatus.isEnrolled && (
-        <div className="bg-white rounded-3xl border border-dashed border-slate-300 shadow-sm p-12 text-center space-y-4">
-          <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mx-auto shadow-inner">
-            <Lock size={28} />
+      {/* ========================================== */}
+      {/* 📅 PROFESSIONAL WEEKLY ROADMAP CURRICULUM */}
+      {/* ========================================== */}
+      <div className="bg-gradient-to-br from-white via-slate-50/50 to-indigo-50/20 rounded-3xl border border-slate-200/80 shadow-2xl p-6 sm:p-10 space-y-8">
+        {/* Header Section */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-6">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2 text-indigo-600 font-extrabold text-xs uppercase tracking-wider">
+              <Layers size={16} /> Structured Learning Path
+            </div>
+            <h3 className="text-2xl font-black text-slate-900 tracking-tight">
+              Weekly Course Roadmap & Syllabus
+            </h3>
           </div>
-          <h3 className="text-xl font-black text-slate-900">
-            Course Syllabus & Lessons Locked
-          </h3>
-          <p className="text-slate-500 text-sm max-w-md mx-auto leading-relaxed">
-            Complete your enrollment or check out via Razorpay above to unlock
-            full multi-module curriculum access, video lessons, and downloadable
-            PDF notes inside the classroom.
-          </p>
-          <button
-            onClick={handleEnroll}
-            className="px-6 py-3 rounded-xl bg-blue-600 text-white text-xs font-bold hover:bg-blue-700 transition shadow-lg shadow-blue-500/20 cursor-pointer"
-          >
-            {course.price === 0 ? "Enroll Now for Free" : "Proceed to Payment"}
-          </button>
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-black px-4 py-2 rounded-2xl bg-indigo-50 text-indigo-700 border border-indigo-100 shadow-xs uppercase tracking-wider flex items-center gap-1.5">
+              <Clock size={14} /> {course.modules?.length || 0} Weeks Curriculum
+            </span>
+          </div>
         </div>
-      )}
+
+        {/* Roadmap Timeline Container */}
+        <div className="relative pl-4 sm:pl-8 space-y-6 before:absolute before:left-4 sm:before:left-7 before:top-3 before:bottom-3 before:w-0.5 before:bg-gradient-to-b before:from-indigo-500 before:via-blue-300 before:to-slate-200">
+          {course.modules?.map((mod, modIdx) => {
+            const isExpanded = expandedLessons[modIdx];
+            const lessonCount = mod.lessons?.length || 0;
+
+            return (
+              <div key={modIdx} className="relative group">
+                {/* Timeline Node Icon */}
+                <div className="absolute -left-4 sm:-left-7 top-6 w-8 h-8 rounded-full bg-white border-2 border-indigo-600 text-indigo-600 shadow-md flex items-center justify-center font-black text-xs z-10 transition-transform group-hover:scale-110">
+                  {modIdx + 1}
+                </div>
+
+                {/* Module Card */}
+                <div className="ml-6 sm:ml-8 border border-slate-200/90 rounded-3xl bg-white shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden">
+                  {/* Week Accordion Header */}
+                  <button
+                    onClick={() =>
+                      setExpandedLessons({
+                        ...expandedLessons,
+                        [modIdx]: !isExpanded,
+                      })
+                    }
+                    className="w-full flex items-center justify-between p-5 sm:p-6 bg-gradient-to-r from-slate-50/80 via-white to-white hover:from-indigo-50/30 hover:to-white transition cursor-pointer text-left"
+                  >
+                    <div className="space-y-1.5">
+                      <div className="flex flex-wrap items-center gap-2.5">
+                        <span className="text-[10px] font-black uppercase tracking-widest bg-indigo-600 text-white px-3 py-1 rounded-lg shadow-2xs">
+                          Week {modIdx + 1}
+                        </span>
+                        <span className="text-xs font-bold text-slate-400">
+                          {lessonCount}{" "}
+                          {lessonCount === 1 ? "Lesson" : "Lessons"} •{" "}
+                          {mod.duration || "Self-Paced"}
+                        </span>
+                      </div>
+                      <h4 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">
+                        {mod.title}
+                      </h4>
+                    </div>
+
+                    <div className="w-9 h-9 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-500 group-hover:bg-indigo-600 group-hover:text-white transition-all shadow-2xs shrink-0 ml-4">
+                      {isExpanded ? (
+                        <ChevronUp size={18} />
+                      ) : (
+                        <ChevronDown size={18} />
+                      )}
+                    </div>
+                  </button>
+
+                  {/* Expanded Lessons List Container */}
+                  {isExpanded && (
+                    <div className="p-4 sm:p-6 bg-slate-50/60 border-t border-slate-100 space-y-3">
+                      {mod.lessons?.length > 0 ? (
+                        mod.lessons.map((lesson, lesIdx) => (
+                          <div
+                            key={lesIdx}
+                            className="group/lesson flex items-center justify-between p-4 sm:p-4.5 rounded-2xl border border-slate-200/70 bg-white hover:border-indigo-300 hover:shadow-md transition-all duration-200 gap-4"
+                          >
+                            <div className="flex items-center gap-3.5 min-w-0">
+                              <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 border border-indigo-100 flex items-center justify-center text-xs font-black shrink-0 shadow-2xs group-hover/lesson:bg-indigo-600 group-hover/lesson:text-white transition-colors">
+                                {String(lesIdx + 1).padStart(2, "0")}
+                              </div>
+                              <div className="min-w-0">
+                                <p className="text-sm font-extrabold text-slate-900 truncate">
+                                  {lesson.title}
+                                </p>
+                                <p className="text-xs text-slate-500 truncate mt-0.5">
+                                  {lesson.description ||
+                                    "Core concepts & practical implementation video tutorial."}
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-3 shrink-0">
+                              <span className="hidden sm:flex items-center gap-1 text-xs font-bold text-slate-400 bg-slate-100 px-3 py-1.5 rounded-xl">
+                                <Clock size={13} className="text-indigo-500" />{" "}
+                                {lesson.duration || 10}m
+                              </span>
+
+                              {enrollmentStatus.isEnrolled ? (
+                                <div className="flex items-center gap-1 text-xs font-bold text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-100">
+                                  <CheckCircle size={15} /> Accessible
+                                </div>
+                              ) : (
+                                <div className="flex items-center gap-1 text-xs font-bold text-slate-400 bg-slate-100 px-3 py-1.5 rounded-xl">
+                                  <Lock size={15} /> Locked
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="text-center py-8 text-xs font-semibold text-slate-400 bg-white rounded-2xl border border-dashed border-slate-200">
+                          No curriculum lessons released for this week yet.
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
 
       {/* ========================================== */}
       {/* 🌟 COURSE BENEFITS, USES & RAW TELEMETRY PANEL */}

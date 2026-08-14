@@ -22,6 +22,12 @@ import {
   BarChart3,
   Award,
   Contact,
+  Brain,
+  Database,
+  Code,
+  Briefcase,
+  Zap,
+  ArrowRight,
 } from "lucide-react";
 
 import { useAuth } from "../../context/AuthContext";
@@ -31,17 +37,96 @@ const Navbar = () => {
   const location = useLocation();
 
   const dropdownRef = useRef(null);
-  const moreDropdownRef = useRef(null);
+  const programsDropdownRef = useRef(null);
 
   const { user, loading, logout } = useAuth();
 
   const [mobileOpen, setMobileOpen] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
-  const [showMoreDropdown, setShowMoreDropdown] = useState(false);
+  const [showProgramsDropdown, setShowProgramsDropdown] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [activeCategory, setActiveCategory] = useState("Popular");
+
+  // Dynamic courses state from backend API
+  const [coursesData, setCoursesData] = useState({
+    categories: [],
+    courses: {},
+  });
+  const [coursesLoading, setCoursesLoading] = useState(false);
 
   const API_BASE_URL =
     import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
+
+  // ==========================================
+  // FETCH COURSES DYNAMICALLY FROM BACKEND
+  // ==========================================
+
+  useEffect(() => {
+    const fetchCoursesForNavbar = async () => {
+      try {
+        setCoursesLoading(true);
+        const res = await fetch(`${API_BASE_URL}/api/courses`);
+        const data = await res.json();
+
+        if (res.ok && data.success) {
+          const fetchedCourses = data.courses || [];
+
+          const grouped = {};
+          const categoriesSet = new Set(["Popular"]);
+
+          fetchedCourses.forEach((course) => {
+            const cat = course.category || "General";
+            categoriesSet.add(cat);
+            if (!grouped[cat]) grouped[cat] = [];
+            grouped[cat].push({
+              title: course.title,
+              duration: course.duration || "Self Paced",
+              mode: course.mode || "Online",
+              _id: course._id,
+            });
+          });
+
+          grouped["Popular"] = fetchedCourses.slice(0, 4).map((course) => ({
+            title: course.title,
+            duration: course.duration || "Self Paced",
+            mode: course.mode || "Online",
+            _id: course._id,
+          }));
+
+          const catList = Array.from(categoriesSet).map((cat) => ({
+            title: cat,
+            icon: getCategoryIcon(cat),
+          }));
+
+          setCoursesData({ categories: catList, courses: grouped });
+          if (catList.length > 0) {
+            setActiveCategory(catList[0].title);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to fetch navbar courses:", error);
+      } finally {
+        setCoursesLoading(false);
+      }
+    };
+
+    fetchCoursesForNavbar();
+  }, [API_BASE_URL]);
+
+  const getCategoryIcon = (categoryName) => {
+    const name = categoryName.toLowerCase();
+    if (name.includes("ai") || name.includes("artificial")) return Brain;
+    if (name.includes("data") || name.includes("analytics")) return Database;
+    if (
+      name.includes("software") ||
+      name.includes("tech") ||
+      name.includes("code")
+    )
+      return Code;
+    if (name.includes("management") || name.includes("business"))
+      return Briefcase;
+    return Zap;
+  };
 
   // ==========================================
   // PROFILE IMAGE
@@ -68,7 +153,6 @@ const Navbar = () => {
       path: "/mentors",
       icon: Users,
     },
-   
     {
       title: "Course",
       path: "/courses",
@@ -82,7 +166,7 @@ const Navbar = () => {
   ];
 
   // ==========================================
-  // MORE NAVIGATION
+  // MORE NAVIGATION (Integrated into Explore Programs Dropdown)
   // ==========================================
 
   const moreItems = [
@@ -132,17 +216,15 @@ const Navbar = () => {
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      // Profile dropdown
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setShowDropdown(false);
       }
 
-      // More dropdown
       if (
-        moreDropdownRef.current &&
-        !moreDropdownRef.current.contains(event.target)
+        programsDropdownRef.current &&
+        !programsDropdownRef.current.contains(event.target)
       ) {
-        setShowMoreDropdown(false);
+        setShowProgramsDropdown(false);
       }
     };
 
@@ -175,8 +257,8 @@ const Navbar = () => {
 
   useEffect(() => {
     setMobileOpen(false);
-    setShowMoreDropdown(false);
     setShowDropdown(false);
+    setShowProgramsDropdown(false);
   }, [location.pathname]);
 
   // ==========================================
@@ -190,18 +272,6 @@ const Navbar = () => {
 
     return (
       location.pathname === path || location.pathname.startsWith(`${path}/`)
-    );
-  };
-
-  // ==========================================
-  // ACTIVE MORE NAV
-  // ==========================================
-
-  const isMoreActive = () => {
-    return moreItems.some(
-      (item) =>
-        location.pathname === item.path ||
-        location.pathname.startsWith(`${item.path}/`)
     );
   };
 
@@ -221,7 +291,7 @@ const Navbar = () => {
           DESKTOP / MAIN NAVBAR
       ========================================================= */}
 
-      <header className="fixed top-2 left-0 right-0 z-50 px-3 sm:px-4 lg:px-8">
+      <header className="fixed top-2 left-0 right-0 z-50 px-3 sm:px-4 lg:px-8 font-sans">
         <div
           className={`max-w-7xl mx-auto h-16 sm:h-20 rounded-2xl sm:rounded-3xl border backdrop-blur-3xl transition-all duration-500 flex items-center justify-between px-4 sm:px-8 ${
             scrolled
@@ -261,91 +331,227 @@ const Navbar = () => {
           ===================================================== */}
 
           <nav className="hidden lg:flex items-center gap-2">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              const active = isMainNavActive(item.path);
-
-              return (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  className={`relative flex items-center gap-2 px-5 py-3 rounded-full text-sm font-semibold transition-all duration-300 overflow-hidden ${
-                    active
-                      ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-200"
-                      : "text-gray-700 hover:bg-white hover:text-blue-600 hover:shadow-lg"
-                  }`}
-                >
-                  <Icon size={18} />
-
-                  {item.title}
-                </Link>
-              );
-            })}
-
-            {/* =================================================
-                MORE DROPDOWN
-            ================================================= */}
-
-            <div ref={moreDropdownRef} className="relative">
+            {/* EXPLORE PROGRAMS & MORE DROPDOWN (3-Column Layout: Categories | Courses | More Links) */}
+            <div
+              ref={programsDropdownRef}
+              className="relative"
+              onMouseEnter={() => setShowProgramsDropdown(true)}
+              onMouseLeave={() => setShowProgramsDropdown(false)}
+            >
               <button
-                onClick={() => setShowMoreDropdown((prev) => !prev)}
+                onClick={() => setShowProgramsDropdown((prev) => !prev)}
                 className={`flex items-center gap-2 px-5 py-3 rounded-full text-sm font-semibold transition-all duration-300 ${
-                  isMoreActive() || showMoreDropdown
-                    ? "bg-white text-blue-600 shadow-lg"
+                  showProgramsDropdown || location.pathname === "/courses"
+                    ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-200"
                     : "text-gray-700 hover:bg-white hover:text-blue-600 hover:shadow-lg"
                 }`}
               >
-                <span>More</span>
-
+                <span>Explore Programs</span>
                 <ChevronDown
                   size={17}
                   className={`transition-transform duration-300 ${
-                    showMoreDropdown ? "rotate-180" : ""
+                    showProgramsDropdown ? "rotate-180" : ""
                   }`}
                 />
               </button>
 
+              {/* 3-COLUMN MEGA DROPDOWN PANEL */}
               <div
-                className={`absolute right-0 top-full mt-3 w-64 rounded-2xl bg-white border border-gray-100 shadow-[0_20px_60px_rgba(0,0,0,0.15)] p-2 overflow-hidden transition-all duration-300 ${
-                  showMoreDropdown
+                className={`absolute left-0 top-full mt-3 w-[1140px] -translate-x-[25%] rounded-3xl bg-white border border-gray-100 shadow-[0_25px_70px_rgba(0,0,0,0.18)] overflow-hidden transition-all duration-300 z-50 ${
+                  showProgramsDropdown
                     ? "visible opacity-100 translate-y-0"
                     : "invisible opacity-0 -translate-y-3"
                 }`}
               >
-                {moreItems.map((item) => {
-                  const Icon = item.icon;
-
-                  const active =
-                    location.pathname === item.path ||
-                    location.pathname.startsWith(`${item.path}/`);
-
-                  return (
-                    <Link
-                      key={item.path}
-                      to={item.path}
-                      onClick={() => setShowMoreDropdown(false)}
-                      className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
-                        active
-                          ? "bg-blue-50 text-blue-600"
-                          : "text-gray-700 hover:bg-blue-50 hover:text-blue-600"
-                      }`}
-                    >
-                      <div
-                        className={`h-9 w-9 rounded-lg flex items-center justify-center ${
-                          active
-                            ? "bg-blue-100 text-blue-600"
-                            : "bg-gray-100 text-gray-600"
-                        }`}
-                      >
-                        <Icon size={18} />
+                <div className="grid grid-cols-12 min-h-[500px]">
+                  {/* 1. LEFT CATEGORY SIDEBAR (Col span 3) */}
+                  <div className="col-span-3 bg-gray-50/90 border-r border-gray-100 p-3 space-y-1 overflow-y-auto max-h-[500px]">
+                    <div className="px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-gray-400">
+                      Categories
+                    </div>
+                    {coursesLoading && coursesData.categories.length === 0 ? (
+                      <div className="p-4 text-xs text-gray-400 text-center">
+                        Loading categories...
                       </div>
+                    ) : (
+                      coursesData.categories.map((cat) => {
+                        const CatIcon = cat.icon;
+                        const isSelected = activeCategory === cat.title;
 
-                      <span className="font-medium text-sm">{item.title}</span>
-                    </Link>
-                  );
-                })}
+                        return (
+                          <button
+                            key={cat.title}
+                            onMouseEnter={() => setActiveCategory(cat.title)}
+                            onClick={() => setActiveCategory(cat.title)}
+                            className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl text-left text-xs font-semibold transition-all ${
+                              isSelected
+                                ? "bg-blue-600 text-white shadow-md shadow-blue-200"
+                                : "text-gray-700 hover:bg-blue-50/70 hover:text-blue-600"
+                            }`}
+                          >
+                            <div className="flex items-center gap-2.5 truncate">
+                              <CatIcon size={16} className="shrink-0" />
+                              <span className="truncate">{cat.title}</span>
+                            </div>
+                            <ChevronDown
+                              size={13}
+                              className={`-rotate-90 shrink-0 ${
+                                isSelected ? "text-white" : "text-gray-400"
+                              }`}
+                            />
+                          </button>
+                        );
+                      })
+                    )}
+                  </div>
+
+                  {/* 2. MIDDLE COURSES LIST CONTENT (Col span 6) */}
+                  <div className="col-span-6 p-6 bg-white flex flex-col justify-between border-r border-gray-100">
+                    <div>
+                      <h3 className="text-base font-bold text-gray-900 mb-4 pb-2 border-b border-gray-100 flex items-center justify-between">
+                        <span>{activeCategory} Courses</span>
+                        <Link
+                          to="/courses"
+                          onClick={() => setShowProgramsDropdown(false)}
+                          className="text-xs font-semibold text-blue-600 hover:underline"
+                        >
+                          View All
+                        </Link>
+                      </h3>
+
+                      <div className="grid grid-cols-2 gap-4 max-h-[380px] overflow-y-auto pr-1">
+                        {coursesLoading ? (
+                          <div className="col-span-2 py-20 text-center text-sm text-gray-400">
+                            Loading courses...
+                          </div>
+                        ) : (coursesData.courses[activeCategory] || [])
+                            .length === 0 ? (
+                          <div className="col-span-2 py-20 text-center text-sm text-gray-400">
+                            No courses available in this category.
+                          </div>
+                        ) : (
+                          (coursesData.courses[activeCategory] || []).map(
+                            (course, idx) => (
+                              <Link
+                                key={course._id || idx}
+                                to={`/courses/${course._id || ""}`}
+                                onClick={() => setShowProgramsDropdown(false)}
+                                className="group p-4 rounded-2xl border border-gray-200/80 bg-white hover:shadow-xl hover:border-blue-200 transition-all duration-300 flex flex-col justify-between"
+                              >
+                                <div>
+                                  <h4 className="font-bold text-xs sm:text-sm text-gray-900 group-hover:text-blue-600 line-clamp-2 transition-colors">
+                                    {course.title}
+                                  </h4>
+                                </div>
+
+                                <div className="mt-4 pt-2.5 border-t border-gray-100 text-[11px] text-gray-500 font-medium flex items-center justify-between">
+                                  <span>{course.duration}</span>
+                                  <span className="text-blue-600 font-semibold">
+                                    {course.mode}
+                                  </span>
+                                </div>
+                              </Link>
+                            )
+                          )
+                        )}
+                      </div>
+                    </div>
+
+                    {/* BOTTOM CORPORATE TRAINING ENQUIRE LINK */}
+                    <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between text-xs font-semibold text-blue-600">
+                      <span className="text-gray-500 text-[11px]">
+                        Need tailored corporate training?
+                      </span>
+                      <Link
+                        to="/contact"
+                        onClick={() => setShowProgramsDropdown(false)}
+                        className="flex items-center gap-1 hover:underline"
+                      >
+                        Enquire Now <ArrowRight size={13} />
+                      </Link>
+                    </div>
+                  </div>
+
+                  {/* 3. RIGHT END SIDE: MORE ITEMS (Col span 3) */}
+                  <div className="col-span-3 bg-gray-50/50 p-5 flex flex-col justify-between">
+                    <div>
+                      <div className="px-1 py-2 text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">
+                        Quick Links & More
+                      </div>
+                      <div className="space-y-1.5">
+                        {moreItems.map((item) => {
+                          const Icon = item.icon;
+                          const active =
+                            location.pathname === item.path ||
+                            location.pathname.startsWith(`${item.path}/`);
+
+                          return (
+                            <Link
+                              key={item.path}
+                              to={item.path}
+                              onClick={() => setShowProgramsDropdown(false)}
+                              className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-all duration-200 text-xs font-semibold ${
+                                active
+                                  ? "bg-blue-600 text-white shadow-sm"
+                                  : "text-gray-700 hover:bg-blue-50 hover:text-blue-600"
+                              }`}
+                            >
+                              <div
+                                className={`h-7 w-7 rounded-lg flex items-center justify-center shrink-0 ${
+                                  active
+                                    ? "bg-white/20 text-white"
+                                    : "bg-gray-200/70 text-gray-600"
+                                }`}
+                              >
+                                <Icon size={14} />
+                              </div>
+                              <span className="truncate">{item.title}</span>
+                            </Link>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    <div className="mt-4 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 p-4 text-white text-center">
+                      <h4 className="text-xs font-bold">Have Questions?</h4>
+                      <p className="text-[10px] text-blue-100 mt-1 leading-relaxed">
+                        Speak directly with our career counselors today.
+                      </p>
+                      <Link
+                        to="/contact"
+                        onClick={() => setShowProgramsDropdown(false)}
+                        className="mt-3 inline-block rounded-xl bg-white px-3 py-1.5 text-[11px] font-bold text-blue-600 shadow transition hover:bg-slate-100"
+                      >
+                        Get in Touch
+                      </Link>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
+
+            {/* REST OF STANDARD NAV ITEMS */}
+            {navItems
+              .filter((item) => item.title !== "Home")
+              .map((item) => {
+                const Icon = item.icon;
+                const active = isMainNavActive(item.path);
+
+                return (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    className={`relative flex items-center gap-2 px-5 py-3 rounded-full text-sm font-semibold transition-all duration-300 overflow-hidden ${
+                      active
+                        ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-200"
+                        : "text-gray-700 hover:bg-white hover:text-blue-600 hover:shadow-lg"
+                    }`}
+                  >
+                    <Icon size={18} />
+                    {item.title}
+                  </Link>
+                );
+              })}
           </nav>
 
           {/* =====================================================
@@ -397,8 +603,7 @@ const Navbar = () => {
                 </button>
 
                 {/* =================================================
-                    PROFILE DROPDOWN
-                    SCROLLABLE
+                    PROFILE DROPDOWN SCROLLABLE
                 ================================================= */}
 
                 <div
@@ -432,13 +637,9 @@ const Navbar = () => {
                     </div>
                   </div>
 
-                  {/* =================================================
-                      SCROLLABLE PROFILE MENU
-                  ================================================= */}
+                  {/* SCROLLABLE PROFILE MENU */}
 
                   <div className="max-h-[calc(100vh-310px)] overflow-y-auto py-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
-                    {/* PROFILE */}
-
                     <Link
                       to="/profile"
                       onClick={() => setShowDropdown(false)}
@@ -451,27 +652,8 @@ const Navbar = () => {
                       <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-100 text-blue-600">
                         <User size={18} />
                       </div>
-
                       <span className="font-medium">My Profile</span>
                     </Link>
-
-                    {/* <Link
-                      to="/studentpractice"
-                      onClick={() => setShowDropdown(false)}
-                      className={`mx-2 flex items-center gap-3 rounded-xl px-4 py-2.5 transition ${
-                        isProfileActive("/studentpractice")
-                          ? "bg-blue-50 text-blue-600"
-                          : "text-gray-700 hover:bg-blue-50 hover:text-blue-600"
-                      }`}
-                    >
-                      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-100 text-blue-600">
-                        <User size={18} />
-                      </div>
-
-                      <span className="font-medium"></span>
-                    </Link> */}
-
-                    {/* DASHBOARD */}
 
                     <Link
                       to="/dashboard"
@@ -485,11 +667,8 @@ const Navbar = () => {
                       <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-100 text-indigo-600">
                         <LayoutDashboard size={18} />
                       </div>
-
                       <span className="font-medium">Dashboard</span>
                     </Link>
-
-                    {/* MY BOOKINGS */}
 
                     <Link
                       to="/my-bookings"
@@ -503,7 +682,6 @@ const Navbar = () => {
                       <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-green-100 text-green-600">
                         <CalendarCheck size={18} />
                       </div>
-
                       <span className="font-medium">My Bookings</span>
                     </Link>
 
@@ -519,11 +697,8 @@ const Navbar = () => {
                       <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-green-100 text-green-600">
                         <CalendarCheck size={18} />
                       </div>
-
                       <span className="font-medium">My Courses</span>
                     </Link>
-
-                    {/* MY REGISTRATIONS */}
 
                     <Link
                       to="/my-registrations"
@@ -537,11 +712,8 @@ const Navbar = () => {
                       <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-orange-100 text-orange-600">
                         <ClipboardList size={18} />
                       </div>
-
                       <span className="font-medium">My Registrations</span>
                     </Link>
-
-                    {/* DISPUTES */}
 
                     <Link
                       to="/disputes"
@@ -555,11 +727,8 @@ const Navbar = () => {
                       <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-100 text-amber-600">
                         <ShieldAlert size={18} />
                       </div>
-
                       <span className="font-medium">Disputes</span>
                     </Link>
-
-                    {/* RESCHEDULE REQUESTS */}
 
                     <Link
                       to="/rescheduleRequest"
@@ -573,11 +742,8 @@ const Navbar = () => {
                       <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-cyan-100 text-cyan-600">
                         <CalendarDays size={18} />
                       </div>
-
                       <span className="font-medium">Reschedule Requests</span>
                     </Link>
-
-                    {/* ACHIEVEMENTS */}
 
                     <Link
                       to="/badges"
@@ -591,11 +757,8 @@ const Navbar = () => {
                       <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-yellow-100 text-yellow-600">
                         <Award size={18} />
                       </div>
-
                       <span className="font-medium">My Achievements</span>
                     </Link>
-
-                    {/* ANALYTICS */}
 
                     <Link
                       to="/analytics"
@@ -609,11 +772,8 @@ const Navbar = () => {
                       <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-violet-100 text-violet-600">
                         <BarChart3 size={18} />
                       </div>
-
                       <span className="font-medium">My Analytics</span>
                     </Link>
-
-                    {/* STUDENT SUPPORT */}
 
                     <Link
                       to="/support-inbox"
@@ -627,13 +787,10 @@ const Navbar = () => {
                       <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-purple-100 text-purple-600">
                         <MessageCircle size={18} />
                       </div>
-
                       <span className="font-medium">Student Support</span>
                     </Link>
 
                     <div className="mx-4 my-2 border-t"></div>
-
-                    {/* LOGOUT */}
 
                     <button
                       onClick={handleLogout}
@@ -642,7 +799,6 @@ const Navbar = () => {
                       <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-red-100 text-red-600">
                         <LogOut size={18} />
                       </div>
-
                       <span className="font-medium">Logout</span>
                     </button>
                   </div>
@@ -650,10 +806,7 @@ const Navbar = () => {
               </div>
             )}
 
-            {/* =================================================
-                MOBILE MENU BUTTON
-            ================================================= */}
-
+            {/* MOBILE MENU BUTTON */}
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
               className="lg:hidden flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-white/70 border border-white/40 shadow-sm text-gray-700 hover:bg-white transition-all"
@@ -665,11 +818,11 @@ const Navbar = () => {
       </header>
 
       {/* =========================================================
-          MOBILE MENU
+          MOBILE MENU (Responsive drawer for small screens)
       ========================================================= */}
 
       <div
-        className={`fixed top-20 sm:top-24 left-3 right-3 sm:left-4 sm:right-4 z-40 lg:hidden rounded-3xl bg-white/95 backdrop-blur-3xl border border-white/60 shadow-[0_20px_50px_rgba(0,0,0,0.15)] transition-all duration-300 overflow-hidden ${
+        className={`fixed top-20 sm:top-24 left-3 right-3 sm:left-4 sm:right-4 z-40 lg:hidden rounded-3xl bg-white/95 backdrop-blur-3xl border border-white/60 shadow-[0_20px_50px_rgba(0,0,0,0.15)] transition-all duration-300 overflow-hidden font-sans ${
           mobileOpen
             ? "opacity-100 visible translate-y-0"
             : "opacity-0 invisible -translate-y-5"
@@ -698,6 +851,15 @@ const Navbar = () => {
 
           {/* MAIN NAV ITEMS */}
           <div className="space-y-1 mb-2">
+            <Link
+              to="/courses"
+              onClick={() => setMobileOpen(false)}
+              className="flex items-center gap-3.5 px-4 py-3 rounded-xl font-semibold text-sm text-gray-700 hover:bg-blue-50/80"
+            >
+              <BookOpen size={18} />
+              Explore Programs
+            </Link>
+
             {navItems.map((item) => {
               const Icon = item.icon;
               const active = isMainNavActive(item.path);
@@ -722,7 +884,10 @@ const Navbar = () => {
 
           <div className="my-2 border-t border-gray-100"></div>
 
-          {/* MORE ITEMS (Directly integrated so no dropdown duplicate exists) */}
+          {/* MORE ITEMS SECTION IN MOBILE */}
+          <div className="px-4 py-1 text-[11px] font-bold uppercase tracking-wider text-gray-400">
+            Quick Links & More
+          </div>
           <div className="space-y-1 mb-2">
             {moreItems.map((item) => {
               const Icon = item.icon;
@@ -759,16 +924,13 @@ const Navbar = () => {
             </Link>
           )}
 
-          {/* =================================================
-              MOBILE AUTHENTICATED MENU (STUDENT PORTAL)
-          ================================================= */}
+          {/* MOBILE AUTHENTICATED MENU (STUDENT PORTAL) */}
 
           {!loading && user && (
             <>
               <div className="my-3 border-t border-gray-100"></div>
 
               <div className="space-y-1 pb-1">
-                {/* PROFILE */}
                 <Link
                   to="/profile"
                   onClick={() => setMobileOpen(false)}
@@ -782,20 +944,6 @@ const Navbar = () => {
                   My Profile
                 </Link>
 
-                {/* <Link
-                  to="/studentpractice"
-                  onClick={() => setMobileOpen(false)}
-                  className={`flex items-center gap-3.5 px-4 py-2.5 rounded-xl text-sm font-medium transition ${
-                    isProfileActive("/studentpractice")
-                      ? "bg-blue-50 text-blue-600 font-semibold"
-                      : "text-gray-700 hover:bg-blue-50"
-                  }`}
-                >
-                  <User size={18} />
-                  Career Navigator
-                </Link> */}
-
-                {/* DASHBOARD */}
                 <Link
                   to="/dashboard"
                   onClick={() => setMobileOpen(false)}
@@ -809,7 +957,6 @@ const Navbar = () => {
                   Dashboard
                 </Link>
 
-                {/* MY BOOKINGS */}
                 <Link
                   to="/my-bookings"
                   onClick={() => setMobileOpen(false)}
@@ -823,10 +970,10 @@ const Navbar = () => {
                   My Bookings
                 </Link>
                 <Link
-                  to="//my-courses"
+                  to="/my-courses"
                   onClick={() => setMobileOpen(false)}
                   className={`flex items-center gap-3.5 px-4 py-2.5 rounded-xl text-sm font-medium transition ${
-                    isProfileActive("//my-courses")
+                    isProfileActive("/my-courses")
                       ? "bg-green-50 text-green-600 font-semibold"
                       : "text-gray-700 hover:bg-green-50"
                   }`}
@@ -835,7 +982,6 @@ const Navbar = () => {
                   My Courses
                 </Link>
 
-                {/* MY REGISTRATIONS */}
                 <Link
                   to="/my-registrations"
                   onClick={() => setMobileOpen(false)}
@@ -849,7 +995,6 @@ const Navbar = () => {
                   My Registrations
                 </Link>
 
-                {/* DISPUTES */}
                 <Link
                   to="/disputes"
                   onClick={() => setMobileOpen(false)}
@@ -863,7 +1008,6 @@ const Navbar = () => {
                   Disputes
                 </Link>
 
-                {/* RESCHEDULE REQUESTS */}
                 <Link
                   to="/rescheduleRequest"
                   onClick={() => setMobileOpen(false)}
@@ -877,7 +1021,6 @@ const Navbar = () => {
                   Reschedule Requests
                 </Link>
 
-                {/* BADGES */}
                 <Link
                   to="/badges"
                   onClick={() => setMobileOpen(false)}
@@ -891,7 +1034,6 @@ const Navbar = () => {
                   My Achievements
                 </Link>
 
-                {/* ANALYTICS */}
                 <Link
                   to="/analytics"
                   onClick={() => setMobileOpen(false)}
@@ -905,7 +1047,6 @@ const Navbar = () => {
                   My Analytics
                 </Link>
 
-                {/* SUPPORT */}
                 <Link
                   to="/support-inbox"
                   onClick={() => setMobileOpen(false)}

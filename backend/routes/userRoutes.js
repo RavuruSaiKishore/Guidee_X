@@ -13,6 +13,7 @@ import {
   getAllFAQs,
   getStudentDashboard,
   getStudentAnalytics,
+  getAllCourses,
 } from "../controllers/userController.js";
 import { protect } from "../middleware/authMiddleware.js";
 
@@ -29,6 +30,7 @@ router.get("/profile", protect, getUserProfile);
 router.get("/profile/stats", protect, getUserProfileStats);
 router.get("/dashboard", protect, getStudentDashboard);
 router.get("/student-analytics", protect, getStudentAnalytics);
+router.get("/", getAllCourses);
 
 
 //FAQ's

@@ -10,6 +10,7 @@ import {
   CheckCircle2,
   XCircle,
   Loader2,
+  Sparkles,
 } from "lucide-react";
 import { toast } from "react-toastify";
 
@@ -206,7 +207,7 @@ const PendingBookings = () => {
     if (!image || typeof image !== "string") {
       return `https://ui-avatars.com/api/?name=${encodeURIComponent(
         `${firstName || ""} ${lastName || ""}`.trim() || "Student"
-      )}&background=f97316&color=fff&size=200`;
+      )}`;
     }
 
     if (image.startsWith("http://") || image.startsWith("https://")) {
@@ -240,19 +241,25 @@ const PendingBookings = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen w-full overflow-x-hidden bg-gray-50 lg:ml-64 lg:w-[calc(100%-16rem)]">
-        <div className="flex min-h-screen flex-col items-center justify-center px-4">
+      <div
+        className="min-h-screen bg-slate-50 pt-20 lg:ml-64 lg:pt-0 text-slate-900"
+        style={{ fontFamily: "'Poppins', sans-serif" }}
+      >
+        <div className="flex min-h-[70vh] flex-col items-center justify-center px-5">
           <div className="relative">
-            <div className="h-14 w-14 rounded-full border-4 border-orange-100 sm:h-16 sm:w-16" />
-
-            <div className="absolute inset-0 h-14 w-14 animate-spin rounded-full border-4 border-transparent border-t-orange-500 sm:h-16 sm:w-16" />
+            <div className="h-14 w-14 rounded-full border-4 border-slate-200" />
+            <div className="absolute inset-0 h-14 w-14 animate-spin rounded-full border-4 border-transparent border-t-blue-600" />
           </div>
-
-          <p className="mt-5 text-center font-medium text-gray-700 sm:text-lg">
+          <p
+            className="mt-5 text-center text-xs font-semibold tracking-tight"
+            style={{ fontWeight: 600 }}
+          >
             Loading your Booking Requests...
           </p>
-
-          <p className="mt-1 text-center text-sm text-gray-400">
+          <p
+            className="mt-1 text-center text-[11px] text-slate-400 font-medium"
+            style={{ fontWeight: 600 }}
+          >
             Please wait a moment
           </p>
         </div>
@@ -265,311 +272,143 @@ const PendingBookings = () => {
   // =========================================================
 
   return (
-    <>
-      <div
-        className="
-          min-h-screen
-          w-full
-          overflow-x-hidden
-          bg-gray-50
-          px-3
-          py-4
-          sm:px-5
-          sm:py-6
-          lg:ml-64
-          lg:w-[calc(100%-16rem)]
-          lg:px-6
-          lg:py-8
-          xl:px-8
-        "
-      >
-        <div className="mx-auto w-full max-w-[1600px]">
-          {/* ================================================= */}
-          {/* HEADER */}
-          {/* ================================================= */}
+    <div
+      className="min-h-screen bg-slate-50 pt-20 lg:ml-64 lg:pt-0 text-slate-900"
+      style={{ fontFamily: "'Poppins', sans-serif", fontStyle: "normal" }}
+    >
+      <main className="w-full max-w-[1600px] mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
+        {/* ================================================= */}
+        {/* HEADER */}
+        {/* ================================================= */}
 
-          <div className="mb-5 sm:mb-6 lg:mb-8">
-            <div
-              className="
-                relative
-                overflow-hidden
-                rounded-2xl
-                bg-gradient-to-r
-                from-amber-500
-                via-orange-500
-                to-red-500
-                p-4
-                text-white
-                shadow-xl
-                sm:rounded-3xl
-                sm:p-6
-                lg:p-8
-              "
-            >
-              {/* Background Decorations */}
+        <section className="relative overflow-hidden rounded-3xl bg-black p-6 sm:p-8 text-white shadow-md">
+          <div className="absolute -right-16 -top-16 h-48 w-48 rounded-full bg-blue-600/20 blur-3xl" />
+          <div className="absolute -bottom-20 left-1/4 h-40 w-40 rounded-full bg-blue-400/10 blur-2xl" />
 
-              <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-white/10 blur-3xl sm:h-44 sm:w-44" />
-
-              <div className="absolute -bottom-16 -left-16 h-48 w-48 rounded-full bg-yellow-300/20 blur-3xl sm:h-56 sm:w-56" />
-
+          <div className="relative z-10 flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-start sm:items-center gap-4 sm:gap-5 min-w-0">
               <div
-                className="
-                  relative
-                  flex
-                  flex-col
-                  gap-5
-                  sm:gap-6
-                  lg:flex-row
-                  lg:items-center
-                  lg:justify-between
-                  lg:gap-8
-                "
+                className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-white/15 bg-white/10 backdrop-blur shadow-inner text-blue-400"
+                style={{ fontWeight: 600 }}
               >
-                {/* LEFT */}
+                <CalendarDays size={26} />
+              </div>
 
-                <div className="flex min-w-0 items-start gap-3 sm:items-center sm:gap-5">
-                  <div
-                    className="
-                      flex
-                      h-12
-                      w-12
-                      shrink-0
-                      items-center
-                      justify-center
-                      rounded-xl
-                      border
-                      border-white/30
-                      bg-white/20
-                      shadow-lg
-                      backdrop-blur-lg
-                      sm:h-16
-                      sm:w-16
-                      sm:rounded-2xl
-                    "
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <span
+                    className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[11px] font-semibold text-blue-300 backdrop-blur"
+                    style={{ fontWeight: 600 }}
                   >
-                    <CalendarDays
-                      size={24}
-                      className="text-yellow-100 sm:h-8 sm:w-8"
-                    />
-                  </div>
-
-                  <div className="min-w-0">
-                    <h1 className="text-xl font-bold leading-tight sm:text-2xl lg:text-4xl">
-                      Pending Booking Requests
-                    </h1>
-
-                    <p className="mt-2 max-w-2xl text-xs leading-5 text-orange-100 sm:text-sm sm:leading-6 lg:text-base">
-                      Review, approve or reject new mentorship booking requests.
-                    </p>
-                  </div>
+                    <Sparkles size={13} className="text-blue-400" />
+                    Approval Suite
+                  </span>
                 </div>
 
-                {/* RIGHT - PENDING COUNT */}
-
-                <div className="w-full sm:w-auto">
-                  <div
-                    className="
-                      flex
-                      items-center
-                      justify-between
-                      gap-4
-                      rounded-2xl
-                      border
-                      border-white/20
-                      bg-white/15
-                      px-4
-                      py-3
-                      shadow-xl
-                      backdrop-blur-lg
-                      sm:min-w-[220px]
-                      sm:px-5
-                      sm:py-4
-                    "
-                  >
-                    <div>
-                      <p className="text-xs uppercase tracking-widest text-orange-100 sm:text-sm">
-                        Pending
-                      </p>
-
-                      <p className="mt-1 text-sm font-semibold sm:text-base">
-                        Requests
-                      </p>
-                    </div>
-
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white text-xl font-bold text-orange-600 shadow-md sm:h-14 sm:w-14 sm:text-2xl">
-                      {filteredBookings.length}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* ================================================= */}
-          {/* SEARCH */}
-          {/* ================================================= */}
-
-          <div className="mb-5 sm:mb-6 lg:mb-8">
-            <div className="mb-3">
-              <h3 className="text-sm font-semibold text-gray-700 sm:text-base">
-                Search Requests
-              </h3>
-
-              <p className="mt-1 text-xs leading-5 text-gray-500 sm:text-sm">
-                Search by student name, email or session type.
-              </p>
-            </div>
-
-            <div className="flex flex-col gap-3 lg:flex-row lg:gap-4">
-              {/* SEARCH INPUT */}
-
-              <div className="relative min-w-0 flex-1">
-                <Search
-                  size={19}
-                  className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
-                />
-
-                <input
-                  type="text"
-                  placeholder="Search by student name, email or session type..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="
-                    h-13
-                    w-full
-                    rounded-xl
-                    border
-                    border-gray-200
-                    bg-white
-                    py-3
-                    pl-11
-                    pr-4
-                    text-sm
-                    shadow-sm
-                    outline-none
-                    transition-all
-                    duration-300
-                    placeholder:text-gray-400
-                    focus:border-orange-500
-                    focus:ring-4
-                    focus:ring-orange-100
-                    sm:h-14
-                    sm:rounded-2xl
-                    sm:text-base
-                  "
-                />
-              </div>
-
-              {/* SEARCH RESULT */}
-
-              <div
-                className="
-                  flex
-                  min-h-[56px]
-                  items-center
-                  justify-between
-                  gap-4
-                  rounded-xl
-                  border
-                  border-orange-200
-                  bg-orange-50
-                  px-4
-                  shadow-sm
-                  sm:rounded-2xl
-                  sm:px-5
-                  lg:min-w-[240px]
-                "
-              >
-                <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-orange-600 sm:text-xs">
-                    Search Results
-                  </p>
-
-                  <p className="mt-0.5 text-xs text-gray-600 sm:text-sm">
-                    Matching Requests
-                  </p>
-                </div>
-
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-orange-600 text-sm font-bold text-white sm:h-10 sm:w-10">
-                  {filteredBookings.length}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* ================================================= */}
-          {/* CONTENT */}
-          {/* ================================================= */}
-
-          {filteredBookings.length === 0 ? (
-            /* ================================================= */
-            /* EMPTY STATE */
-            /* ================================================= */
-
-            <div
-              className="
-                rounded-2xl
-                border
-                border-gray-100
-                bg-white
-                px-5
-                py-12
-                text-center
-                shadow-sm
-                sm:rounded-3xl
-                sm:px-8
-                sm:py-16
-              "
-            >
-              <CalendarDays
-                size={56}
-                className="mx-auto mb-5 text-orange-300 sm:h-[70px] sm:w-[70px]"
-              />
-
-              <h2 className="text-xl font-bold text-gray-800 sm:text-2xl">
-                No Pending Booking Requests
-              </h2>
-
-              <p className="mx-auto mt-2 max-w-lg text-sm leading-6 text-gray-500">
-                You're all caught up. There are no booking requests waiting for
-                approval.
-              </p>
-            </div>
-          ) : (
-            /* ================================================= */
-            /* BOOKING LIST */
-            /* ================================================= */
-
-            <div className="space-y-4 sm:space-y-5 lg:space-y-6">
-              {filteredBookings.map((booking) => (
-                <div
-                  key={booking._id}
-                  className="
-                    min-w-0
-                    rounded-2xl
-                    border
-                    border-gray-100
-                    bg-white
-                    p-4
-                    shadow-md
-                    transition-all
-                    duration-300
-                    hover:shadow-xl
-                    sm:rounded-3xl
-                    sm:p-6
-                    lg:p-7
-                  "
+                <h1
+                  className="mt-2 text-2xl sm:text-3xl font-semibold tracking-tight text-white"
+                  style={{ fontWeight: 600 }}
                 >
-                  {/* ================================================= */}
+                  Pending Booking Requests
+                </h1>
+
+                <p
+                  className="mt-1 text-xs sm:text-sm text-slate-300 font-medium leading-relaxed"
+                  style={{ fontWeight: 600 }}
+                >
+                  Review, approve or reject new mentorship booking requests.
+                </p>
+              </div>
+            </div>
+
+            <div
+              className="flex items-center gap-4 rounded-2xl border border-white/15 bg-white/10 px-5 py-4 backdrop-blur shadow-inner shrink-0"
+              style={{ fontWeight: 600 }}
+            >
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white text-base font-semibold text-black shadow-xs">
+                {filteredBookings.length}
+              </div>
+              <div>
+                <p className="text-[10px] uppercase tracking-wider text-slate-400">
+                  Pending
+                </p>
+                <h3 className="text-sm font-semibold text-white">Requests</h3>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ================================================= */}
+        {/* SEARCH */}
+        {/* ================================================= */}
+
+        <section className="space-y-3">
+          <div className="flex flex-col lg:flex-row items-center gap-3 bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
+            <div className="relative min-w-0 flex-1 w-full">
+              <Search
+                size={17}
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+              />
+              <input
+                type="text"
+                placeholder="Search by student name, email or session type..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full h-11 pl-11 pr-4 rounded-xl border border-slate-200 bg-slate-50 text-xs font-semibold text-slate-800 outline-none transition-all placeholder:text-slate-400 focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                style={{ fontWeight: 600 }}
+              />
+            </div>
+
+            <div
+              className="flex h-11 w-full lg:w-64 items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-4 text-xs font-semibold text-slate-700 shrink-0"
+              style={{ fontWeight: 600 }}
+            >
+              <span className="text-slate-500 uppercase tracking-wide text-[10px]">
+                Matching Requests
+              </span>
+              <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-black text-white text-xs">
+                {filteredBookings.length}
+              </span>
+            </div>
+          </div>
+        </section>
+
+        {/* ================================================= */}
+        {/* CONTENT */}
+        {/* ================================================= */}
+
+        {filteredBookings.length === 0 ? (
+          <section className="flex min-h-[400px] w-full flex-col items-center justify-center rounded-3xl border border-slate-200 bg-white px-5 py-16 text-center shadow-xs">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 mb-4">
+              <CalendarDays size={26} />
+            </div>
+
+            <h2
+              className="text-base font-semibold text-slate-900 tracking-tight"
+              style={{ fontWeight: 600 }}
+            >
+              No Pending Booking Requests
+            </h2>
+
+            <p
+              className="mt-1 max-w-sm text-center text-xs text-slate-500 font-medium leading-relaxed"
+              style={{ fontWeight: 600 }}
+            >
+              You're all caught up. There are no booking requests waiting for
+              approval.
+            </p>
+          </section>
+        ) : (
+          <section className="w-full space-y-4">
+            {filteredBookings.map((booking) => (
+              <article
+                key={booking._id}
+                className="w-full overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xs transition duration-200 hover:border-blue-300 hover:shadow-md p-5 sm:p-6"
+              >
+                <div className="w-full space-y-5">
                   {/* TOP SECTION */}
-                  {/* ================================================= */}
-
-                  <div className="flex min-w-0 flex-col gap-5 xl:flex-row xl:items-start xl:justify-between xl:gap-8">
-                    {/* STUDENT INFO */}
-
-                    <div className="flex min-w-0 items-start gap-3 sm:gap-5">
-                      {/* PROFILE IMAGE */}
-
+                  <div className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between pb-4 border-b border-slate-100">
+                    <div className="flex min-w-0 items-start gap-3.5 sm:gap-4">
                       <img
                         src={getProfileImageUrl(
                           booking.student?.profileImage,
@@ -579,196 +418,133 @@ const PendingBookings = () => {
                         alt={`${booking.student?.firstName || ""} ${
                           booking.student?.lastName || ""
                         }`}
-                        className="
-                          h-14
-                          w-14
-                          shrink-0
-                          rounded-full
-                          border-4
-                          border-orange-100
-                          object-cover
-                          sm:h-20
-                          sm:w-20
-                        "
+                        className="h-12 w-12 shrink-0 rounded-2xl border border-slate-200 object-cover shadow-2xs"
                       />
 
-                      {/* STUDENT DETAILS */}
-
                       <div className="min-w-0 flex-1">
-                        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-                          <h2 className="break-words text-lg font-bold text-gray-800 sm:text-2xl">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <h2
+                            className="break-words text-xs sm:text-sm font-semibold text-slate-900 tracking-tight"
+                            style={{ fontWeight: 600 }}
+                          >
                             {booking.student?.firstName || "Student"}{" "}
                             {booking.student?.lastName || ""}
                           </h2>
 
-                          <span className="shrink-0 rounded-full bg-yellow-100 px-2.5 py-1 text-[10px] font-semibold text-yellow-700 sm:px-3 sm:text-xs">
+                          <span
+                            className="rounded-full px-3 py-1 text-[11px] font-semibold border border-amber-200 bg-amber-50 text-amber-700"
+                            style={{ fontWeight: 600 }}
+                          >
                             {booking.bookingStatus || "Pending"}
                           </span>
                         </div>
 
-                        {/* EMAIL */}
+                        <p
+                          className="mt-1 break-all text-[11px] text-slate-500 font-medium"
+                          style={{ fontWeight: 600 }}
+                        >
+                          {booking.student?.email || "-"}
+                        </p>
 
-                        <div className="mt-2 flex min-w-0 items-start gap-2 text-gray-500">
-                          <Mail
-                            size={15}
-                            className="mt-0.5 shrink-0 sm:h-4 sm:w-4"
-                          />
-
-                          <span className="min-w-0 break-all text-xs sm:text-sm">
-                            {booking.student?.email || "-"}
-                          </span>
-                        </div>
-
-                        {/* SESSION TYPE */}
-
-                        <div className="mt-3 flex min-w-0 items-center gap-2">
-                          <BookOpenCheck
-                            size={17}
-                            className="shrink-0 text-orange-600"
-                          />
-
-                          <span className="truncate text-sm font-medium text-gray-700 sm:text-base">
+                        <div
+                          className="mt-2 inline-flex max-w-full rounded-xl bg-slate-100 border border-slate-200 px-3 py-1 text-[11px] font-semibold text-slate-700"
+                          style={{ fontWeight: 600 }}
+                        >
+                          <span className="truncate">
                             {booking.sessionType || "-"}
                           </span>
                         </div>
                       </div>
                     </div>
 
-                    {/* ================================================= */}
                     {/* BOOKING DETAILS */}
-                    {/* ================================================= */}
-
-                    <div
-                      className="
-                        grid
-                        grid-cols-2
-                        gap-2
-                        sm:gap-3
-                        md:grid-cols-4
-                        xl:min-w-[600px]
-                        xl:max-w-[720px]
-                      "
-                    >
-                      {/* DATE */}
-
-                      <div className="min-w-0 rounded-xl bg-gray-50 p-3 text-center sm:rounded-2xl sm:p-4">
-                        <CalendarDays
-                          size={20}
-                          className="mx-auto mb-2 text-blue-600 sm:h-[22px] sm:w-[22px]"
-                        />
-
-                        <p className="text-[10px] text-gray-500 sm:text-xs">
-                          Session Date
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 text-xs font-semibold shrink-0">
+                      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3.5 text-center">
+                        <p
+                          className="text-[10px] uppercase tracking-wide text-slate-400"
+                          style={{ fontWeight: 600 }}
+                        >
+                          Date
                         </p>
-
-                        <h3 className="mt-1 truncate text-xs font-semibold text-gray-800 sm:text-sm">
+                        <h3
+                          className="mt-1 text-slate-900"
+                          style={{ fontWeight: 600 }}
+                        >
                           {formatDate(booking.sessionDate)}
                         </h3>
                       </div>
 
-                      {/* TIME */}
-
-                      <div className="min-w-0 rounded-xl bg-gray-50 p-3 text-center sm:rounded-2xl sm:p-4">
-                        <Clock3
-                          size={20}
-                          className="mx-auto mb-2 text-green-600 sm:h-[22px] sm:w-[22px]"
-                        />
-
-                        <p className="text-[10px] text-gray-500 sm:text-xs">
+                      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3.5 text-center">
+                        <p
+                          className="text-[10px] uppercase tracking-wide text-slate-400"
+                          style={{ fontWeight: 600 }}
+                        >
                           Time
                         </p>
-
-                        <h3 className="mt-1 truncate text-xs font-semibold text-gray-800 sm:text-sm">
+                        <h3
+                          className="mt-1 text-slate-900"
+                          style={{ fontWeight: 600 }}
+                        >
                           {booking.startTime || "-"}
                         </h3>
-
-                        <p className="truncate text-[10px] text-gray-400 sm:text-xs">
-                          {booking.endTime || "-"}
-                        </p>
                       </div>
 
-                      {/* PAYMENT */}
-
-                      <div className="min-w-0 rounded-xl bg-gray-50 p-3 text-center sm:rounded-2xl sm:p-4">
-                        <CreditCard
-                          size={20}
-                          className="mx-auto mb-2 text-purple-600 sm:h-[22px] sm:w-[22px]"
-                        />
-
-                        <p className="text-[10px] text-gray-500 sm:text-xs">
+                      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3.5 text-center">
+                        <p
+                          className="text-[10px] uppercase tracking-wide text-slate-400"
+                          style={{ fontWeight: 600 }}
+                        >
                           Payment
                         </p>
-
                         <h3
-                          className={`mt-1 truncate text-xs font-semibold sm:text-sm ${
+                          className={`mt-1 font-semibold ${
                             booking.paymentStatus === "Paid"
-                              ? "text-green-600"
-                              : booking.paymentStatus === "Pending"
-                              ? "text-yellow-600"
-                              : "text-red-600"
+                              ? "text-emerald-600"
+                              : "text-amber-600"
                           }`}
+                          style={{ fontWeight: 600 }}
                         >
                           {booking.paymentStatus || "-"}
                         </h3>
                       </div>
 
-                      {/* AMOUNT */}
-
-                      <div className="min-w-0 rounded-xl bg-gray-50 p-3 text-center sm:rounded-2xl sm:p-4">
-                        <IndianRupee
-                          size={20}
-                          className="mx-auto mb-2 text-orange-500 sm:h-[22px] sm:w-[22px]"
-                        />
-
-                        <p className="text-[10px] text-gray-500 sm:text-xs">
+                      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3.5 text-center">
+                        <p
+                          className="text-[10px] uppercase tracking-wide text-slate-400"
+                          style={{ fontWeight: 600 }}
+                        >
                           Amount
                         </p>
-
-                        <h3 className="mt-1 truncate text-xs font-semibold text-gray-800 sm:text-sm">
+                        <h3
+                          className="mt-1 text-emerald-600 font-bold"
+                          style={{ fontWeight: 600 }}
+                        >
                           ₹{booking.amount || 0}
                         </h3>
                       </div>
                     </div>
                   </div>
 
-                  {/* ================================================= */}
                   {/* STUDENT NOTES */}
-                  {/* ================================================= */}
-
                   {booking.notes && (
-                    <div className="mt-5 rounded-xl border border-orange-100 bg-orange-50 p-4 sm:mt-6 sm:rounded-2xl sm:p-5">
-                      <p className="text-xs font-semibold text-orange-700 sm:text-sm">
+                    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-xs font-semibold">
+                      <p
+                        className="text-[10px] uppercase tracking-wider text-slate-400 mb-1"
+                        style={{ fontWeight: 600 }}
+                      >
                         Student Notes
                       </p>
-
-                      <p className="mt-2 break-words text-sm leading-6 text-gray-700 sm:text-base sm:leading-7">
+                      <p
+                        className="break-words leading-relaxed text-slate-700 font-medium"
+                        style={{ fontWeight: 600 }}
+                      >
                         {booking.notes}
                       </p>
                     </div>
                   )}
 
-                  {/* ================================================= */}
                   {/* ACTION BUTTONS */}
-                  {/* ================================================= */}
-
-                  <div
-                    className="
-                      mt-5
-                      flex
-                      flex-col
-                      gap-3
-                      border-t
-                      border-gray-100
-                      pt-5
-                      sm:mt-6
-                      sm:flex-row
-                      sm:justify-end
-                      sm:gap-3
-                      sm:pt-5
-                    "
-                  >
-                    {/* REJECT */}
-
+                  <div className="pt-2 flex flex-col sm:flex-row items-center justify-end gap-2.5">
                     <button
                       onClick={() => {
                         setSelectedBookingId(booking._id);
@@ -776,82 +552,41 @@ const PendingBookings = () => {
                         setShowRejectModal(true);
                       }}
                       disabled={approvingId === booking._id || rejecting}
-                      className="
-                        flex
-                        w-full
-                        items-center
-                        justify-center
-                        gap-2
-                        rounded-xl
-                        border
-                        border-red-200
-                        bg-red-50
-                        px-5
-                        py-3
-                        text-sm
-                        font-semibold
-                        text-red-600
-                        transition-all
-                        duration-300
-                        hover:bg-red-600
-                        hover:text-white
-                        disabled:cursor-not-allowed
-                        disabled:opacity-50
-                        sm:w-auto
-                        sm:px-6
-                      "
+                      className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 bg-red-50 border border-red-200 hover:bg-red-100 text-red-600 rounded-xl text-xs font-semibold transition shadow-2xs disabled:opacity-50"
+                      style={{ fontWeight: 600 }}
                     >
-                      <XCircle size={18} />
+                      <XCircle size={15} />
                       Reject Booking
                     </button>
-
-                    {/* APPROVE */}
 
                     <button
                       onClick={() => approveBooking(booking._id)}
                       disabled={approvingId === booking._id || rejecting}
-                      className="
-                        flex
-                        w-full
-                        items-center
-                        justify-center
-                        gap-2
-                        rounded-xl
-                        bg-green-600
-                        px-5
-                        py-3
-                        text-sm
-                        font-semibold
-                        text-white
-                        shadow-md
-                        transition-all
-                        duration-300
-                        hover:bg-green-700
-                        disabled:cursor-not-allowed
-                        disabled:opacity-60
-                        sm:w-auto
-                        sm:px-6
-                      "
+                      className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2.5 bg-black hover:bg-slate-800 text-white rounded-xl text-xs font-semibold transition shadow-xs disabled:opacity-50"
+                      style={{ fontWeight: 600 }}
                     >
                       {approvingId === booking._id ? (
                         <>
-                          <Loader2 size={18} className="animate-spin" />
+                          <Loader2
+                            size={15}
+                            className="animate-spin text-blue-400"
+                          />
                           Confirming...
                         </>
                       ) : (
                         <>
-                          <CheckCircle2 size={18} />
+                          <CheckCircle2 size={15} className="text-blue-400" />
                           Confirm Booking
                         </>
                       )}
                     </button>
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
+              </article>
+            ))}
+          </section>
+        )}
+      </main>
 
       {/* ========================================================= */}
       {/* REJECT MODAL */}
@@ -859,18 +594,7 @@ const PendingBookings = () => {
 
       {showRejectModal && (
         <div
-          className="
-            fixed
-            inset-0
-            z-[100]
-            flex
-            items-center
-            justify-center
-            bg-black/50
-            p-3
-            backdrop-blur-sm
-            sm:p-5
-          "
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm"
           onClick={() => {
             if (!rejecting) {
               setShowRejectModal(false);
@@ -878,66 +602,42 @@ const PendingBookings = () => {
           }}
         >
           <div
-            className="
-              w-full
-              max-w-md
-              rounded-2xl
-              bg-white
-              p-5
-              shadow-2xl
-              sm:rounded-3xl
-              sm:p-6
-            "
+            className="w-full max-w-md rounded-3xl bg-white p-6 shadow-xl border border-slate-200"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* MODAL HEADER */}
-
-            <div className="flex items-start gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-100 text-red-600">
-                <XCircle size={21} />
-              </div>
-
-              <div className="min-w-0">
-                <h2 className="text-xl font-bold text-gray-800 sm:text-2xl">
+            <div className="flex items-start justify-between gap-4 border-b border-slate-100 pb-4">
+              <div>
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-50 text-red-600 border border-red-200">
+                  <XCircle size={20} />
+                </div>
+                <h2
+                  className="mt-3 text-base font-semibold text-slate-900 tracking-tight"
+                  style={{ fontWeight: 600 }}
+                >
                   Reject Booking
                 </h2>
-
-                <p className="mt-1 text-xs leading-5 text-gray-500 sm:text-sm">
+                <p
+                  className="mt-1 text-xs text-slate-500 font-medium"
+                  style={{ fontWeight: 600 }}
+                >
                   Please enter the reason for rejecting this booking request.
                 </p>
               </div>
             </div>
 
-            {/* TEXTAREA */}
+            <div className="mt-4">
+              <textarea
+                rows={4}
+                value={rejectReason}
+                onChange={(e) => setRejectReason(e.target.value)}
+                disabled={rejecting}
+                placeholder="Enter rejection reason..."
+                className="w-full resize-none rounded-2xl border border-slate-200 bg-slate-50 p-3.5 text-xs font-semibold text-slate-800 outline-none transition focus:border-blue-600 focus:bg-white focus:ring-2 focus:ring-blue-100 disabled:bg-slate-100"
+                style={{ fontWeight: 600 }}
+              />
+            </div>
 
-            <textarea
-              rows={5}
-              value={rejectReason}
-              onChange={(e) => setRejectReason(e.target.value)}
-              disabled={rejecting}
-              placeholder="Enter rejection reason..."
-              className="
-                mt-5
-                w-full
-                resize-none
-                rounded-xl
-                border
-                border-gray-200
-                p-4
-                text-sm
-                outline-none
-                transition
-                placeholder:text-gray-400
-                focus:border-red-500
-                focus:ring-4
-                focus:ring-red-100
-                disabled:bg-gray-50
-              "
-            />
-
-            {/* ACTIONS */}
-
-            <div className="mt-5 flex flex-col-reverse gap-2 sm:mt-6 sm:flex-row sm:justify-end sm:gap-3">
+            <div className="mt-5 flex flex-col-reverse gap-2.5 sm:flex-row sm:justify-end pt-3 border-t border-slate-100">
               <button
                 onClick={() => {
                   setShowRejectModal(false);
@@ -945,22 +645,8 @@ const PendingBookings = () => {
                   setSelectedBookingId(null);
                 }}
                 disabled={rejecting}
-                className="
-                  w-full
-                  rounded-xl
-                  border
-                  border-gray-300
-                  px-5
-                  py-3
-                  text-sm
-                  font-medium
-                  text-gray-700
-                  transition
-                  hover:bg-gray-100
-                  disabled:cursor-not-allowed
-                  disabled:opacity-50
-                  sm:w-auto
-                "
+                className="w-full sm:w-auto rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
+                style={{ fontWeight: 600 }}
               >
                 Cancel
               </button>
@@ -968,34 +654,17 @@ const PendingBookings = () => {
               <button
                 onClick={rejectBooking}
                 disabled={!rejectReason.trim() || rejecting}
-                className="
-                  flex
-                  w-full
-                  items-center
-                  justify-center
-                  gap-2
-                  rounded-xl
-                  bg-red-600
-                  px-6
-                  py-3
-                  text-sm
-                  font-semibold
-                  text-white
-                  transition
-                  hover:bg-red-700
-                  disabled:cursor-not-allowed
-                  disabled:opacity-50
-                  sm:w-auto
-                "
+                className="w-full sm:w-auto flex items-center justify-center gap-2 rounded-xl bg-red-600 px-5 py-2.5 text-xs font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50 shadow-xs"
+                style={{ fontWeight: 600 }}
               >
                 {rejecting ? (
                   <>
-                    <Loader2 size={17} className="animate-spin" />
+                    <Loader2 size={15} className="animate-spin" />
                     Rejecting...
                   </>
                 ) : (
                   <>
-                    <XCircle size={17} />
+                    <XCircle size={15} />
                     Reject Booking
                   </>
                 )}
@@ -1004,7 +673,7 @@ const PendingBookings = () => {
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 };
 

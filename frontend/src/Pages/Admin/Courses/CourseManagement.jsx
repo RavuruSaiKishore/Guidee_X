@@ -13,7 +13,8 @@ import {
   SlidersHorizontal,
   ArrowUpDown,
   Tag,
-  Eye,
+  DollarSign,
+  TrendingUp,
 } from "lucide-react";
 import { toast } from "react-toastify";
 
@@ -61,7 +62,7 @@ const ManageCoursesPage = () => {
   }, [API_BASE_URL]);
 
   const handleDelete = async (courseId, e) => {
-    e.stopPropagation(); // Prevent card navigation when clicking delete
+    e.stopPropagation();
     if (
       !window.confirm(
         "Are you sure you want to delete this course? All student progress data will be removed."
@@ -93,6 +94,17 @@ const ManageCoursesPage = () => {
       toast.error("Something went wrong while deleting.");
     }
   };
+
+  const totalCourses = courses.length;
+  const publishedCourses = courses.filter((c) => c.isPublished).length;
+  const totalStudentsEnrolled = courses.reduce(
+    (acc, c) => acc + (c.studentCount || 0),
+    0
+  );
+  const totalRevenue = courses.reduce(
+    (acc, c) => acc + (c.price || 0) * (c.studentCount || 0),
+    0
+  );
 
   const categories = [
     "All",
@@ -130,7 +142,7 @@ const ManageCoursesPage = () => {
     );
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <div className="max-w-[110rem] mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full">
       {/* Hero Header */}
       <div className="bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 rounded-3xl p-8 mb-8 text-white shadow-xl relative overflow-hidden flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div className="absolute -right-10 -bottom-10 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
@@ -156,6 +168,81 @@ const ManageCoursesPage = () => {
           >
             <Plus size={18} /> Create New Course
           </Link>
+        </div>
+      </div>
+
+      {/* ========================================== */}
+      {/* 📊 PLATFORM STATISTICS & METRICS CARDS */}
+      {/* ========================================== */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+        <div className="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm flex items-center gap-4">
+          <div className="w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold">
+            <BookOpen size={24} />
+          </div>
+          <div>
+            <span className="text-xs font-bold text-gray-400 uppercase tracking-wider block">
+              Total Courses
+            </span>
+            <span className="text-2xl font-black text-gray-900 mt-0.5 block">
+              {totalCourses}
+            </span>
+            <span className="text-[11px] font-semibold text-emerald-600">
+              {publishedCourses} Published
+            </span>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm flex items-center gap-4">
+          <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
+            <Users size={24} />
+          </div>
+          <div>
+            <span className="text-xs font-bold text-gray-400 uppercase tracking-wider block">
+              Total Students
+            </span>
+            <span className="text-2xl font-black text-gray-900 mt-0.5 block">
+              {totalStudentsEnrolled}
+            </span>
+            <span className="text-[11px] font-semibold text-blue-600">
+              Active Enrollments
+            </span>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm flex items-center gap-4">
+          <div className="w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold">
+            <DollarSign size={24} />
+          </div>
+          <div>
+            <span className="text-xs font-bold text-gray-400 uppercase tracking-wider block">
+              Estimated Revenue
+            </span>
+            <span className="text-2xl font-black text-gray-900 mt-0.5 block">
+              ${totalRevenue.toLocaleString()}
+            </span>
+            <span className="text-[11px] font-semibold text-indigo-600">
+              Lifetime Earnings
+            </span>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm flex items-center gap-4">
+          <div className="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold">
+            <TrendingUp size={24} />
+          </div>
+          <div>
+            <span className="text-xs font-bold text-gray-400 uppercase tracking-wider block">
+              Avg. Per Course
+            </span>
+            <span className="text-2xl font-black text-gray-900 mt-0.5 block">
+              {totalCourses > 0
+                ? Math.round(totalStudentsEnrolled / totalCourses)
+                : 0}
+            </span>
+            <span className="text-[11px] font-semibold text-amber-600">
+              Students / Course
+            </span>
+          </div>
         </div>
       </div>
 

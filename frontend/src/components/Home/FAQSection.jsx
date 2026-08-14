@@ -87,30 +87,30 @@ const FAQSection = () => {
   };
 
   // ==========================================
-  // CATEGORY STYLE
+  // CATEGORY STYLE (Matches Mentor Page UI Palette: slate/blue theme)
   // ==========================================
   const getCategoryStyle = (category) => {
     switch (category) {
       case "Booking":
-        return "bg-blue-50 text-blue-600 border-blue-100";
+        return "bg-blue-50 text-blue-700 border-blue-100";
 
       case "Cancellation":
-        return "bg-red-50 text-red-600 border-red-100";
+        return "bg-rose-50 text-rose-700 border-rose-100";
 
       case "Payment":
-        return "bg-emerald-50 text-emerald-600 border-emerald-100";
+        return "bg-emerald-50 text-emerald-700 border-emerald-100";
 
       case "Meeting":
-        return "bg-purple-50 text-purple-600 border-purple-100";
+        return "bg-purple-50 text-purple-700 border-purple-100";
 
       case "Mentor":
-        return "bg-orange-50 text-orange-600 border-orange-100";
+        return "bg-amber-50 text-amber-700 border-amber-100";
 
       case "Account":
-        return "bg-cyan-50 text-cyan-600 border-cyan-100";
+        return "bg-indigo-50 text-indigo-700 border-indigo-100";
 
       default:
-        return "bg-gray-50 text-gray-600 border-gray-200";
+        return "bg-slate-100 text-slate-700 border-slate-200";
     }
   };
 
@@ -122,11 +122,11 @@ const FAQSection = () => {
   };
 
   return (
-    <section className="relative overflow-hidden bg-white py-16 sm:py-20 lg:py-24">
+    <section className="relative overflow-hidden bg-white py-16 sm:py-20 lg:py-24 font-sans">
       {/* Decorative Background */}
-      <div className="pointer-events-none absolute left-0 top-20 h-64 w-64 rounded-full bg-indigo-100/40 blur-3xl" />
+      <div className="pointer-events-none absolute left-0 top-20 h-64 w-64 rounded-full bg-blue-100/30 blur-3xl" />
 
-      <div className="pointer-events-none absolute bottom-10 right-0 h-72 w-72 rounded-full bg-blue-100/40 blur-3xl" />
+      <div className="pointer-events-none absolute bottom-10 right-0 h-72 w-72 rounded-full bg-slate-100/60 blur-3xl" />
 
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* ==========================================
@@ -134,22 +134,22 @@ const FAQSection = () => {
         ========================================== */}
         <div className="mx-auto mb-12 max-w-3xl text-center">
           {/* ICON */}
-          <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600 shadow-sm">
-            <MessageCircleQuestion size={28} />
+          <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 shadow-sm border border-blue-100/60">
+            <MessageCircleQuestion size={26} />
           </div>
 
           {/* SMALL TITLE */}
-          <p className="mb-3 text-sm font-bold uppercase tracking-wider text-indigo-600">
+          <p className="mb-3 text-xs font-bold uppercase tracking-widest text-blue-600">
             Help Center
           </p>
 
           {/* MAIN TITLE */}
-          <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl lg:text-5xl">
+          <h2 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl md:text-4xl">
             Frequently Asked Questions
           </h2>
 
           {/* DESCRIPTION */}
-          <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-gray-500 sm:text-base">
+          <p className="mx-auto mt-3 max-w-2xl text-xs sm:text-sm leading-relaxed text-slate-500">
             Find quick answers to common questions about mentors, bookings,
             payments, meetings, and your GuideX learning experience.
           </p>
@@ -163,7 +163,7 @@ const FAQSection = () => {
             {[1, 2, 3, 4, 5, 6].map((item) => (
               <div
                 key={item}
-                className="h-24 animate-pulse rounded-2xl border border-gray-100 bg-gray-50"
+                className="h-24 animate-pulse rounded-2xl border border-slate-100 bg-slate-50"
               />
             ))}
           </div>
@@ -171,14 +171,14 @@ const FAQSection = () => {
           /* ==========================================
               EMPTY STATE
           ========================================== */
-          <div className="mx-auto max-w-2xl rounded-2xl border border-dashed border-gray-200 bg-gray-50 px-6 py-12 text-center">
-            <HelpCircle size={40} className="mx-auto mb-4 text-gray-300" />
+          <div className="mx-auto max-w-2xl rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-6 py-12 text-center">
+            <HelpCircle size={40} className="mx-auto mb-4 text-slate-300" />
 
-            <h3 className="text-lg font-semibold text-gray-700">
+            <h3 className="text-base font-bold text-slate-700">
               No FAQs available
             </h3>
 
-            <p className="mt-2 text-sm text-gray-500">
+            <p className="mt-1 text-xs text-slate-500">
               Frequently asked questions will appear here soon.
             </p>
           </div>
@@ -196,8 +196,8 @@ const FAQSection = () => {
                   key={faq._id}
                   className={`overflow-hidden rounded-2xl border bg-white transition-all duration-300 ${
                     isOpen
-                      ? "border-indigo-200 shadow-lg shadow-indigo-100/50"
-                      : "border-gray-200 shadow-sm hover:border-indigo-100 hover:shadow-md"
+                      ? "border-blue-300 shadow-md shadow-blue-100/50"
+                      : "border-slate-200/80 shadow-sm hover:border-blue-200 hover:shadow-md"
                   }`}
                 >
                   {/* ==================================
@@ -212,14 +212,14 @@ const FAQSection = () => {
                     <div
                       className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition ${
                         isOpen
-                          ? "bg-indigo-600 text-white"
-                          : "bg-indigo-50 text-indigo-600"
+                          ? "bg-blue-600 text-white shadow-sm shadow-blue-200"
+                          : "bg-slate-100 text-slate-700 border border-slate-200/60"
                       }`}
                     >
                       {isOpen ? (
-                        <HelpCircle size={20} />
+                        <HelpCircle size={18} />
                       ) : (
-                        <span className="text-sm font-bold">
+                        <span className="text-xs font-bold">
                           {String(index + 1).padStart(2, "0")}
                         </span>
                       )}
@@ -229,7 +229,7 @@ const FAQSection = () => {
                     <div className="min-w-0 flex-1">
                       <div className="mb-2 flex flex-wrap items-center gap-2">
                         <span
-                          className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-semibold ${getCategoryStyle(
+                          className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-semibold tracking-wide ${getCategoryStyle(
                             faq.category
                           )}`}
                         >
@@ -240,8 +240,8 @@ const FAQSection = () => {
                       </div>
 
                       <h3
-                        className={`pr-2 text-sm font-bold leading-6 transition sm:text-base ${
-                          isOpen ? "text-indigo-600" : "text-gray-800"
+                        className={`pr-2 text-xs sm:text-sm font-bold leading-relaxed transition ${
+                          isOpen ? "text-blue-600" : "text-slate-900"
                         }`}
                       >
                         {faq.question}
@@ -252,11 +252,11 @@ const FAQSection = () => {
                     <div
                       className={`mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-all ${
                         isOpen
-                          ? "rotate-180 bg-indigo-50 text-indigo-600"
-                          : "bg-gray-50 text-gray-500"
+                          ? "rotate-180 bg-blue-50 text-blue-600 border border-blue-100"
+                          : "bg-slate-50 text-slate-500 border border-slate-200/60"
                       }`}
                     >
-                      <ChevronDown size={18} />
+                      <ChevronDown size={16} />
                     </div>
                   </button>
 
@@ -271,17 +271,14 @@ const FAQSection = () => {
                     }`}
                   >
                     <div className="overflow-hidden">
-                      <div className="border-t border-gray-100 px-5 pb-5 pt-4 sm:px-6 sm:pb-6">
-                        <div className="rounded-xl bg-gray-50 p-4">
+                      <div className="border-t border-slate-100 px-5 pb-5 pt-4 sm:px-6 sm:pb-6">
+                        <div className="rounded-xl bg-slate-50 border border-slate-100 p-4">
                           <div className="flex gap-3">
                             <div className="mt-0.5 shrink-0">
-                              <HelpCircle
-                                size={18}
-                                className="text-indigo-500"
-                              />
+                              <HelpCircle size={16} className="text-blue-600" />
                             </div>
 
-                            <p className="text-sm leading-7 text-gray-600">
+                            <p className="text-xs sm:text-sm leading-relaxed text-slate-600">
                               {faq.answer}
                             </p>
                           </div>
@@ -308,11 +305,11 @@ const FAQSection = () => {
                   },
                 })
               }
-              className="inline-flex items-center gap-2 rounded-xl border border-indigo-200 bg-white px-6 py-3 text-sm font-semibold text-indigo-600 shadow-sm transition hover:border-indigo-600 hover:bg-indigo-600 hover:text-white"
+              className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-6 py-3 text-xs font-bold text-slate-700 shadow-sm transition hover:border-blue-600 hover:bg-blue-600 hover:text-white"
             >
-              <HelpCircle size={18} />
+              <HelpCircle size={15} />
               View All FAQs
-              <ChevronDown size={17} className="-rotate-90" />
+              <ChevronDown size={15} className="-rotate-90" />
             </button>
           </div>
         )}

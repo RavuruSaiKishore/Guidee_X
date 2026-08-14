@@ -1,106 +1,47 @@
-import { ArrowRight, Rocket, Users, GraduationCap, Star } from "lucide-react";
+import { ArrowRight, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const FinalCTA = () => {
   const navigate = useNavigate();
 
   return (
-    <section className="relative overflow-hidden py-24 bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-700">
-      {/* Background Blur */}
-      <div className="absolute -top-20 -left-20 w-72 h-72 bg-blue-400 opacity-20 rounded-full blur-3xl"></div>
+    <section className="bg-white py-12 sm:py-16 font-sans">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 p-8 sm:p-12 lg:p-16 text-white shadow-2xl">
+          {/* Background Ambient Glows */}
+          <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-white/10 blur-3xl pointer-events-none" />
+          <div className="absolute -left-20 -bottom-20 h-64 w-64 rounded-full bg-black/10 blur-3xl pointer-events-none" />
 
-      <div className="absolute bottom-0 right-0 w-96 h-96 bg-indigo-400 opacity-20 rounded-full blur-3xl"></div>
+          <div className="relative z-10 max-w-2xl mx-auto text-center">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/20 px-4 py-1.5 text-xs font-semibold backdrop-blur-md mb-6">
+              <Sparkles size={14} /> Start Your Journey Today
+            </span>
 
-      <div className="relative max-w-7xl mx-auto px-6">
-        {/* Main Card */}
+            <h2 className="text-2xl font-extrabold tracking-tight sm:text-4xl lg:text-5xl leading-tight">
+              Ready to Accelerate Your Career?
+            </h2>
 
-        <div className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-3xl p-10 md:p-16 shadow-2xl">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            {/* Left */}
+            <p className="mt-4 text-xs sm:text-sm text-blue-100 leading-relaxed">
+              Connect with top industry veterans, schedule mock interviews, and
+              get the personalized roadmap you need to succeed.
+            </p>
 
-            <div>
-              <span className="inline-flex items-center gap-2 bg-white/20 px-4 py-2 rounded-full text-sm font-semibold">
-                <Rocket size={16} />
-                Your Future Starts Here
-              </span>
-
-              <h2 className="mt-6 text-5xl font-bold leading-tight text-white">
-                Ready to Build Your
-                <span className="text-yellow-300"> Dream Career?</span>
-              </h2>
-
-              <p className="mt-6 text-blue-100 text-lg leading-relaxed">
-                Learn from top mentors working at Google, Microsoft, Amazon,
-                Meta and leading startups.
-                <br />
-                Gain practical skills, build projects, prepare for interviews
-                and land your dream job.
-              </p>
+            <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
+              <button
+                onClick={() => navigate("/mentors")}
+                className="w-full sm:w-auto rounded-xl bg-white px-7 py-3.5 text-xs font-bold text-blue-600 shadow-lg transition-all hover:bg-slate-100 flex items-center justify-center gap-2"
+              >
+                Find a Mentor
+                <ArrowRight size={15} />
+              </button>
 
               <button
-                onClick={() => navigate("/login")}
-                className="mt-10 inline-flex items-center gap-3 bg-white text-blue-700 px-8 py-4 rounded-xl font-bold text-lg hover:scale-105 transition"
+                onClick={() => navigate("/landingPage")}
+                className="w-full sm:w-auto rounded-xl border border-white/30 bg-white/10 px-7 py-3.5 text-xs font-bold text-white backdrop-blur-md transition-all hover:bg-white/20"
               >
-                Start Learning Today
-                <ArrowRight size={20} />
+                Become a Mentor
               </button>
             </div>
-
-            {/* Right */}
-
-            <div className="grid grid-cols-2 gap-6">
-              <div className="bg-white/15 rounded-2xl p-6 text-center">
-                <Users className="mx-auto mb-3 text-yellow-300" size={40} />
-
-                <h3 className="text-3xl font-bold text-white">10K+</h3>
-
-                <p className="text-blue-100 mt-2">Active Students</p>
-              </div>
-
-              <div className="bg-white/15 rounded-2xl p-6 text-center">
-                <GraduationCap
-                  className="mx-auto mb-3 text-yellow-300"
-                  size={40}
-                />
-
-                <h3 className="text-3xl font-bold text-white">500+</h3>
-
-                <p className="text-blue-100 mt-2">Expert Mentors</p>
-              </div>
-
-              <div className="bg-white/15 rounded-2xl p-6 text-center">
-                <Rocket className="mx-auto mb-3 text-yellow-300" size={40} />
-
-                <h3 className="text-3xl font-bold text-white">150+</h3>
-
-                <p className="text-blue-100 mt-2">Career Courses</p>
-              </div>
-
-              <div className="bg-white/15 rounded-2xl p-6 text-center">
-                <Star className="mx-auto mb-3 text-yellow-300" size={40} />
-
-                <h3 className="text-3xl font-bold text-white">4.9★</h3>
-
-                <p className="text-blue-100 mt-2">Student Rating</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Bottom */}
-
-          <div className="mt-14 border-t border-white/20 pt-8 flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="text-blue-100 text-lg">
-              ✔ Lifetime Learning Access
-              <span className="mx-4">•</span>✔ Live Mentorship
-              <span className="mx-4">•</span>✔ Placement Support
-            </div>
-
-            <button
-              onClick={() => navigate("/pricing")}
-              className="border border-white px-8 py-3 rounded-xl text-white font-semibold hover:bg-white hover:text-blue-700 transition"
-            >
-              View Pricing
-            </button>
           </div>
         </div>
       </div>

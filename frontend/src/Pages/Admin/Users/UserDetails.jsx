@@ -35,6 +35,9 @@ import {
   X,
   XCircle,
   Zap,
+  BookOpen,
+  DollarSign,
+  Layers,
 } from "lucide-react";
 
 const StudentDetails = () => {
@@ -133,6 +136,8 @@ const StudentDetails = () => {
 
   const eventRegistrations = data?.eventRegistrations || [];
 
+  const courseEnrollments = data?.courseEnrollments || [];
+
   const formatDate = (date) => {
     if (!date) return "Not available";
 
@@ -188,6 +193,7 @@ const StudentDetails = () => {
       case "Paid":
       case "Accepted":
       case "Registered":
+      case "paid":
         return "bg-emerald-50 text-emerald-700 border-emerald-200";
 
       case "Confirmed":
@@ -471,10 +477,15 @@ const StudentDetails = () => {
 
             {/* HEADER STATS */}
 
-            <div className="grid grid-cols-3 gap-2 sm:gap-3">
+            <div className="grid grid-cols-4 gap-2 sm:gap-3">
               <HeaderStat
                 value={statistics.bookings?.completed || 0}
-                label="Completed"
+                label="Sessions"
+              />
+
+              <HeaderStat
+                value={statistics.courses?.totalEnrolled || 0}
+                label="Courses"
               />
 
               <HeaderStat value={gamification.xp || 0} label="XP" />
@@ -502,6 +513,14 @@ const StudentDetails = () => {
               onClick={() => setActiveTab("overview")}
               icon={<UserRound size={16} />}
               label="Overview"
+            />
+
+            <TabButton
+              active={activeTab === "courses"}
+              onClick={() => setActiveTab("courses")}
+              icon={<BookOpen size={16} />}
+              label="Courses"
+              count={courseEnrollments.length}
             />
 
             <TabButton
@@ -554,7 +573,7 @@ const StudentDetails = () => {
           <div className="space-y-6">
             {/* STAT CARDS */}
 
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
               <StatCard
                 icon={<CalendarDays />}
                 label="Bookings"
@@ -563,17 +582,31 @@ const StudentDetails = () => {
               />
 
               <StatCard
-                icon={<CheckCircle2 />}
-                label="Completed"
-                value={statistics.bookings?.completed || 0}
+                icon={<BookOpen />}
+                label="Courses"
+                value={statistics.courses?.totalEnrolled || 0}
+                iconClass="bg-blue-50 text-blue-600"
+              />
+
+              <StatCard
+                icon={<DollarSign />}
+                label="Mentorship Spend"
+                value={formatCurrency(statistics.payments?.bookingAmountPaid)}
                 iconClass="bg-emerald-50 text-emerald-600"
               />
 
               <StatCard
                 icon={<CreditCard />}
-                label="Paid"
-                value={formatCurrency(statistics.payments?.totalAmountPaid)}
+                label="Course Spend"
+                value={formatCurrency(statistics.payments?.courseAmountPaid)}
                 iconClass="bg-amber-50 text-amber-600"
+              />
+
+              <StatCard
+                icon={<TicketCheck />}
+                label="Events Spend"
+                value={formatCurrency(statistics.payments?.eventAmountPaid)}
+                iconClass="bg-purple-50 text-purple-600"
               />
 
               <StatCard
@@ -581,13 +614,6 @@ const StudentDetails = () => {
                 label="Meetings"
                 value={statistics.meetings?.completed || 0}
                 iconClass="bg-sky-50 text-sky-600"
-              />
-
-              <StatCard
-                icon={<TicketCheck />}
-                label="Events"
-                value={statistics.events?.attended || 0}
-                iconClass="bg-fuchsia-50 text-fuchsia-600"
               />
 
               <StatCard
@@ -911,6 +937,70 @@ const StudentDetails = () => {
         )}
 
         {/* =================================================
+            COURSES
+        ================================================= */}
+
+        {activeTab === "courses" && (
+          <SectionCard
+            title="Enrolled Courses"
+            subtitle={`${courseEnrollments.length} total course enrollments`}
+            icon={<BookOpen size={19} />}
+            iconClass="bg-blue-50 text-blue-600"
+          >
+            {courseEnrollments.length > 0 ? (
+              <div className="space-y-3">
+                {courseEnrollments.map((enrolled) => (
+                  <div
+                    key={enrolled._id}
+                    className="rounded-2xl border border-gray-100 bg-gray-50 p-4 transition hover:border-blue-100 hover:bg-white hover:shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4"
+                  >
+                    <div className="flex items-center gap-4">
+                      {enrolled.course?.thumbnail && (
+                        <img
+                          src={getProfileImage(enrolled.course.thumbnail)}
+                          alt=""
+                          className="w-14 h-14 rounded-xl object-cover shrink-0"
+                        />
+                      )}
+                      <div>
+                        <p className="text-sm font-bold text-gray-900">
+                          {enrolled.course?.title || "Course Title Unavailable"}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-0.5">
+                          {enrolled.course?.category} • Level:{" "}
+                          {enrolled.course?.level || "Beginner"}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-3">
+                      <div className="text-xs text-gray-500">
+                        Progress:{" "}
+                        <span className="font-bold text-indigo-600">
+                          {enrolled.progressPercentage || 0}%
+                        </span>
+                      </div>
+                      <span
+                        className={`rounded-full border px-3 py-1 text-[11px] font-bold ${getStatusStyle(
+                          enrolled.paymentStatus || "Paid"
+                        )}`}
+                      >
+                        {enrolled.paymentStatus || "Enrolled"}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <EmptyState
+                icon={<BookOpen size={24} />}
+                text="No course enrollments found for this student."
+              />
+            )}
+          </SectionCard>
+        )}
+
+        {/* =================================================
             BOOKINGS
         ================================================= */}
 
@@ -1100,8 +1190,10 @@ const StudentDetails = () => {
                         </p>
 
                         <p className="mt-1 text-xs text-gray-500">
-                          Speaker:{" "}
-                          {registration.event?.speaker || "Not specified"}
+                          Price:{" "}
+                          {registration.event?.isPaid
+                            ? formatCurrency(registration.event?.ticketPrice)
+                            : "Free"}
                         </p>
                       </div>
 

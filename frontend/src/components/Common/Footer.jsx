@@ -2,35 +2,37 @@ import { GraduationCap, Mail } from "lucide-react";
 
 const Footer = () => {
   return (
-    <footer className="bg-slate-950 text-slate-300">
-      <div className="mx-auto max-w-7xl px-6 py-20">
-        <div className="grid gap-14 lg:grid-cols-4">
+    <footer className="bg-slate-950 text-slate-300 font-sans border-t border-slate-900">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-14 sm:py-16">
+        {/* Main Footer Grid */}
+        <div className="grid gap-10 lg:grid-cols-4 lg:gap-8">
           {/* Brand */}
-
-          <div>
+          <div className="space-y-4">
             <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 text-xl font-bold text-white">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-base font-black text-white shadow-sm">
                 G
               </div>
-
               <div>
-                <h2 className="text-2xl font-bold text-white">GuideX</h2>
-
-                <p className="text-sm text-slate-400">Learn • Mentor • Grow</p>
+                <h2 className="text-lg font-bold text-white tracking-tight">
+                  GuideX
+                </h2>
+                <p className="text-[11px] text-slate-400 font-medium">
+                  Learn • Mentor • Grow
+                </p>
               </div>
             </div>
 
-            <p className="mt-6 leading-8 text-slate-400">
+            <p className="text-xs leading-relaxed text-slate-400 max-w-sm">
               GuideX connects ambitious students with experienced industry
-              professionals through personalized mentorship, career guidance,
-              interview preparation and skill development.
+              professionals through personalized mentorship and skill
+              development.
             </p>
 
-            <div className="mt-8 flex gap-4">
+            <div className="flex gap-2.5 pt-1">
               {["F", "X", "L", "I"].map((item) => (
                 <div
                   key={item}
-                  className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-xl bg-slate-900 transition hover:bg-blue-600 hover:text-white"
+                  className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg bg-slate-900 border border-slate-800 text-xs font-bold text-slate-300 transition hover:bg-blue-600 hover:border-blue-600 hover:text-white"
                 >
                   {item}
                 </div>
@@ -39,11 +41,11 @@ const Footer = () => {
           </div>
 
           {/* Quick Links */}
-
           <div>
-            <h3 className="mb-6 text-xl font-bold text-white">Quick Links</h3>
-
-            <div className="space-y-4">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-white mb-4">
+              Quick Links
+            </h3>
+            <div className="space-y-2.5 text-xs">
               {[
                 "Home",
                 "Find Mentors",
@@ -55,7 +57,7 @@ const Footer = () => {
                 <a
                   href="#"
                   key={item}
-                  className="block transition hover:translate-x-1 hover:text-blue-400"
+                  className="block text-slate-400 transition hover:translate-x-1 hover:text-white"
                 >
                   {item}
                 </a>
@@ -63,12 +65,12 @@ const Footer = () => {
             </div>
           </div>
 
-          {/* Mentor */}
-
+          {/* Mentor Links */}
           <div>
-            <h3 className="mb-6 text-xl font-bold text-white">Mentors</h3>
-
-            <div className="space-y-4">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-white mb-4">
+              Mentors
+            </h3>
+            <div className="space-y-2.5 text-xs">
               {[
                 "Become a Mentor",
                 "Mentor Guidelines",
@@ -80,7 +82,7 @@ const Footer = () => {
                 <a
                   href="#"
                   key={item}
-                  className="block transition hover:translate-x-1 hover:text-blue-400"
+                  className="block text-slate-400 transition hover:translate-x-1 hover:text-white"
                 >
                   {item}
                 </a>
@@ -89,74 +91,74 @@ const Footer = () => {
           </div>
 
           {/* Newsletter */}
-
           <div>
-            <h3 className="mb-6 text-xl font-bold text-white">Stay Updated</h3>
-
-            <p className="leading-7 text-slate-400">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-white mb-4">
+              Stay Updated
+            </h3>
+            <p className="text-xs leading-relaxed text-slate-400">
               Subscribe to receive updates about GuideX, mentorship
               opportunities and platform news.
             </p>
 
-            <div className="mt-6">
+            <div className="mt-4 space-y-2.5">
               <input
                 type="email"
                 placeholder="Enter your email"
-                className="w-full rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 outline-none transition focus:border-blue-500"
+                className="w-full rounded-xl border border-slate-800 bg-slate-900 px-3.5 py-2.5 text-xs text-white outline-none transition focus:border-blue-500 placeholder:text-slate-500"
               />
 
-              <button className="mt-4 w-full rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 py-3 font-semibold text-white transition hover:shadow-xl">
+              <button className="w-full rounded-xl bg-blue-600 py-2.5 text-xs font-bold text-white transition hover:bg-blue-500 shadow-sm">
                 Subscribe
               </button>
             </div>
           </div>
         </div>
 
-        {/* Stats */}
-
-        <div className="mt-20 grid gap-6 rounded-[32px] border border-slate-800 bg-slate-900 p-10 md:grid-cols-4">
-          <div className="text-center">
-            <h2 className="text-4xl font-black text-blue-400">5000+</h2>
-
-            <p className="mt-2 text-slate-400">Students</p>
+        {/* Stats Strip */}
+        <div className="mt-12 grid grid-cols-2 gap-4 rounded-2xl border border-slate-800 bg-slate-900/60 p-6 md:grid-cols-4 text-center">
+          <div>
+            <h4 className="text-2xl font-black text-blue-400">5000+</h4>
+            <p className="text-[11px] font-semibold text-slate-400 mt-0.5">
+              Students
+            </p>
           </div>
 
-          <div className="text-center">
-            <h2 className="text-4xl font-black text-blue-400">250+</h2>
-
-            <p className="mt-2 text-slate-400">Mentors</p>
+          <div>
+            <h4 className="text-2xl font-black text-blue-400">250+</h4>
+            <p className="text-[11px] font-semibold text-slate-400 mt-0.5">
+              Mentors
+            </p>
           </div>
 
-          <div className="text-center">
-            <h2 className="text-4xl font-black text-blue-400">1200+</h2>
-
-            <p className="mt-2 text-slate-400">Sessions</p>
+          <div>
+            <h4 className="text-2xl font-black text-blue-400">1200+</h4>
+            <p className="text-[11px] font-semibold text-slate-400 mt-0.5">
+              Sessions
+            </p>
           </div>
 
-          <div className="text-center">
-            <h2 className="text-4xl font-black text-blue-400">4.9★</h2>
-
-            <p className="mt-2 text-slate-400">Rating</p>
+          <div>
+            <h4 className="text-2xl font-black text-blue-400">4.9★</h4>
+            <p className="text-[11px] font-semibold text-slate-400 mt-0.5">
+              Rating
+            </p>
           </div>
         </div>
 
-        {/* Bottom */}
-
-        <div className="mt-16 flex flex-col items-center justify-between gap-6 border-t border-slate-800 pt-8 lg:flex-row">
+        {/* Bottom Bar */}
+        <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-slate-900 pt-6 text-xs lg:flex-row">
           <p className="text-slate-500">
             © {new Date().getFullYear()} GuideX. All rights reserved.
           </p>
 
-          <div className="flex flex-wrap items-center gap-8">
-            <a href="#" className="transition hover:text-blue-400">
+          <div className="flex flex-wrap items-center gap-6 text-slate-400">
+            <a href="#" className="transition hover:text-white">
               Privacy Policy
             </a>
-
-            <a href="#" className="transition hover:text-blue-400">
+            <a href="#" className="transition hover:text-white">
               Terms & Conditions
             </a>
-
-            <a href="#" className="transition hover:text-blue-400">
+            <a href="#" className="transition hover:text-white">
               Cookie Policy
             </a>
           </div>

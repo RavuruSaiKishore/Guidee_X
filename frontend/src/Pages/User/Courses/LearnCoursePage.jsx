@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import {
-  BookOpen,
   PlayCircle,
   Clock,
   FileText,
@@ -20,6 +19,8 @@ import {
   FileCheck,
   Code2,
   Lock,
+  User,
+  Edit3,
 } from "lucide-react";
 import { toast } from "react-toastify";
 
@@ -30,6 +31,43 @@ const LearnCoursePage = () => {
   const [course, setCourse] = useState(null);
   const [enrollment, setEnrollment] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  // Add these states to your component
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [chatInput, setChatInput] = useState("");
+  const [chatMessages, setChatMessages] = useState([
+    { role: "bot", text: "Hi! Need help with this course? Ask me anything!" },
+  ]);
+
+  const handleAskAI = async () => {
+    if (!chatInput.trim()) return;
+    const userMsg = { role: "user", text: chatInput };
+    setChatMessages((prev) => [...prev, userMsg]);
+    setChatInput("");
+
+    try {
+      const token = localStorage.getItem("UserToken");
+      const res = await fetch(
+        `${API_BASE_URL}/api/courses/doubts/ask-ai/${id}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
+          credentials: "include",
+          body: JSON.stringify({ question: chatInput }),
+        }
+      );
+      const data = await res.json();
+      setChatMessages((prev) => [...prev, { role: "bot", text: data.answer }]);
+    } catch (err) {
+      setChatMessages((prev) => [
+        ...prev,
+        { role: "bot", text: "Sorry, I'm having trouble connecting." },
+      ]);
+    }
+  };
 
   // Active playing lesson state
   const [activeLesson, setActiveLesson] = useState(null);
@@ -44,6 +82,11 @@ const LearnCoursePage = () => {
 
   // State to track expanded modules for showing lessons in sidebar
   const [expandedModules, setExpandedModules] = useState({ 0: true });
+
+  // Review & Rating Modal State
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [rating, setRating] = useState(5);
+  const [comment, setComment] = useState("");
 
   const API_BASE_URL =
     import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
@@ -139,11 +182,43 @@ const LearnCoursePage = () => {
       if (response.ok && data.success) {
         setEnrollment(data.enrollment);
         toast.success(data.message || "Progress updated!");
+
+        // Trigger review modal automatically if course just completed
+        if (data.enrollment?.isCompleted) {
+          setShowReviewModal(true);
+        }
       } else {
         toast.error(data.message || "Failed to load progress");
       }
     } catch (error) {
       console.error("Progress update error:", error);
+    }
+  };
+
+  const handleReviewSubmit = async () => {
+    try {
+      const token = localStorage.getItem("UserToken");
+      const response = await fetch(`${API_BASE_URL}/api/courses/${id}/review`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+        body: JSON.stringify({ rating, comment }),
+        credentials: "include",
+      });
+
+      const data = await response.json();
+      if (response.ok && data.success) {
+        toast.success("Review saved successfully!");
+        setShowReviewModal(false);
+        window.location.reload();
+      } else {
+        toast.error(data.message || "Failed to submit review.");
+      }
+    } catch (error) {
+      console.error("Review submission error:", error);
+      toast.error("Network error while submitting review.");
     }
   };
 
@@ -238,6 +313,26 @@ const LearnCoursePage = () => {
     }
   };
 
+  // Helper to extract student ID from UserToken JWT
+  const getCurrentUserId = () => {
+    try {
+      const token = localStorage.getItem("UserToken");
+      if (!token) return null;
+      const base64Url = token.split(".")[1];
+      const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+      const jsonPayload = decodeURIComponent(
+        atob(base64)
+          .split("")
+          .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+          .join("")
+      );
+      const decoded = JSON.parse(jsonPayload);
+      return decoded.id || decoded._id;
+    } catch (e) {
+      return null;
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[75vh] space-y-4 bg-slate-50">
@@ -271,6 +366,21 @@ const LearnCoursePage = () => {
   const imageUrl = course.thumbnail?.startsWith("http")
     ? course.thumbnail
     : `${API_BASE_URL}${course.thumbnail}`;
+
+  const currentUserId = getCurrentUserId();
+  const myReview = course?.reviews?.find(
+    (rev) =>
+      rev.student?._id?.toString() === currentUserId?.toString() ||
+      rev.student?.toString() === currentUserId?.toString()
+  );
+
+  const openEditModal = () => {
+    if (myReview) {
+      setRating(myReview.rating);
+      setComment(myReview.comment);
+    }
+    setShowReviewModal(true);
+  };
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col selection:bg-blue-600 selection:text-white pb-32">
@@ -382,6 +492,41 @@ const LearnCoursePage = () => {
       </div>
 
       {/* ========================================== */}
+      {/* 🎖️ CERTIFICATE UNLOCK BANNER */}
+      {/* ========================================== */}
+      {enrollment?.isCompleted && (
+        <div className="max-w-[96rem] mx-auto w-full px-4 sm:px-6 lg:px-8 mt-8">
+          <div className="bg-gradient-to-r from-amber-500 to-yellow-600 rounded-3xl p-8 text-white shadow-2xl flex flex-col md:flex-row items-center justify-between gap-6 border border-amber-400">
+            <div className="flex items-center gap-6">
+              <div className="p-4 bg-white/20 rounded-2xl backdrop-blur-md">
+                <Award size={48} />
+              </div>
+              <div>
+                <h2 className="text-2xl font-black">Certificate Unlocked!</h2>
+                <p className="text-amber-100 font-bold text-sm">
+                  You have officially graduated from {course.title}.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={openEditModal}
+                className="px-6 py-4 bg-amber-700 text-white font-black rounded-2xl shadow-xl hover:bg-amber-800 transition flex items-center gap-2 cursor-pointer"
+              >
+                <Star size={18} /> {myReview ? "Edit Review" : "Rate Course"}
+              </button>
+              <Link
+                to={`/student/certificate/${id}`}
+                className="px-8 py-4 bg-white text-amber-700 font-black rounded-2xl shadow-xl hover:bg-slate-50 transition flex items-center gap-2"
+              >
+                <FileCheck size={20} /> View Certificate
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================== */}
       {/* 📺 WIDER CLASSROOM CONTAINER GRID */}
       {/* ========================================== */}
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 max-w-[96rem] mx-auto w-full p-4 sm:p-6 lg:p-8 gap-8">
@@ -413,46 +558,193 @@ const LearnCoursePage = () => {
               </div>
 
               {activeLesson && (
-                <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
-                  <div className="space-y-2.5">
-                    <div className="flex items-center gap-2.5 flex-wrap">
-                      <span className="px-3.5 py-1 rounded-full bg-blue-50 text-blue-600 text-xs font-black uppercase tracking-wider border border-blue-100">
-                        Currently Playing
-                      </span>
-                      <span className="text-xs text-slate-500 font-bold flex items-center gap-1 bg-slate-100 px-3 py-1 rounded-lg">
-                        <Clock size={13} className="text-blue-500" />{" "}
-                        {activeLesson.duration || 10} mins
-                      </span>
+                <div className="space-y-6">
+                  <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
+                    <div className="space-y-2.5">
+                      <div className="flex items-center gap-2.5 flex-wrap">
+                        <span className="px-3.5 py-1 rounded-full bg-blue-50 text-blue-600 text-xs font-black uppercase tracking-wider border border-blue-100">
+                          Currently Playing
+                        </span>
+                        <span className="text-xs text-slate-500 font-bold flex items-center gap-1 bg-slate-100 px-3 py-1 rounded-lg">
+                          <Clock size={13} className="text-blue-500" />{" "}
+                          {activeLesson.duration || 10} mins
+                        </span>
+                      </div>
+                      <h2 className="text-xl sm:text-2xl font-black text-slate-900">
+                        {activeLesson.title}
+                      </h2>
+                      {activeLesson.description && (
+                        <p className="text-slate-600 text-xs sm:text-sm leading-relaxed">
+                          {activeLesson.description}
+                        </p>
+                      )}
                     </div>
-                    <h2 className="text-xl sm:text-2xl font-black text-slate-900">
-                      {activeLesson.title}
-                    </h2>
-                    {activeLesson.description && (
-                      <p className="text-slate-600 text-xs sm:text-sm leading-relaxed">
-                        {activeLesson.description}
-                      </p>
+
+                    {completedLessons.includes(activeLesson._id) ? (
+                      <div className="px-7 py-4 rounded-2xl bg-emerald-50 text-emerald-700 border border-emerald-200 font-black text-xs flex items-center gap-2.5 shadow-xl shadow-emerald-500/15 whitespace-nowrap">
+                        <CheckCircle2 size={18} /> Lesson Completed
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() =>
+                          handleToggleLessonComplete(activeLesson._id)
+                        }
+                        className="px-7 py-4 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-black text-xs flex items-center gap-2.5 transition shadow-xl shadow-blue-600/20 hover:from-blue-700 hover:to-indigo-700 transform hover:-translate-y-0.5 cursor-pointer whitespace-nowrap"
+                      >
+                        <Circle size={18} /> Mark as Complete
+                      </button>
                     )}
                   </div>
 
-                  <button
-                    onClick={() => handleToggleLessonComplete(activeLesson._id)}
-                    className={`px-7 py-4 rounded-2xl font-black text-xs flex items-center gap-2.5 transition shadow-xl cursor-pointer whitespace-nowrap transform hover:-translate-y-0.5 ${
-                      completedLessons.includes(activeLesson._id)
-                        ? "bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 shadow-emerald-500/10"
-                        : "bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700 shadow-blue-600/20"
-                    }`}
-                  >
-                    {completedLessons.includes(activeLesson._id) ? (
-                      <>
-                        <CheckCircle2 size={18} className="text-emerald-600" />{" "}
-                        Lesson Completed
-                      </>
+                  {/* 🔥 LESSON DOUBT AI SOLVING WIDGET */}
+                  <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-xl space-y-4">
+                    <div className="flex items-center justify-between border-b pb-4">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-sm">
+                          <Zap size={16} />
+                        </div>
+                        <div>
+                          <h3 className="text-base font-black text-slate-900">
+                            Ask AI About This Lesson
+                          </h3>
+                          <p className="text-[11px] text-slate-500">
+                            Stuck on "{activeLesson.title}"? Get instant AI
+                            explanations.
+                          </p>
+                        </div>
+                      </div>
+                      <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-blue-50 text-blue-600 border border-blue-100 uppercase">
+                        Course Assistant
+                      </span>
+                    </div>
+
+                    {/* Chat History Box */}
+                    <div className="space-y-3 max-h-60 overflow-y-auto p-3 bg-slate-50 rounded-2xl border border-slate-100">
+                      {chatMessages.map((msg, i) => (
+                        <div
+                          key={i}
+                          className={`p-3 rounded-2xl text-xs leading-relaxed max-w-[85%] ${
+                            msg.role === "user"
+                              ? "bg-blue-600 text-white ml-auto rounded-br-xs shadow-sm"
+                              : "bg-white text-slate-700 mr-auto rounded-bl-xs border border-slate-200 shadow-2xs"
+                          }`}
+                        >
+                          {msg.text}
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Input Box */}
+                    <div className="flex items-center gap-2 pt-1">
+                      <input
+                        type="text"
+                        placeholder={`Ask a doubt regarding "${activeLesson.title}"...`}
+                        value={chatInput}
+                        onChange={(e) => setChatInput(e.target.value)}
+                        onKeyDown={(e) => e.key === "Enter" && handleAskAI()}
+                        className="flex-1 p-3 rounded-xl border border-slate-200 text-xs bg-slate-50 outline-none focus:ring-2 focus:ring-blue-600"
+                      />
+                      <button
+                        onClick={handleAskAI}
+                        className="px-5 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold text-xs shadow-md hover:from-blue-700 hover:to-indigo-700 transition cursor-pointer flex items-center gap-1.5"
+                      >
+                        Ask AI
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* 🔥 YOUR REVIEW DISPLAY SECTION (DIRECTLY BELOW VIDEO PLAYER) */}
+              {enrollment?.isCompleted && (
+                <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-xl space-y-4">
+                  <div className="flex items-center justify-between border-b pb-4">
+                    <h3 className="text-lg font-black text-slate-900 flex items-center gap-2">
+                      <Star
+                        size={18}
+                        className="text-amber-400 fill-amber-400"
+                      />{" "}
+                      Your Course Review
+                    </h3>
+                    {myReview ? (
+                      <button
+                        onClick={openEditModal}
+                        className="text-xs font-bold text-indigo-600 hover:underline flex items-center gap-1 cursor-pointer"
+                      >
+                        <Edit3 size={14} /> Edit Review
+                      </button>
                     ) : (
-                      <>
-                        <Circle size={18} /> Mark as Complete
-                      </>
+                      <button
+                        onClick={openEditModal}
+                        className="text-xs font-bold text-indigo-600 hover:underline cursor-pointer"
+                      >
+                        + Add Review
+                      </button>
                     )}
-                  </button>
+                  </div>
+
+                  {myReview ? (
+                    <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          {myReview.student?.profileImage ? (
+                            <img
+                              src={
+                                myReview.student.profileImage.startsWith("http")
+                                  ? myReview.student.profileImage
+                                  : `${API_BASE_URL}${myReview.student.profileImage}`
+                              }
+                              alt="Profile"
+                              className="w-10 h-10 rounded-full object-cover border border-slate-200"
+                            />
+                          ) : (
+                            <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm">
+                              {myReview.student?.firstName?.[0] || (
+                                <User size={18} />
+                              )}
+                            </div>
+                          )}
+                          <div>
+                            <span className="font-bold text-sm text-slate-900 block">
+                              {`${myReview.student?.firstName || ""} ${
+                                myReview.student?.lastName || ""
+                              }`.trim() || "You"}
+                            </span>
+                            <span className="text-[10px] text-slate-400 font-semibold block">
+                              Verified Student Review
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-0.5">
+                          {[...Array(5)].map((_, i) => (
+                            <Star
+                              key={i}
+                              size={14}
+                              className={
+                                i < myReview.rating
+                                  ? "fill-amber-400 text-amber-400"
+                                  : "text-slate-300"
+                              }
+                            />
+                          ))}
+                        </div>
+                      </div>
+                      <p className="text-xs sm:text-sm text-slate-600 italic">
+                        "{myReview.comment}"
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="text-center py-6 text-xs text-slate-500 space-y-2">
+                      <p>You haven't submitted a review for this course yet.</p>
+                      <button
+                        onClick={openEditModal}
+                        className="px-4 py-2 bg-indigo-600 text-white rounded-xl font-bold text-xs shadow hover:bg-indigo-700 cursor-pointer"
+                      >
+                        Write a Review
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
             </>
@@ -840,6 +1132,70 @@ const LearnCoursePage = () => {
           </div>
         </div>
       </div>
+
+      {/* ========================================== */}
+      {/* 🌟 COURSE FEEDBACK / REVIEW MODAL */}
+      {/* ========================================== */}
+      {showReviewModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl space-y-5 animate-in fade-in zoom-in duration-200">
+            <div className="text-center space-y-1">
+              <Award size={48} className="text-amber-500 mx-auto" />
+              <h3 className="text-xl font-black text-slate-900">
+                {myReview
+                  ? "Edit Your Review"
+                  : "Course Successfully Completed!"}
+              </h3>
+              <p className="text-xs text-slate-500 font-medium">
+                {myReview
+                  ? "Update your rating and feedback below."
+                  : "Please leave a review and rating for your learning experience."}
+              </p>
+            </div>
+
+            <div className="flex justify-center gap-2 py-2">
+              {[1, 2, 3, 4, 5].map((r) => (
+                <Star
+                  key={r}
+                  size={30}
+                  className={`cursor-pointer transition hover:scale-110 ${
+                    rating >= r
+                      ? "fill-amber-400 text-amber-400"
+                      : "text-slate-300"
+                  }`}
+                  onClick={() => setRating(r)}
+                />
+              ))}
+            </div>
+
+            <textarea
+              className="w-full p-4 rounded-2xl border border-slate-200 text-xs font-medium focus:ring-2 focus:ring-blue-600 outline-none resize-none h-28 bg-slate-50"
+              placeholder="Write your feedback here..."
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+            />
+
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setShowReviewModal(false)}
+                className="flex-1 py-3.5 bg-slate-100 text-slate-700 font-bold rounded-2xl text-xs hover:bg-slate-200 transition cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleReviewSubmit}
+                className="flex-1 py-3.5 bg-indigo-600 text-white font-bold rounded-2xl text-xs shadow-lg shadow-indigo-600/30 hover:bg-indigo-700 transition cursor-pointer"
+              >
+                {myReview ? "Update Review" : "Submit Review"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Floating Chat Button */}
+   
+
+    
     </div>
   );
 };

@@ -14,6 +14,7 @@ import {
   CheckCircle2,
   XCircle,
   Timer,
+  Sparkles,
 } from "lucide-react";
 
 import { ToastContainer, toast } from "react-toastify";
@@ -83,8 +84,6 @@ const RescheduleSession = () => {
       );
 
       const data = await res.json();
-
-      console.log("Sessions With Reschedule Status:", data);
 
       if (!res.ok) {
         throw new Error(data.message || "Unable to fetch confirmed sessions.");
@@ -390,7 +389,7 @@ const RescheduleSession = () => {
     }
 
     if (selectedBooking.bookingStatus !== "Confirmed") {
-      toast.error("Only confirmed bookings can be rescheduled.");
+      toast.error("Only confirmed sessions can be rescheduled.");
 
       return;
     }
@@ -441,23 +440,13 @@ const RescheduleSession = () => {
 
       const data = await res.json();
 
-      console.log("Reschedule Request Response:", data);
-
       if (!res.ok) {
         throw new Error(data.message || "Unable to send reschedule request.");
       }
 
       toast.success(data.message || "Reschedule request sent to the student.");
 
-      // =====================================================
-      // GET REQUEST FROM RESPONSE
-      // =====================================================
-
       const request = data.request || null;
-
-      // =====================================================
-      // UPDATE UI LOCALLY
-      // =====================================================
 
       setBookings((previousBookings) =>
         previousBookings.map((booking) =>
@@ -492,19 +481,19 @@ const RescheduleSession = () => {
   const getStatusStyle = (status) => {
     switch (status) {
       case "Confirmed":
-        return "bg-emerald-50 text-emerald-700 border-emerald-200";
+        return "border-emerald-200 bg-emerald-50 text-emerald-700";
 
       case "Completed":
-        return "bg-blue-50 text-blue-700 border-blue-200";
+        return "border-blue-200 bg-blue-50 text-blue-700";
 
       case "Cancelled":
-        return "bg-red-50 text-red-700 border-red-200";
+        return "border-red-200 bg-red-50 text-red-700";
 
       case "Rejected":
-        return "bg-gray-100 text-gray-600 border-gray-200";
+        return "border-slate-200 bg-slate-100 text-slate-700";
 
       default:
-        return "bg-amber-50 text-amber-700 border-amber-200";
+        return "border-amber-200 bg-amber-50 text-amber-700";
     }
   };
 
@@ -514,703 +503,686 @@ const RescheduleSession = () => {
 
   if (loading) {
     return (
-      <div className="lg:ml-64 min-h-screen bg-slate-50 pt-16 lg:pt-0 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 rounded-2xl bg-indigo-50 flex items-center justify-center mx-auto">
-            <Loader2 size={34} className="animate-spin text-indigo-600" />
+      <div
+        className="min-h-screen bg-slate-50 pt-20 lg:ml-64 lg:pt-0 text-slate-900"
+        style={{ fontFamily: "'Poppins', sans-serif" }}
+      >
+        <div className="flex min-h-[70vh] flex-col items-center justify-center px-5">
+          <div className="relative">
+            <div className="h-14 w-14 rounded-full border-4 border-slate-200" />
+            <div className="absolute inset-0 h-14 w-14 animate-spin rounded-full border-4 border-transparent border-t-blue-600" />
           </div>
-
-          <p className="mt-5 text-slate-700 font-semibold">
+          <p
+            className="mt-5 text-center text-xs font-semibold tracking-tight"
+            style={{ fontWeight: 600 }}
+          >
             Loading your Reschedule Sessions...
           </p>
-
-          <p className="mt-1 text-sm text-slate-400">
+          <p
+            className="mt-1 text-center text-[11px] text-slate-400 font-medium"
+            style={{ fontWeight: 600 }}
+          >
             Please wait while we fetch your Reschedule Session.
           </p>
         </div>
       </div>
     );
   }
-  
 
   return (
-    <>
-      <main className="lg:ml-64 min-h-screen bg-slate-50 pt-16 lg:pt-0">
+    <div
+      className="min-h-screen bg-slate-50 pt-20 lg:ml-64 lg:pt-0 text-slate-900"
+      style={{ fontFamily: "'Poppins', sans-serif", fontStyle: "normal" }}
+    >
+      <main className="w-full max-w-[1600px] mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
         <ToastContainer position="top-right" autoClose={2500} />
 
-        <div className="w-full max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
-          {/* =====================================================
-              HEADER
-          ====================================================== */}
+        {/* =====================================================
+            HEADER
+        ====================================================== */}
+        <section className="relative overflow-hidden rounded-3xl bg-black p-6 sm:p-8 text-white shadow-md">
+          <div className="absolute -right-16 -top-16 h-48 w-48 rounded-full bg-blue-600/20 blur-3xl" />
+          <div className="absolute -bottom-20 left-1/4 h-40 w-40 rounded-full bg-blue-400/10 blur-2xl" />
 
-          <div className="mb-6 sm:mb-8">
-            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900 via-indigo-900 to-purple-800 p-5 text-white shadow-xl sm:rounded-3xl sm:p-7 lg:p-8">
-              {/* Background Decorations */}
-
-              <div className="absolute -right-12 -top-12 h-40 w-40 rounded-full bg-cyan-400/20 blur-3xl sm:h-52 sm:w-52" />
-
-              <div className="absolute -bottom-20 left-1/3 h-48 w-48 rounded-full bg-fuchsia-500/20 blur-3xl sm:h-64 sm:w-64" />
-
-              <div className="absolute -bottom-16 -left-10 h-44 w-44 rounded-full bg-teal-400/15 blur-3xl sm:h-56 sm:w-56" />
-
-              {/* Header Content */}
-
-              <div className="relative flex items-start gap-3 sm:gap-5">
-                {/* Icon */}
-
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-cyan-300/20 bg-gradient-to-br from-cyan-400/30 to-indigo-500/30 shadow-lg shadow-cyan-900/20 backdrop-blur-md sm:h-16 sm:w-16 sm:rounded-2xl">
-                  <CalendarDays
-                    size={26}
-                    className="text-cyan-200 sm:h-[34px] sm:w-[34px]"
-                  />
-                </div>
-
-                {/* Title & Description */}
-
-                <div className="min-w-0">
-                  <h1 className="text-2xl font-bold leading-tight tracking-tight sm:text-3xl lg:text-4xl">
-                    Reschedule Sessions
-                  </h1>
-
-                  <p className="mt-2 max-w-2xl text-sm leading-6 text-indigo-100 sm:text-base">
-                    Request a new date and time for your upcoming mentoring
-                    sessions.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* =====================================================
-              INFORMATION BANNER
-          ====================================================== */}
-
-          <div className="mb-8 rounded-2xl border border-indigo-200 bg-indigo-50 p-4 sm:p-5">
-            <div className="flex gap-4">
-              <div className="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center flex-shrink-0">
-                <RefreshCw size={20} className="text-indigo-600" />
+          <div className="relative z-10 flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-start sm:items-center gap-4 sm:gap-5 min-w-0">
+              <div
+                className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-white/15 bg-white/10 backdrop-blur shadow-inner text-blue-400"
+                style={{ fontWeight: 600 }}
+              >
+                <CalendarDays size={26} />
               </div>
 
-              <div>
-                <h3 className="font-bold text-indigo-900">
-                  How rescheduling works
-                </h3>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <span
+                    className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[11px] font-semibold text-blue-300 backdrop-blur"
+                    style={{ fontWeight: 600 }}
+                  >
+                    <Sparkles size={13} className="text-blue-400" />
+                    Flexibility Suite
+                  </span>
+                </div>
 
-                <p className="text-sm text-indigo-700 mt-1">
-                  Send a new date and time to your student. The request status
-                  will change to Pending, Accepted, or Rejected based on the
-                  student's response.
+                <h1
+                  className="mt-2 text-2xl sm:text-3xl font-semibold tracking-tight text-white"
+                  style={{ fontWeight: 600 }}
+                >
+                  Reschedule Sessions
+                </h1>
+
+                <p
+                  className="mt-1 text-xs sm:text-sm text-slate-300 font-medium leading-relaxed"
+                  style={{ fontWeight: 600 }}
+                >
+                  Request a new date and time for your upcoming mentoring
+                  sessions.
                 </p>
               </div>
             </div>
-          </div>
 
-          {/* =====================================================
-              EMPTY STATE
-          ====================================================== */}
-
-          {bookings.length === 0 ? (
-            <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-10 sm:p-16 text-center">
-              <CalendarDays size={60} className="mx-auto text-slate-300" />
-
-              <h2 className="text-2xl font-bold text-slate-800 mt-6">
-                No confirmed sessions
-              </h2>
-
-              <p className="text-slate-500 mt-2">
-                Your confirmed mentoring sessions will appear here.
-              </p>
+            <div
+              className="flex items-center gap-4 rounded-2xl border border-white/15 bg-white/10 px-5 py-4 backdrop-blur shadow-inner shrink-0"
+              style={{ fontWeight: 600 }}
+            >
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white text-base font-semibold text-black shadow-xs">
+                {bookings.length}
+              </div>
+              <div>
+                <p className="text-[10px] uppercase tracking-wider text-slate-400">
+                  Total
+                </p>
+                <h3 className="text-sm font-semibold text-white">Sessions</h3>
+              </div>
             </div>
-          ) : (
-            <div className="space-y-6">
-              {bookings.map((booking) => {
-                const student = booking.student;
+          </div>
+        </section>
 
-                const studentName = getStudentName(student);
+        {/* =====================================================
+            INFORMATION BANNER
+        ====================================================== */}
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs flex items-center gap-4">
+          <div className="h-11 w-11 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 border border-blue-100">
+            <RefreshCw size={20} />
+          </div>
+          <div>
+            <h3
+              className="text-xs font-semibold text-slate-900 tracking-tight"
+              style={{ fontWeight: 600 }}
+            >
+              How rescheduling works
+            </h3>
+            <p
+              className="mt-0.5 text-xs text-slate-500 font-medium leading-relaxed"
+              style={{ fontWeight: 600 }}
+            >
+              Send a new date and time to your student. The request status will
+              change to Pending, Accepted, or Rejected based on the student's
+              response.
+            </p>
+          </div>
+        </div>
 
-                const rescheduleRequest = booking.rescheduleRequest;
+        {/* =====================================================
+            EMPTY STATE
+        ====================================================== */}
+        {bookings.length === 0 ? (
+          <div className="bg-white rounded-3xl border border-slate-200 shadow-xs p-12 text-center">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 mb-4">
+              <CalendarDays size={26} />
+            </div>
+            <h2
+              className="text-base font-semibold text-slate-900 tracking-tight"
+              style={{ fontWeight: 600 }}
+            >
+              No confirmed sessions
+            </h2>
+            <p
+              className="mt-1 text-xs text-slate-500 font-medium max-w-sm mx-auto"
+              style={{ fontWeight: 600 }}
+            >
+              Your confirmed mentoring sessions will appear here.
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {bookings.map((booking) => {
+              const student = booking.student;
 
-                const rescheduleStatus = getRescheduleStatus(booking);
+              const studentName = getStudentName(student);
 
-                const hasPendingRequest = rescheduleStatus === "Pending";
+              const rescheduleRequest = booking.rescheduleRequest;
 
-                const statusStyle = getRescheduleStatusStyle(rescheduleStatus);
+              const rescheduleStatus = getRescheduleStatus(booking);
 
-                return (
-                  <div
-                    key={booking._id}
-                    className="bg-white rounded-3xl border border-slate-200 shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden"
-                  >
-                    <div className="p-5 sm:p-6">
-                      {/* =================================================
-                            STUDENT + BOOKING STATUS
-                        ================================================== */}
+              const hasPendingRequest = rescheduleStatus === "Pending";
 
-                      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
-                        <div className="flex items-center gap-4 min-w-0">
-                          <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl overflow-hidden bg-indigo-100 flex items-center justify-center flex-shrink-0">
-                            {student?.profileImage ? (
-                              <img
-                                src={`${API_BASE_URL}${student.profileImage}`}
-                                alt={studentName}
-                                className="w-full h-full object-cover"
-                                onError={(e) => {
-                                  e.currentTarget.style.display = "none";
-                                  e.currentTarget.nextElementSibling.style.display =
-                                    "flex";
-                                }}
-                              />
-                            ) : null}
+              const statusStyle = getRescheduleStatusStyle(rescheduleStatus);
 
-                            <div
-                              className={`w-full h-full items-center justify-center ${
-                                student?.profileImage ? "hidden" : "flex"
-                              }`}
+              return (
+                <article
+                  key={booking._id}
+                  className="bg-white rounded-3xl border border-slate-200 shadow-xs transition duration-200 hover:border-blue-300 hover:shadow-md p-6"
+                >
+                  <div className="space-y-5">
+                    {/* STUDENT + BOOKING STATUS */}
+                    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 pb-4 border-b border-slate-100">
+                      <div className="flex items-center gap-3.5 min-w-0">
+                        <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-2xl overflow-hidden bg-slate-100 flex items-center justify-center shrink-0 border border-slate-200 shadow-2xs">
+                          {student?.profileImage ? (
+                            <img
+                              src={`${API_BASE_URL}${student.profileImage}`}
+                              alt={studentName}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                e.currentTarget.style.display = "none";
+                                e.currentTarget.nextElementSibling.style.display =
+                                  "flex";
+                              }}
+                            />
+                          ) : null}
+
+                          <div
+                            className={`w-full h-full items-center justify-center bg-black text-white text-xs font-semibold ${
+                              student?.profileImage ? "hidden" : "flex"
+                            }`}
+                            style={{ fontWeight: 600 }}
+                          >
+                            <UserRound size={18} className="text-blue-400" />
+                          </div>
+                        </div>
+
+                        <div className="min-w-0">
+                          <h2
+                            className="text-xs sm:text-sm font-semibold text-slate-900 tracking-tight truncate"
+                            style={{ fontWeight: 600 }}
+                          >
+                            {studentName}
+                          </h2>
+                          <p
+                            className="text-[11px] text-slate-500 font-medium truncate mt-0.5"
+                            style={{ fontWeight: 600 }}
+                          >
+                            {student?.email || "Email unavailable"}
+                          </p>
+                          {student?.phone && (
+                            <p
+                              className="text-[10px] text-slate-400 font-medium mt-0.5"
+                              style={{ fontWeight: 600 }}
                             >
-                              <UserRound
-                                size={28}
-                                className="text-indigo-600"
-                              />
-                            </div>
+                              {student.phone}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      <span
+                        className={`inline-flex px-3 py-1 rounded-full text-[11px] font-semibold border ${getStatusStyle(
+                          booking.bookingStatus
+                        )}`}
+                        style={{ fontWeight: 600 }}
+                      >
+                        {booking.bookingStatus}
+                      </span>
+                    </div>
+
+                    {/* CURRENT BOOKING METRICS */}
+                    <div>
+                      <div className="flex items-center gap-2 mb-3">
+                        <CalendarDays size={15} className="text-blue-600" />
+                        <h3
+                          className="text-xs font-semibold uppercase tracking-wider text-slate-900"
+                          style={{ fontWeight: 600 }}
+                        >
+                          Current Booking Details
+                        </h3>
+                      </div>
+
+                      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3.5 text-xs font-semibold">
+                        <div className="bg-slate-50 rounded-2xl p-3.5 border border-slate-200">
+                          <p
+                            className="text-[10px] uppercase tracking-wide text-slate-400 mb-1"
+                            style={{ fontWeight: 600 }}
+                          >
+                            Session Date
+                          </p>
+                          <p
+                            className="text-slate-900 truncate"
+                            style={{ fontWeight: 600 }}
+                          >
+                            {formatDate(booking.sessionDate)}
+                          </p>
+                        </div>
+
+                        <div className="bg-slate-50 rounded-2xl p-3.5 border border-slate-200">
+                          <p
+                            className="text-[10px] uppercase tracking-wide text-slate-400 mb-1"
+                            style={{ fontWeight: 600 }}
+                          >
+                            Start Time
+                          </p>
+                          <p
+                            className="text-slate-900 truncate"
+                            style={{ fontWeight: 600 }}
+                          >
+                            {formatTime(booking.startTime)}
+                          </p>
+                        </div>
+
+                        <div className="bg-slate-50 rounded-2xl p-3.5 border border-slate-200">
+                          <p
+                            className="text-[10px] uppercase tracking-wide text-slate-400 mb-1"
+                            style={{ fontWeight: 600 }}
+                          >
+                            End Time
+                          </p>
+                          <p
+                            className="text-slate-900 truncate"
+                            style={{ fontWeight: 600 }}
+                          >
+                            {formatTime(booking.endTime)}
+                          </p>
+                        </div>
+
+                        <div className="bg-slate-50 rounded-2xl p-3.5 border border-slate-200">
+                          <p
+                            className="text-[10px] uppercase tracking-wide text-slate-400 mb-1"
+                            style={{ fontWeight: 600 }}
+                          >
+                            Session Type
+                          </p>
+                          <p
+                            className="text-slate-900 truncate"
+                            style={{ fontWeight: 600 }}
+                          >
+                            {booking.sessionType}
+                          </p>
+                        </div>
+
+                        <div className="bg-slate-50 rounded-2xl p-3.5 border border-slate-200">
+                          <p
+                            className="text-[10px] uppercase tracking-wide text-slate-400 mb-1"
+                            style={{ fontWeight: 600 }}
+                          >
+                            Amount
+                          </p>
+                          <p
+                            className="text-emerald-600 font-bold truncate"
+                            style={{ fontWeight: 600 }}
+                          >
+                            ₹{booking.amount}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* RESCHEDULE STATUS */}
+                    {rescheduleStatus && (
+                      <div
+                        className={`rounded-2xl border p-5 ${statusStyle.wrapper}`}
+                      >
+                        <div className="flex gap-3">
+                          <div className="shrink-0 mt-0.5">
+                            {getRescheduleStatusIcon(rescheduleStatus)}
                           </div>
 
-                          <div className="min-w-0">
-                            <h2 className="text-lg sm:text-xl font-bold text-slate-900 truncate">
-                              {studentName}
-                            </h2>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
+                              <h3
+                                className={`text-xs font-semibold ${statusStyle.title}`}
+                                style={{ fontWeight: 600 }}
+                              >
+                                Reschedule Request: {rescheduleStatus}
+                              </h3>
 
-                            <p className="text-sm text-slate-500 truncate">
-                              {student?.email || "Email unavailable"}
+                              {rescheduleRequest?.respondedAt && (
+                                <span
+                                  className={`text-[10px] ${statusStyle.text} font-semibold`}
+                                  style={{ fontWeight: 600 }}
+                                >
+                                  Responded on{" "}
+                                  {formatDate(rescheduleRequest.respondedAt)}
+                                </span>
+                              )}
+                            </div>
+
+                            <p
+                              className={`text-xs mt-1 font-medium ${statusStyle.text}`}
+                              style={{ fontWeight: 600 }}
+                            >
+                              {getRescheduleStatusMessage(rescheduleStatus)}
                             </p>
 
-                            {student?.phone && (
-                              <p className="text-xs text-slate-400 mt-1">
-                                {student.phone}
-                              </p>
+                            {rescheduleRequest && (
+                              <div className="mt-4 space-y-3 pt-3 border-t border-current/10">
+                                <p
+                                  className={`text-[10px] font-semibold uppercase tracking-wider ${statusStyle.text}`}
+                                  style={{ fontWeight: 600 }}
+                                >
+                                  Proposed Schedule
+                                </p>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                  <div className="bg-white/80 rounded-xl p-3 border border-current/10">
+                                    <p className="text-[10px] text-slate-400 font-semibold">
+                                      New Date
+                                    </p>
+                                    <p className="text-xs font-semibold text-slate-800 mt-0.5">
+                                      {formatDate(
+                                        rescheduleRequest.requestedSessionDate
+                                      )}
+                                    </p>
+                                  </div>
+
+                                  <div className="bg-white/80 rounded-xl p-3 border border-current/10">
+                                    <p className="text-[10px] text-slate-400 font-semibold">
+                                      New Start Time
+                                    </p>
+                                    <p className="text-xs font-semibold text-slate-800 mt-0.5">
+                                      {formatTime(
+                                        rescheduleRequest.requestedStartTime
+                                      )}
+                                    </p>
+                                  </div>
+
+                                  <div className="bg-white/80 rounded-xl p-3 border border-current/10">
+                                    <p className="text-[10px] text-slate-400 font-semibold">
+                                      New End Time
+                                    </p>
+                                    <p className="text-xs font-semibold text-slate-800 mt-0.5">
+                                      {formatTime(
+                                        rescheduleRequest.requestedEndTime
+                                      )}
+                                    </p>
+                                  </div>
+                                </div>
+
+                                {rescheduleRequest.reason && (
+                                  <div className="bg-white/80 rounded-xl p-3.5 border border-current/10">
+                                    <div className="flex items-center gap-1.5 mb-1">
+                                      <MessageSquare
+                                        size={13}
+                                        className={statusStyle.icon}
+                                      />
+                                      <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+                                        Reason
+                                      </p>
+                                    </div>
+                                    <p
+                                      className="text-xs text-slate-700 font-medium"
+                                      style={{ fontWeight: 600 }}
+                                    >
+                                      {rescheduleRequest.reason}
+                                    </p>
+                                  </div>
+                                )}
+                              </div>
                             )}
                           </div>
                         </div>
-
-                        <span
-                          className={`inline-flex px-4 py-2 rounded-full text-sm font-semibold border ${getStatusStyle(
-                            booking.bookingStatus
-                          )}`}
-                        >
-                          {booking.bookingStatus}
-                        </span>
                       </div>
+                    )}
 
-                      {/* =================================================
-                            CURRENT BOOKING
-                        ================================================== */}
-
-                      <div className="mt-8">
-                        <div className="flex items-center gap-2 mb-4">
-                          <CalendarDays size={18} className="text-slate-500" />
-
-                          <h3 className="font-bold text-slate-800">
-                            Current Booking
-                          </h3>
-                        </div>
-
-                        <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-4">
-                          {/* DATE */}
-
-                          <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100">
-                            <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center">
-                                <CalendarDays
-                                  size={20}
-                                  className="text-indigo-600"
-                                />
-                              </div>
-
-                              <div className="min-w-0">
-                                <p className="text-xs text-slate-400">
-                                  Session Date
-                                </p>
-
-                                <p className="font-semibold text-slate-800 truncate">
-                                  {formatDate(booking.sessionDate)}
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* START */}
-
-                          <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100">
-                            <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center">
-                                <Clock3 size={20} className="text-purple-600" />
-                              </div>
-
-                              <div>
-                                <p className="text-xs text-slate-400">
-                                  Start Time
-                                </p>
-
-                                <p className="font-semibold text-slate-800">
-                                  {formatTime(booking.startTime)}
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* END */}
-
-                          <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100">
-                            <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center">
-                                <Clock3 size={20} className="text-orange-600" />
-                              </div>
-
-                              <div>
-                                <p className="text-xs text-slate-400">
-                                  End Time
-                                </p>
-
-                                <p className="font-semibold text-slate-800">
-                                  {formatTime(booking.endTime)}
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* TYPE */}
-
-                          <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100">
-                            <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
-                                <Briefcase
-                                  size={20}
-                                  className="text-blue-600"
-                                />
-                              </div>
-
-                              <div>
-                                <p className="text-xs text-slate-400">
-                                  Session Type
-                                </p>
-
-                                <p className="font-semibold text-slate-800">
-                                  {booking.sessionType}
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* AMOUNT */}
-
-                          <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100">
-                            <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center">
-                                <IndianRupee
-                                  size={20}
-                                  className="text-emerald-600"
-                                />
-                              </div>
-
-                              <div>
-                                <p className="text-xs text-slate-400">Amount</p>
-
-                                <p className="font-bold text-slate-800">
-                                  ₹{booking.amount}
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* =================================================
-                            RESCHEDULE STATUS
-                        ================================================== */}
-
-                      {rescheduleStatus && (
-                        <div
-                          className={`mt-6 rounded-2xl border p-5 ${statusStyle.wrapper}`}
-                        >
-                          <div className="flex gap-3">
-                            <div className="flex-shrink-0 mt-0.5">
-                              {getRescheduleStatusIcon(rescheduleStatus)}
-                            </div>
-
-                            <div className="flex-1 min-w-0">
-                              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                                <h3
-                                  className={`font-bold ${statusStyle.title}`}
-                                >
-                                  Reschedule Request: {rescheduleStatus}
-                                </h3>
-
-                                {rescheduleRequest?.respondedAt && (
-                                  <span
-                                    className={`text-xs ${statusStyle.text}`}
-                                  >
-                                    Responded on{" "}
-                                    {formatDate(rescheduleRequest.respondedAt)}
-                                  </span>
-                                )}
-                              </div>
-
-                              <p className={`text-sm mt-1 ${statusStyle.text}`}>
-                                {getRescheduleStatusMessage(rescheduleStatus)}
-                              </p>
-
-                              {/* =================================================
-                                    REQUESTED SCHEDULE
-                                ================================================== */}
-
-                              {rescheduleRequest && (
-                                <div className="mt-5">
-                                  <p
-                                    className={`text-xs font-bold uppercase tracking-wider ${statusStyle.text}`}
-                                  >
-                                    Proposed Schedule
-                                  </p>
-
-                                  <div className="grid sm:grid-cols-3 gap-3 mt-3">
-                                    <div className="bg-white/70 rounded-xl p-3 border border-white">
-                                      <p className="text-xs text-slate-400">
-                                        New Date
-                                      </p>
-
-                                      <p className="font-semibold text-slate-800 mt-1">
-                                        {formatDate(
-                                          rescheduleRequest.requestedSessionDate
-                                        )}
-                                      </p>
-                                    </div>
-
-                                    <div className="bg-white/70 rounded-xl p-3 border border-white">
-                                      <p className="text-xs text-slate-400">
-                                        New Start Time
-                                      </p>
-
-                                      <p className="font-semibold text-slate-800 mt-1">
-                                        {formatTime(
-                                          rescheduleRequest.requestedStartTime
-                                        )}
-                                      </p>
-                                    </div>
-
-                                    <div className="bg-white/70 rounded-xl p-3 border border-white">
-                                      <p className="text-xs text-slate-400">
-                                        New End Time
-                                      </p>
-
-                                      <p className="font-semibold text-slate-800 mt-1">
-                                        {formatTime(
-                                          rescheduleRequest.requestedEndTime
-                                        )}
-                                      </p>
-                                    </div>
-                                  </div>
-
-                                  {/* REASON */}
-
-                                  {rescheduleRequest.reason && (
-                                    <div className="mt-4 bg-white/70 rounded-xl p-4 border border-white">
-                                      <div className="flex items-center gap-2">
-                                        <MessageSquare
-                                          size={16}
-                                          className={statusStyle.icon}
-                                        />
-
-                                        <p className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                                          Reason
-                                        </p>
-                                      </div>
-
-                                      <p className="text-sm text-slate-700 mt-2">
-                                        {rescheduleRequest.reason}
-                                      </p>
-                                    </div>
-                                  )}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* =================================================
-                            NOTES
-                        ================================================== */}
-
-                      {booking.notes && (
-                        <div className="mt-6 rounded-2xl bg-indigo-50 border border-indigo-100 p-5">
-                          <div className="flex items-center gap-2">
-                            <MessageSquare
-                              size={17}
-                              className="text-indigo-600"
-                            />
-
-                            <p className="text-xs font-bold uppercase tracking-wider text-indigo-600">
-                              Student Notes
-                            </p>
-                          </div>
-
-                          <p className="text-sm text-slate-700 mt-2">
-                            {booking.notes}
+                    {/* NOTES */}
+                    {booking.notes && (
+                      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-xs font-semibold">
+                        <div className="flex items-center gap-1.5 text-blue-600 mb-1">
+                          <MessageSquare size={14} />
+                          <p
+                            className="text-[10px] uppercase tracking-wider text-slate-400"
+                            style={{ fontWeight: 600 }}
+                          >
+                            Student Notes
                           </p>
                         </div>
+                        <p
+                          className="break-words leading-relaxed text-slate-700 font-medium pl-5"
+                          style={{ fontWeight: 600 }}
+                        >
+                          {booking.notes}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* REQUEST BUTTON */}
+                    {booking.bookingStatus === "Confirmed" &&
+                      !hasPendingRequest && (
+                        <div className="pt-2 flex justify-end">
+                          <button
+                            onClick={() => openRescheduleModal(booking)}
+                            className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-black hover:bg-slate-800 text-xs font-semibold text-white shadow-xs transition"
+                            style={{ fontWeight: 600 }}
+                          >
+                            <RefreshCw size={14} className="text-blue-400" />
+                            Request Reschedule
+                          </button>
+                        </div>
                       )}
-
-                      {/* =================================================
-                            REQUEST BUTTON
-                        ================================================== */}
-
-                      {booking.bookingStatus === "Confirmed" &&
-                        !hasPendingRequest && (
-                          <div className="mt-7 flex justify-end">
-                            <button
-                              onClick={() => openRescheduleModal(booking)}
-                              className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-indigo-600 text-white font-semibold hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition"
-                            >
-                              <RefreshCw size={18} />
-                              Request Reschedule
-                            </button>
-                          </div>
-                        )}
-                    </div>
                   </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
+                </article>
+              );
+            })}
+          </div>
+        )}
       </main>
 
       {/* =========================================================
           RESCHEDULE MODAL
       ========================================================= */}
-
       {showRescheduleModal && selectedBooking && (
         <div
-          className="fixed inset-0 z-[100] bg-slate-950/60 backdrop-blur-sm overflow-y-auto"
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm overflow-y-auto"
           onMouseDown={(e) => {
             if (e.target === e.currentTarget) {
               closeRescheduleModal();
             }
           }}
         >
-          <div className="min-h-full flex items-center justify-center p-4 sm:p-6">
-            <div
-              className="bg-white w-full max-w-xl max-h-[90vh] rounded-3xl shadow-2xl flex flex-col overflow-hidden"
-              onMouseDown={(e) => e.stopPropagation()}
-            >
-              {/* HEADER */}
+          <div
+            className="w-full max-w-xl max-h-[90vh] rounded-3xl bg-white p-6 shadow-xl border border-slate-200 overflow-y-auto"
+            onMouseDown={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-4 border-b border-slate-100 pb-4">
+              <div>
+                <h2
+                  className="text-base font-semibold text-slate-900 tracking-tight"
+                  style={{ fontWeight: 600 }}
+                >
+                  Request Reschedule
+                </h2>
+                <p
+                  className="mt-1 text-xs text-slate-500 font-medium"
+                  style={{ fontWeight: 600 }}
+                >
+                  Send a new schedule proposal to{" "}
+                  <span className="font-semibold text-slate-900">
+                    {getStudentName(selectedBooking.student)}
+                  </span>
+                </p>
+              </div>
 
-              <div className="flex-shrink-0 px-5 sm:px-6 py-5 border-b border-slate-100 flex items-center justify-between">
-                <div className="min-w-0 pr-4">
-                  <h2 className="text-xl sm:text-2xl font-bold text-slate-900">
-                    Request Reschedule
-                  </h2>
+              <button
+                type="button"
+                onClick={closeRescheduleModal}
+                disabled={submitting}
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+              >
+                <X size={18} />
+              </button>
+            </div>
 
-                  <p className="text-sm text-slate-500 mt-1">
-                    Send a new schedule proposal to{" "}
-                    <span className="font-semibold">
-                      {getStudentName(selectedBooking.student)}
-                    </span>
+            <div className="mt-5 space-y-5">
+              {/* CURRENT BOOKING PREVIEW */}
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <CalendarDays size={15} className="text-blue-600" />
+                  <p
+                    className="text-xs font-semibold text-slate-900"
+                    style={{ fontWeight: 600 }}
+                  >
+                    Current Booking Details
                   </p>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={closeRescheduleModal}
-                  disabled={submitting}
-                  className="w-10 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition flex-shrink-0"
-                >
-                  <X size={20} />
-                </button>
-              </div>
-
-              {/* BODY */}
-
-              <div className="flex-1 overflow-y-auto p-5 sm:p-6">
-                {/* CURRENT BOOKING */}
-
-                <div className="rounded-2xl bg-slate-50 border border-slate-200 p-5">
-                  <div className="flex items-center gap-2 mb-5">
-                    <CalendarDays size={18} className="text-slate-500" />
-
-                    <p className="font-semibold text-slate-800">
-                      Current Booking
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs font-semibold">
+                  <div className="bg-white rounded-xl p-3 border border-slate-200">
+                    <p className="text-[10px] text-slate-400 uppercase">
+                      Current Date
+                    </p>
+                    <p className="text-slate-800 mt-0.5">
+                      {formatDate(selectedBooking.sessionDate)}
                     </p>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div className="bg-white rounded-xl border border-slate-100 p-4">
-                      <p className="text-xs text-slate-400">Current Date</p>
-
-                      <p className="font-semibold text-slate-700 mt-2">
-                        {formatDate(selectedBooking.sessionDate)}
-                      </p>
-                    </div>
-
-                    <div className="bg-white rounded-xl border border-slate-100 p-4">
-                      <p className="text-xs text-slate-400">Start Time</p>
-
-                      <p className="font-semibold text-slate-700 mt-2">
-                        {formatTime(selectedBooking.startTime)}
-                      </p>
-                    </div>
-
-                    <div className="bg-white rounded-xl border border-slate-100 p-4">
-                      <p className="text-xs text-slate-400">End Time</p>
-
-                      <p className="font-semibold text-slate-700 mt-2">
-                        {formatTime(selectedBooking.endTime)}
-                      </p>
-                    </div>
+                  <div className="bg-white rounded-xl p-3 border border-slate-200">
+                    <p className="text-[10px] text-slate-400 uppercase">
+                      Start Time
+                    </p>
+                    <p className="text-slate-800 mt-0.5">
+                      {formatTime(selectedBooking.startTime)}
+                    </p>
                   </div>
 
-                  <div className="mt-4 flex items-center justify-between rounded-xl bg-indigo-50 border border-indigo-100 px-4 py-3">
-                    <div className="flex items-center gap-2">
-                      <Clock3 size={17} className="text-indigo-600" />
-
-                      <span className="text-sm font-medium text-indigo-700">
-                        Session Duration
-                      </span>
-                    </div>
-
-                    <span className="text-sm font-bold text-indigo-800">
-                      {selectedBooking.duration || 0} minutes
-                    </span>
+                  <div className="bg-white rounded-xl p-3 border border-slate-200">
+                    <p className="text-[10px] text-slate-400 uppercase">
+                      End Time
+                    </p>
+                    <p className="text-slate-800 mt-0.5">
+                      {formatTime(selectedBooking.endTime)}
+                    </p>
                   </div>
                 </div>
 
-                {/* FORM */}
-
-                <form
-                  onSubmit={handleRescheduleRequest}
-                  className="mt-6 space-y-5"
-                >
-                  {/* DATE */}
-
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">
-                      Proposed New Date
-                    </label>
-
-                    <input
-                      type="date"
-                      value={newDate}
-                      onChange={(e) => setNewDate(e.target.value)}
-                      min={getTodayDate()}
-                      disabled={submitting}
-                      className="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 disabled:bg-slate-100"
-                    />
-                  </div>
-
-                  {/* START TIME */}
-
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">
-                      Proposed New Start Time
-                    </label>
-
-                    <input
-                      type="time"
-                      value={newStartTime}
-                      onChange={(e) => setNewStartTime(e.target.value)}
-                      disabled={submitting}
-                      className="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 disabled:bg-slate-100"
-                    />
-
-                    {newStartTime && selectedBooking.duration && (
-                      <div className="mt-3 rounded-xl bg-indigo-50 border border-indigo-100 p-3">
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-indigo-700">
-                            Calculated End Time
-                          </span>
-
-                          <span className="font-bold text-indigo-900">
-                            {calculateEndTime(
-                              newStartTime,
-                              selectedBooking.duration
-                            )}
-                          </span>
-                        </div>
-
-                        <p className="text-xs text-indigo-600 mt-1">
-                          Based on {selectedBooking.duration} minute session
-                        </p>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* REASON */}
-
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">
-                      Reason for Rescheduling
-                    </label>
-
-                    <textarea
-                      rows={4}
-                      value={reason}
-                      onChange={(e) => setReason(e.target.value)}
-                      disabled={submitting}
-                      placeholder="Explain why you need to reschedule this session..."
-                      className="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none resize-none focus:ring-2 focus:ring-indigo-500 disabled:bg-slate-100"
-                    />
-                  </div>
-
-                  {/* WARNING */}
-
-                  <div className="flex gap-3 p-4 rounded-2xl bg-amber-50 border border-amber-200">
-                    <AlertCircle
-                      size={20}
-                      className="text-amber-600 flex-shrink-0"
-                    />
-
-                    <p className="text-sm text-amber-800">
-                      The current booking will remain unchanged until the
-                      student accepts your request. The new end time is
-                      calculated automatically from the session duration.
-                    </p>
-                  </div>
-
-                  {/* BUTTONS */}
-
-                  <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-2">
-                    <button
-                      type="button"
-                      onClick={closeRescheduleModal}
-                      disabled={submitting}
-                      className="w-full sm:w-auto px-5 py-3 rounded-xl border border-slate-200 text-slate-700 font-semibold hover:bg-slate-50 transition"
-                    >
-                      Cancel
-                    </button>
-
-                    <button
-                      type="submit"
-                      disabled={submitting}
-                      className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold transition disabled:opacity-60"
-                    >
-                      {submitting ? (
-                        <>
-                          <Loader2 size={18} className="animate-spin" />
-                          Sending...
-                        </>
-                      ) : (
-                        <>
-                          <RefreshCw size={18} />
-                          Send Reschedule Request
-                        </>
-                      )}
-                    </button>
-                  </div>
-                </form>
+                <div className="mt-3 flex items-center justify-between rounded-xl bg-blue-50 border border-blue-200 px-3.5 py-2.5 text-xs font-semibold text-blue-700">
+                  <span>Session Duration</span>
+                  <span>{selectedBooking.duration || 0} minutes</span>
+                </div>
               </div>
+
+              {/* FORM */}
+              <form onSubmit={handleRescheduleRequest} className="space-y-4">
+                <div>
+                  <label
+                    className="block text-xs font-semibold text-slate-700 mb-1.5"
+                    style={{ fontWeight: 600 }}
+                  >
+                    Proposed New Date
+                  </label>
+                  <input
+                    type="date"
+                    value={newDate}
+                    onChange={(e) => setNewDate(e.target.value)}
+                    min={getTodayDate()}
+                    disabled={submitting}
+                    className="w-full h-11 px-4 rounded-xl border border-slate-200 bg-slate-50 text-xs font-semibold text-slate-800 outline-none focus:border-blue-600 focus:bg-white focus:ring-2 focus:ring-blue-100 disabled:opacity-50"
+                    style={{ fontWeight: 600 }}
+                  />
+                </div>
+
+                <div>
+                  <label
+                    className="block text-xs font-semibold text-slate-700 mb-1.5"
+                    style={{ fontWeight: 600 }}
+                  >
+                    Proposed New Start Time
+                  </label>
+                  <input
+                    type="time"
+                    value={newStartTime}
+                    onChange={(e) => setNewStartTime(e.target.value)}
+                    disabled={submitting}
+                    className="w-full h-11 px-4 rounded-xl border border-slate-200 bg-slate-50 text-xs font-semibold text-slate-800 outline-none focus:border-blue-600 focus:bg-white focus:ring-2 focus:ring-blue-100 disabled:opacity-50"
+                    style={{ fontWeight: 600 }}
+                  />
+
+                  {newStartTime && selectedBooking.duration && (
+                    <div className="mt-2.5 rounded-xl bg-slate-50 border border-slate-200 p-3 text-xs font-semibold text-slate-700">
+                      <div className="flex items-center justify-between">
+                        <span className="text-slate-500">
+                          Calculated End Time
+                        </span>
+                        <span className="text-slate-900 font-bold">
+                          {calculateEndTime(
+                            newStartTime,
+                            selectedBooking.duration
+                          )}
+                        </span>
+                      </div>
+                      <p className="text-[10px] text-slate-400 mt-0.5">
+                        Based on {selectedBooking.duration} minute session
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <label
+                    className="block text-xs font-semibold text-slate-700 mb-1.5"
+                    style={{ fontWeight: 600 }}
+                  >
+                    Reason for Rescheduling
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={reason}
+                    onChange={(e) => setReason(e.target.value)}
+                    disabled={submitting}
+                    placeholder="Explain why you need to reschedule this session..."
+                    className="w-full resize-none rounded-2xl border border-slate-200 bg-slate-50 p-3.5 text-xs font-semibold text-slate-800 outline-none transition focus:border-blue-600 focus:bg-white focus:ring-2 focus:ring-blue-100 disabled:opacity-50"
+                    style={{ fontWeight: 600 }}
+                  />
+                </div>
+
+                <div className="flex gap-3 p-3.5 rounded-2xl bg-amber-50 border border-amber-200 text-xs font-semibold text-amber-800">
+                  <AlertCircle
+                    size={18}
+                    className="shrink-0 text-amber-600 mt-0.5"
+                  />
+                  <p className="leading-relaxed" style={{ fontWeight: 600 }}>
+                    The current booking will remain unchanged until the student
+                    accepts your request.
+                  </p>
+                </div>
+
+                <div className="pt-3 border-t border-slate-100 flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5">
+                  <button
+                    type="button"
+                    onClick={closeRescheduleModal}
+                    disabled={submitting}
+                    className="w-full sm:w-auto rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
+                    style={{ fontWeight: 600 }}
+                  >
+                    Cancel
+                  </button>
+
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    className="w-full sm:w-auto flex items-center justify-center gap-2 rounded-xl bg-black hover:bg-slate-800 px-5 py-2.5 text-xs font-semibold text-white transition disabled:opacity-50 shadow-xs"
+                    style={{ fontWeight: 600 }}
+                  >
+                    {submitting ? (
+                      <>
+                        <Loader2
+                          size={15}
+                          className="animate-spin text-blue-400"
+                        />
+                        Sending...
+                      </>
+                    ) : (
+                      <>
+                        <RefreshCw size={15} className="text-blue-400" />
+                        Send Reschedule Request
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 };
 

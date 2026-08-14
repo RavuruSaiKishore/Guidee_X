@@ -19,7 +19,6 @@ import UserLayout from "./layouts/UserLayout";
 import ProtectedRoute from "./components/Auth/ProtectedRoute";
 
 // ================= LAZY-LOADED PAGES =================
-// Student related pages
 const Profile = lazy(() => import("./Pages/User/Profile"));
 const Dashboard = lazy(() => import("./Pages/User/Dashboard"));
 const MyBookinsg = lazy(() => import("./Pages/User/MyBookings"));
@@ -79,7 +78,9 @@ const MyCoursesPage = lazy(() => import("./Pages/User/Courses/MyCoursesPage"));
 const StudentPracticeArena = lazy(() =>
   import("./Pages/User/RoadMap/StudentPracticeArena")
 );
-
+const CertificatePage = lazy(() =>
+  import("./Pages/User/Courses/CertificatePage")
+);
 
 // mentor routes
 const MentorLayout = lazy(() => import("./Pages/Mentor/Layout/MentorLayout"));
@@ -231,6 +232,9 @@ const CourseDetailsAdminPage = lazy(() =>
 const CourseStudentsPage = lazy(() =>
   import("./Pages/Admin/Courses/CourseStudentsPage")
 );
+const CreateMentorAdmin = lazy(() =>
+  import("./Pages/Admin/Mentors/CreateMentorAdmin")
+);
 
 function App() {
   useAutoLogout();
@@ -307,6 +311,10 @@ function App() {
               path="/student/practice/:problemId"
               element={<StudentPracticeArena />}
             />
+            <Route
+              path="/student/certificate/:id"
+              element={<CertificatePage />}
+            />
           </Route>
         </Route>
 
@@ -326,7 +334,6 @@ function App() {
             <Route path="/mentor/profile" element={<MentorProfiles />} />
             <Route path="/mentor/Editprofile" element={<EditMentorProfile />} />
             <Route path="/mentor/CancelBookings" element={<CancelBookings />} />
-            <Route path="/mentor/availability" element={<Availability />} />
             <Route
               path="/mentor/CompletedBookings"
               element={<CompletedBookings />}
@@ -350,7 +357,6 @@ function App() {
               path="/mentor/create-request"
               element={<CreateMentorRequest />}
             />
-
             <Route path="/mentor/disputes" element={<MentorDisputes />} />
             <Route
               path="/mentor/disputes/:disputeId"
@@ -358,6 +364,7 @@ function App() {
             />
           </Route>
         </Route>
+
         {/* ================= ADMIN ROUTES ================= */}
         <Route element={<ProtectedRoute allowedRole="admin" />}>
           <Route path="/admin" element={<AdminLayout />}>
@@ -378,7 +385,7 @@ function App() {
             <Route path="/admin/blogs" element={<AdminBlogManagement />} />
             <Route path="/admin/blogs/create" element={<AdminBlogForm />} />
             <Route path="/admin/blogs/:id" element={<BlogDetails />} />
-            <Route path="/admin/blogs/edit/:id" element={<EditBlog />} />{" "}
+            <Route path="/admin/blogs/edit/:id" element={<EditBlog />} />
             <Route
               path="/admin/mentors/:mentorId"
               element={<MentorDetails />}
@@ -452,6 +459,10 @@ function App() {
             <Route
               path="/admin/courses/:id/students"
               element={<CourseStudentsPage />}
+            />
+            <Route
+              path="/admin/mentor/create"
+              element={<CreateMentorAdmin />}
             />
           </Route>
         </Route>

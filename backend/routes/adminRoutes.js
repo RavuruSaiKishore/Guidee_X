@@ -38,6 +38,7 @@ import {
   getMentorById,
   getAllAdminReviews,
   getAdminBookingById,
+  createMentorByAdmin
 } from "../controllers/adminController.js";
 import { upload } from "../middleware/upload.js";
 // import { applyMentor } from "../controllers/mentorController.js";
@@ -74,6 +75,7 @@ router.delete("/mentors/:id", protect, deleteMentor);
 router.get("/pendingmentors", protect, pendingMentors);
 router.patch("/approve-mentor/:mentorId", protect, approveMentor);
 router.get("/mentors/:id", protect, getMentorById);
+router.post("/mentors/create",protect, upload.any(), createMentorByAdmin);
 
 router.put(
   "/mentors/:id",

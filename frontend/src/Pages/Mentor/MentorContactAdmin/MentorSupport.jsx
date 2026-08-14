@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
 
@@ -15,7 +15,6 @@ import {
   ArrowRight,
   Filter,
   Sparkles,
-  X,
 } from "lucide-react";
 
 const API_BASE_URL =
@@ -59,8 +58,6 @@ const MentorSupport = () => {
     }
   };
 
- 
-
   const filteredRequests = useMemo(() => {
     return requests.filter((item) => {
       const matchesSearch =
@@ -85,176 +82,233 @@ const MentorSupport = () => {
   const badgeColor = (status) => {
     switch (status) {
       case "Pending":
-        return "bg-amber-100 text-amber-700";
+        return "border-amber-200 bg-amber-50 text-amber-700";
 
       case "In Progress":
-        return "bg-blue-100 text-blue-700";
+        return "border-blue-200 bg-blue-50 text-blue-700";
 
       case "Resolved":
-        return "bg-green-100 text-green-700";
+        return "border-emerald-200 bg-emerald-50 text-emerald-700";
 
       default:
-        return "bg-slate-100 text-slate-700";
+        return "border-slate-200 bg-slate-50 text-slate-700";
     }
   };
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-[70vh]">
-        <Loader2 className="animate-spin text-indigo-600" size={42} />
+      <div
+        className="min-h-screen bg-slate-50 pt-16 sm:pt-20 lg:ml-64 lg:pt-0 text-slate-900"
+        style={{ fontFamily: "'Poppins', sans-serif" }}
+      >
+        <div className="flex min-h-[70vh] flex-col items-center justify-center px-2 sm:px-5">
+          <div className="relative">
+            <div className="h-14 w-14 rounded-full border-4 border-slate-200" />
+            <div className="absolute inset-0 h-14 w-14 animate-spin rounded-full border-4 border-transparent border-t-blue-600" />
+          </div>
+          <p
+            className="mt-5 text-center text-xs font-semibold tracking-tight"
+            style={{ fontWeight: 600 }}
+          >
+            Loading Support Center...
+          </p>
+          <p
+            className="mt-1 text-center text-[11px] text-slate-400 font-medium"
+            style={{ fontWeight: 600 }}
+          >
+            Please wait a moment
+          </p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-gray-50 pt-16 lg:ml-64 lg:pt-0">
-      <div className="mx-auto w-full max-w-7xl px-3 py-4 sm:px-5 sm:py-6 md:px-6 lg:px-8 lg:py-8 xl:px-10 space-y-6">
-        {/* HEADER */}
+    <div
+      className="min-h-screen bg-slate-50 pt-16 sm:pt-20 lg:ml-64 lg:pt-0 text-slate-900 pb-16"
+      style={{ fontFamily: "'Poppins', sans-serif", fontStyle: "normal" }}
+    >
+      <main className="w-full max-w-[1600px] mx-auto px-2 sm:px-6 lg:px-8 py-3 sm:py-6 lg:py-8 space-y-4 sm:space-y-6">
+        {/* ===================== HEADER ===================== */}
+        <section className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-black p-4 sm:p-8 text-white shadow-md w-full">
+          <div className="absolute -right-16 -top-16 h-48 w-48 rounded-full bg-blue-600/20 blur-3xl" />
+          <div className="absolute -bottom-20 left-1/4 h-40 w-40 rounded-full bg-blue-400/10 blur-2xl" />
 
-        <div className="rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-900 to-purple-900 p-8 flex justify-between items-center overflow-hidden relative">
-          <div className="absolute right-0 top-0 w-80 h-80 rounded-full bg-white/5 blur-3xl"></div>
+          <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-start sm:items-center gap-3.5 sm:gap-5 min-w-0">
+              <div
+                className="flex h-11 w-11 sm:h-14 sm:w-14 shrink-0 items-center justify-center rounded-2xl border border-white/15 bg-white/10 backdrop-blur shadow-inner text-blue-400"
+                style={{ fontWeight: 600 }}
+              >
+                <MessageSquare size={22} className="sm:w-[26px] sm:h-[26px]" />
+              </div>
 
-          <div className="flex items-center gap-5 z-10">
-            <div className="w-16 h-16 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center">
-              <MessageSquare size={30} className="text-white" />
-            </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <span
+                    className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[10px] sm:text-[11px] font-semibold text-blue-300 backdrop-blur"
+                    style={{ fontWeight: 600 }}
+                  >
+                    <Sparkles size={12} className="text-blue-400" />
+                    GuideX Support
+                  </span>
+                </div>
 
-            <div>
-              <div className="flex items-center gap-3">
-                <h1 className="text-3xl font-bold text-white">
+                <h1
+                  className="mt-1.5 sm:mt-2 text-xl sm:text-3xl font-semibold tracking-tight text-white"
+                  style={{ fontWeight: 600 }}
+                >
                   Support Center
                 </h1>
 
-                <span className="px-3 py-1 rounded-full bg-white/10 text-indigo-200 text-xs flex items-center gap-1">
-                  <Sparkles size={13} />
-                  GuideX
-                </span>
+                <p
+                  className="mt-0.5 sm:mt-1 text-[11px] sm:text-sm text-slate-300 font-medium leading-relaxed"
+                  style={{ fontWeight: 600 }}
+                >
+                  Connect directly with the GuideX Administration Team.
+                </p>
               </div>
+            </div>
 
-              <p className="text-slate-300 mt-2">
-                Connect directly with the GuideX Administration Team
-              </p>
+            <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+              <button
+                onClick={fetchRequests}
+                className="flex items-center gap-1.5 px-3.5 sm:px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/25 border border-white/15 text-xs font-semibold text-white backdrop-blur transition shadow-xs"
+                style={{ fontWeight: 600 }}
+              >
+                <RefreshCw size={14} className="text-blue-400" />
+                Refresh
+              </button>
+
+              <Link
+                to="/mentor/create-request"
+                className="flex items-center gap-1.5 px-4 sm:px-5 py-2.5 rounded-xl bg-black hover:bg-slate-800 border border-white/20 text-xs font-semibold text-white transition shadow-xs"
+                style={{ fontWeight: 600 }}
+              >
+                <Plus size={14} className="text-blue-400" />
+                New Request
+              </Link>
             </div>
           </div>
+        </section>
 
-          <div className="flex gap-3 z-10">
-            <button
-              onClick={fetchRequests}
-              className="px-5 py-3 rounded-xl bg-white text-indigo-700 font-semibold flex items-center gap-2 hover:bg-slate-100 transition"
-            >
-              <RefreshCw size={18} />
-              Refresh
-            </button>
-
-            <Link
-              to="/mentor/create-request"
-              className="px-5 py-3 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-semibold flex items-center gap-2 shadow-lg"
-            >
-              <Plus size={18} />
-              New Request
-            </Link>
-          </div>
-        </div>
         {/* ===================== STATS ===================== */}
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
-          <div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 hover:shadow-lg transition">
-            <div className="flex justify-between items-center">
-              <div>
-                <p className="text-sm text-slate-500 font-medium">
+        <section className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4 text-xs font-semibold w-full">
+          <div className="rounded-2xl sm:rounded-3xl border border-slate-200 bg-white p-3.5 sm:p-4 shadow-xs">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-blue-600 shrink-0">
+                <MessageSquare size={18} />
+              </div>
+              <div className="min-w-0">
+                <p
+                  className="text-[9px] sm:text-[10px] uppercase tracking-wide text-slate-400"
+                  style={{ fontWeight: 600 }}
+                >
                   Total Requests
                 </p>
-
-                <h2 className="text-3xl font-bold text-slate-900 mt-2">
+                <p
+                  className="text-sm sm:text-base font-semibold text-slate-900 mt-0.5"
+                  style={{ fontWeight: 600 }}
+                >
                   {stats.total}
-                </h2>
-              </div>
-
-              <div className="w-14 h-14 rounded-2xl bg-indigo-100 flex items-center justify-center">
-                <MessageSquare className="text-indigo-600" size={28} />
+                </p>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 hover:shadow-lg transition">
-            <div className="flex justify-between items-center">
-              <div>
-                <p className="text-sm text-slate-500 font-medium">Pending</p>
-
-                <h2 className="text-3xl font-bold text-amber-600 mt-2">
+          <div className="rounded-2xl sm:rounded-3xl border border-slate-200 bg-white p-3.5 sm:p-4 shadow-xs">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-amber-600 shrink-0">
+                <AlertCircle size={18} />
+              </div>
+              <div className="min-w-0">
+                <p
+                  className="text-[9px] sm:text-[10px] uppercase tracking-wide text-slate-400"
+                  style={{ fontWeight: 600 }}
+                >
+                  Pending
+                </p>
+                <p
+                  className="text-sm sm:text-base font-semibold text-amber-600 mt-0.5"
+                  style={{ fontWeight: 600 }}
+                >
                   {stats.pending}
-                </h2>
-              </div>
-
-              <div className="w-14 h-14 rounded-2xl bg-amber-100 flex items-center justify-center">
-                <AlertCircle className="text-amber-600" size={28} />
+                </p>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 hover:shadow-lg transition">
-            <div className="flex justify-between items-center">
-              <div>
-                <p className="text-sm text-slate-500 font-medium">
+          <div className="rounded-2xl sm:rounded-3xl border border-slate-200 bg-white p-3.5 sm:p-4 shadow-xs">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-blue-600 shrink-0">
+                <Clock3 size={18} />
+              </div>
+              <div className="min-w-0">
+                <p
+                  className="text-[9px] sm:text-[10px] uppercase tracking-wide text-slate-400"
+                  style={{ fontWeight: 600 }}
+                >
                   In Progress
                 </p>
-
-                <h2 className="text-3xl font-bold text-blue-600 mt-2">
+                <p
+                  className="text-sm sm:text-base font-semibold text-blue-600 mt-0.5"
+                  style={{ fontWeight: 600 }}
+                >
                   {stats.progress}
-                </h2>
-              </div>
-
-              <div className="w-14 h-14 rounded-2xl bg-blue-100 flex items-center justify-center">
-                <Clock3 className="text-blue-600" size={28} />
+                </p>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 hover:shadow-lg transition">
-            <div className="flex justify-between items-center">
-              <div>
-                <p className="text-sm text-slate-500 font-medium">Resolved</p>
-
-                <h2 className="text-3xl font-bold text-green-600 mt-2">
+          <div className="rounded-2xl sm:rounded-3xl border border-slate-200 bg-white p-3.5 sm:p-4 shadow-xs">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-emerald-600 shrink-0">
+                <CheckCircle2 size={18} />
+              </div>
+              <div className="min-w-0">
+                <p
+                  className="text-[9px] sm:text-[10px] uppercase tracking-wide text-slate-400"
+                  style={{ fontWeight: 600 }}
+                >
+                  Resolved
+                </p>
+                <p
+                  className="text-sm sm:text-base font-semibold text-emerald-600 mt-0.5"
+                  style={{ fontWeight: 600 }}
+                >
                   {stats.resolved}
-                </h2>
-              </div>
-
-              <div className="w-14 h-14 rounded-2xl bg-green-100 flex items-center justify-center">
-                <CheckCircle2 className="text-green-600" size={28} />
+                </p>
               </div>
             </div>
           </div>
-        </div>
+        </section>
 
         {/* ===================== SEARCH ===================== */}
-
-        <div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-5 flex flex-col lg:flex-row gap-4 justify-between items-center">
-          <div className="relative flex-1 w-full">
-            <Search
-              size={18}
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
-            />
-
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search by subject or category..."
-              className="w-full pl-11 pr-4 py-3 rounded-2xl border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-500"
-            />
-          </div>
-
-          <div className="flex gap-3 w-full lg:w-auto">
-            <div className="relative">
-              <Filter
-                size={17}
-                className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+        <section className="space-y-3 w-full">
+          <div className="flex flex-col lg:flex-row items-center gap-3 bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200 shadow-xs w-full">
+            <div className="relative min-w-0 flex-1 w-full">
+              <Search
+                size={16}
+                className="absolute left-3.5 sm:left-4 top-1/2 -translate-y-1/2 text-slate-400"
               />
+
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search by subject or category..."
+                className="w-full h-10 sm:h-11 pl-10 sm:pl-11 pr-3 sm:pr-4 rounded-xl border border-slate-200 bg-slate-50 text-xs font-semibold text-slate-800 outline-none transition-all placeholder:text-slate-400 focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                style={{ fontWeight: 600 }}
+              />
+            </div>
+
+            <div className="flex items-center gap-2 w-full lg:w-auto shrink-0">
+              <Filter size={15} className="text-slate-400" />
 
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="pl-10 pr-10 py-3 rounded-2xl border border-slate-200 outline-none"
+                className="w-full lg:w-48 h-10 sm:h-11 rounded-xl border border-slate-200 bg-slate-50 px-3.5 text-xs font-semibold text-slate-700 outline-none focus:border-blue-600 focus:bg-white focus:ring-2 focus:ring-blue-100"
+                style={{ fontWeight: 600 }}
               >
                 <option value="">All Status</option>
                 <option value="Pending">Pending</option>
@@ -263,47 +317,61 @@ const MentorSupport = () => {
               </select>
             </div>
           </div>
-        </div>
+        </section>
 
-        {/* ===================== NEW REQUEST MODAL ===================== */}
         {/* ===================== REQUESTS ===================== */}
-
-        <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
-          <div className="flex items-center justify-between px-8 py-6 border-b border-slate-100">
+        <section className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200 overflow-hidden shadow-xs w-full">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 sm:p-6 border-b border-slate-100">
             <div>
-              <h2 className="text-2xl font-bold text-slate-900">
+              <h2
+                className="text-sm sm:text-base font-semibold text-slate-900 tracking-tight"
+                style={{ fontWeight: 600 }}
+              >
                 Your Support Conversations
               </h2>
 
-              <p className="text-slate-500 text-sm mt-1">
+              <p
+                className="text-xs text-slate-500 font-medium mt-0.5"
+                style={{ fontWeight: 600 }}
+              >
                 Track all conversations with the GuideX Administration Team.
               </p>
             </div>
 
-            <div className="px-4 py-2 rounded-xl bg-indigo-50 text-indigo-700 font-semibold">
+            <span
+              className="px-3 py-1.5 rounded-xl bg-slate-100 border border-slate-200 text-xs font-semibold text-slate-700 w-fit"
+              style={{ fontWeight: 600 }}
+            >
               {filteredRequests.length} Conversation
               {filteredRequests.length !== 1 && "s"}
-            </div>
+            </span>
           </div>
 
           {filteredRequests.length === 0 ? (
-            <div className="py-20 flex flex-col items-center">
-              <div className="w-24 h-24 rounded-full bg-indigo-50 flex items-center justify-center">
-                <MessageSquare size={42} className="text-indigo-500" />
+            <div className="p-12 text-center">
+              <div className="mx-auto flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 mb-3 sm:mb-4">
+                <MessageSquare size={24} />
               </div>
 
-              <h3 className="mt-6 text-2xl font-bold text-slate-800">
+              <h3
+                className="text-sm sm:text-base font-semibold text-slate-900 tracking-tight"
+                style={{ fontWeight: 600 }}
+              >
                 No Conversations Found
               </h3>
 
-              <p className="text-slate-500 mt-2 max-w-md text-center">
+              <p
+                className="mt-1 max-w-sm mx-auto text-xs text-slate-500 font-medium leading-relaxed"
+                style={{ fontWeight: 600 }}
+              >
                 You haven't started any conversations with the administration
                 team yet.
               </p>
 
               <Link
                 to="/mentor/create-request"
-                className="mt-8 bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-7 py-3 rounded-2xl font-semibold hover:scale-105 transition"
+                className="mt-4 inline-flex items-center justify-center rounded-xl bg-black hover:bg-slate-800 px-5 py-2.5 text-xs font-semibold text-white transition shadow-xs"
+                style={{ fontWeight: 600 }}
               >
                 Create First Request
               </Link>
@@ -311,52 +379,73 @@ const MentorSupport = () => {
           ) : (
             <div className="divide-y divide-slate-100">
               {filteredRequests.map((item) => (
-                <div
+                <article
                   key={item._id}
-                  className="px-8 py-6 hover:bg-slate-50 transition"
+                  className="p-4 sm:p-6 hover:bg-slate-50 transition space-y-4"
                 >
-                  <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-6">
+                  <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
                     {/* LEFT */}
-
-                    <div className="flex gap-5">
-                      <div className="w-14 h-14 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white flex items-center justify-center font-bold text-xl shadow-lg">
-                        {item.subject?.charAt(0).toUpperCase()}
+                    <div className="flex items-start gap-3.5 min-w-0">
+                      <div
+                        className="flex h-11 w-11 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-xl bg-black text-white text-base font-semibold shadow-2xs"
+                        style={{ fontWeight: 600 }}
+                      >
+                        {item.subject?.charAt(0).toUpperCase() || "S"}
                       </div>
 
-                      <div>
-                        <div className="flex flex-wrap items-center gap-3">
-                          <h3 className="text-xl font-bold text-slate-900">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <h3
+                            className="text-xs sm:text-sm font-semibold text-slate-900 tracking-tight truncate"
+                            style={{ fontWeight: 600 }}
+                          >
                             {item.subject}
                           </h3>
 
                           <span
-                            className={`px-3 py-1 rounded-full text-xs font-semibold ${badgeColor(
+                            className={`rounded-full px-3 py-1 text-[10px] sm:text-[11px] font-semibold border ${badgeColor(
                               item.status
                             )}`}
+                            style={{ fontWeight: 600 }}
                           >
                             {item.status}
                           </span>
                         </div>
 
-                        <p className="mt-2 text-slate-600">{item.category}</p>
+                        <p
+                          className="mt-0.5 text-[11px] text-slate-500 font-medium truncate"
+                          style={{ fontWeight: 600 }}
+                        >
+                          {item.category}
+                        </p>
 
-                        <div className="flex flex-wrap gap-6 mt-4 text-sm text-slate-500">
-                          <span className="flex items-center gap-2">
-                            <Calendar size={15} />
-
+                        <div className="flex flex-wrap items-center gap-4 mt-2 text-[11px] text-slate-400 font-medium">
+                          <span
+                            className="flex items-center gap-1.5"
+                            style={{ fontWeight: 600 }}
+                          >
+                            <Calendar size={13} className="text-blue-600" />
                             {new Date(item.createdAt).toLocaleDateString()}
                           </span>
 
-                          <span className="flex items-center gap-2">
-                            <Clock3 size={15} />
-
+                          <span
+                            className="flex items-center gap-1.5"
+                            style={{ fontWeight: 600 }}
+                          >
+                            <Clock3 size={13} className="text-blue-600" />
                             {new Date(
                               item.lastMessageAt || item.createdAt
                             ).toLocaleString()}
                           </span>
 
-                          <span className="flex items-center gap-2">
-                            <MessageSquare size={15} />
+                          <span
+                            className="flex items-center gap-1.5"
+                            style={{ fontWeight: 600 }}
+                          >
+                            <MessageSquare
+                              size={13}
+                              className="text-blue-600"
+                            />
                             {item.conversation?.length || 1} Messages
                           </span>
                         </div>
@@ -364,29 +453,32 @@ const MentorSupport = () => {
                     </div>
 
                     {/* RIGHT */}
-
-                    <div className="flex flex-col items-end gap-4">
+                    <div className="flex flex-col sm:flex-row xl:flex-col items-start sm:items-center xl:items-end justify-between xl:justify-center gap-2.5 pt-2 xl:pt-0 border-t xl:border-t-0 border-slate-100">
                       <Link
                         to={`/mentor/admin-chat/${item._id}`}
-                        className="flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 py-3 rounded-2xl font-semibold shadow-lg hover:scale-105 transition"
+                        className="w-full sm:w-auto xl:w-auto flex items-center justify-center gap-1.5 rounded-xl bg-black hover:bg-slate-800 px-4 py-2.5 text-xs font-semibold text-white transition shadow-xs"
+                        style={{ fontWeight: 600 }}
                       >
-                        Open Chat
-                        <ArrowRight size={18} />
+                        <span>Open Chat</span>
+                        <ArrowRight size={13} className="text-blue-400" />
                       </Link>
 
                       {item.replied && (
-                        <div className="text-sm text-green-600 font-medium">
+                        <div
+                          className="text-[11px] text-emerald-600 font-semibold"
+                          style={{ fontWeight: 600 }}
+                        >
                           ✓ Admin Replied
                         </div>
                       )}
                     </div>
                   </div>
-                </div>
+                </article>
               ))}
             </div>
           )}
-        </div>
-      </div>
+        </section>
+      </main>
     </div>
   );
 };

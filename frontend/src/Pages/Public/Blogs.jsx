@@ -10,9 +10,15 @@ import {
   Share2,
   TrendingUp,
   X,
+  Sparkles,
+  Flame,
+  FileText,
+  BookmarkCheck,
+  Lightbulb,
+  Layers,
+  Compass,
 } from "lucide-react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-
 
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
@@ -23,8 +29,7 @@ const Blogs = () => {
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-    const navigate = useNavigate();
-
+  const navigate = useNavigate();
 
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
@@ -46,29 +51,22 @@ const Blogs = () => {
   ];
 
   // ==========================================
-  // CATEGORY COLORS
+  // CATEGORY COLORS (Harmonized with Mentor/Course UI slate/blue theme)
   // ==========================================
 
   const getCategoryStyle = (category) => {
     const styles = {
-      Career: "bg-blue-50 text-blue-700 border-blue-100",
-
-      Technology: "bg-violet-50 text-violet-700 border-violet-100",
-
-      Education: "bg-emerald-50 text-emerald-700 border-emerald-100",
-
-      Interview: "bg-orange-50 text-orange-700 border-orange-100",
-
-      Programming: "bg-cyan-50 text-cyan-700 border-cyan-100",
-
-      "Personal Growth": "bg-pink-50 text-pink-700 border-pink-100",
-
-      Mentorship: "bg-indigo-50 text-indigo-700 border-indigo-100",
-
-      "Industry Trends": "bg-amber-50 text-amber-700 border-amber-100",
+      Career: "bg-blue-50 text-blue-700 border-blue-200/60",
+      Technology: "bg-indigo-50 text-indigo-700 border-indigo-200/60",
+      Education: "bg-emerald-50 text-emerald-700 border-emerald-200/60",
+      Interview: "bg-amber-50 text-amber-700 border-amber-200/60",
+      Programming: "bg-cyan-50 text-cyan-700 border-cyan-200/60",
+      "Personal Growth": "bg-purple-50 text-purple-700 border-purple-200/60",
+      Mentorship: "bg-blue-50 text-blue-800 border-blue-200/60",
+      "Industry Trends": "bg-slate-100 text-slate-800 border-slate-200",
     };
 
-    return styles[category] || "bg-slate-50 text-slate-600 border-slate-200";
+    return styles[category] || "bg-slate-50 text-slate-700 border-slate-200";
   };
 
   // ==========================================
@@ -95,46 +93,45 @@ const Blogs = () => {
     fetchBlogs();
   }, []);
 
- const fetchBlogs = async () => {
-   try {
-     setLoading(true);
-     setError("");
+  const fetchBlogs = async () => {
+    try {
+      setLoading(true);
+      setError("");
 
-     const response = await fetch(
-       `${API_BASE_URL}/api/blog-interactions/blogs`,
-       {
-         method: "GET",
-         headers: {
-           "Content-Type": "application/json",
-         },
-       }
-     );
+      const response = await fetch(
+        `${API_BASE_URL}/api/blog-interactions/blogs`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
-     const data = await response.json();
+      const data = await response.json();
 
-     console.log("Blogs response:", data);
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to fetch blogs");
+      }
 
-     if (!response.ok) {
-       throw new Error(data.message || "Failed to fetch blogs");
-     }
+      const blogData = Array.isArray(data)
+        ? data
+        : data.blogs || data.data || [];
 
-     const blogData = Array.isArray(data)
-       ? data
-       : data.blogs || data.data || [];
+      setBlogs(blogData);
 
-     setBlogs(blogData);
+      const featured = blogData.filter((blog) => blog.featured === true);
 
-     const featured = blogData.filter((blog) => blog.featured === true);
-
-     setFeaturedBlogs(featured);
-   } catch (error) {
-     console.error("Fetch blogs error:", error);
-
-     setError(error.message || "Unable to load blogs. Please try again later.");
-   } finally {
-     setLoading(false);
-   }
- };
+      setFeaturedBlogs(featured);
+    } catch (error) {
+      console.error("Fetch blogs error:", error);
+      setError(
+        error.message || "Unable to load blogs. Please try again later."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // ==========================================
   // FILTER BLOGS
@@ -181,118 +178,87 @@ const Blogs = () => {
     setSelectedCategory("All");
   };
 
-  // ==========================================
-  // RENDER
-  // ==========================================
-
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-slate-50 font-sans">
       {/* ==========================================
-          HERO SECTION
+          REFINED MODERN HERO SECTION
       ========================================== */}
 
-      <section className="relative overflow-hidden bg-gradient-to-br from-indigo-950 via-slate-950 to-emerald-950">
-        {/* Decorative Background */}
+      <section className="relative overflow-hidden bg-white border-b border-slate-200/80 py-16 sm:py-20 lg:py-24">
+        {/* Subtle decorative backdrop glow */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 h-96 w-full max-w-7xl bg-gradient-to-b from-blue-50/60 via-indigo-50/20 to-transparent pointer-events-none blur-3xl" />
 
-        <div className="absolute -left-32 -top-32 h-96 w-96 rounded-full bg-indigo-500/20 blur-3xl" />
+        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
+          <div className="inline-flex items-center gap-2 rounded-full border border-blue-200/80 bg-blue-50 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-blue-600 mb-6 shadow-sm">
+            <Compass size={14} />
+            GuideX Knowledge Nexus
+          </div>
 
-        <div className="absolute -bottom-40 right-0 h-96 w-96 rounded-full bg-emerald-500/20 blur-3xl" />
+          <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl md:text-5xl lg:text-6xl">
+            Explore Expert Perspectives & <br className="hidden sm:inline" />
+            <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 bg-clip-text text-transparent">
+              Accelerate Your Growth
+            </span>
+          </h1>
 
-        <div className="absolute right-1/3 top-10 h-48 w-48 rounded-full bg-violet-500/10 blur-3xl" />
+          <p className="mx-auto mt-4 max-w-2xl text-xs sm:text-sm md:text-base leading-relaxed text-slate-500">
+            Deep-dive technical articles, structured career pathways, and
+            insider interview strategies curated directly by industry mentors.
+          </p>
 
-        {/* Hero Content */}
-
-        <div className="relative mx-auto max-w-7xl px-6 py-20 lg:px-8 lg:py-24">
-          <div className="max-w-3xl">
-            {/* Badge */}
-
-            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-indigo-400/20 bg-indigo-500/10 px-4 py-2 text-sm font-semibold text-indigo-300 backdrop-blur-sm">
-              <BookOpen size={17} />
-
-              <span>GuideX Insights</span>
-            </div>
-
-            {/* Heading */}
-
-            <h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl">
-              Ideas to help you{" "}
-              <span className="bg-gradient-to-r from-indigo-400 via-violet-400 to-emerald-400 bg-clip-text text-transparent">
-                learn and grow.
+          {/* Quick Stat Indicators */}
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-6 sm:gap-10 text-slate-600">
+            <div className="flex items-center gap-2">
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-50 text-blue-600 font-bold text-xs border border-blue-100">
+                {blogs.length}+
+              </div>
+              <span className="text-xs font-bold text-slate-700">
+                Published Guides
               </span>
-            </h1>
-
-            {/* Description */}
-
-            <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-300">
-              Practical insights on careers, technology, programming,
-              interviews, and personal growth from the GuideX community.
-            </p>
-
-            {/* Stats */}
-
-            <div className="mt-8 flex flex-wrap gap-3">
-              {/* Articles */}
-
-              <div className="rounded-xl border border-white/10 bg-white/5 px-5 py-3 backdrop-blur-sm">
-                <p className="text-lg font-bold text-white">{blogs.length}+</p>
-
-                <p className="text-xs text-slate-400">Articles</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 font-bold text-xs border border-indigo-100">
+                {categories.length - 1}
               </div>
-
-              {/* Categories */}
-
-              <div className="rounded-xl border border-white/10 bg-white/5 px-5 py-3 backdrop-blur-sm">
-                <p className="text-lg font-bold text-white">
-                  {categories.length - 1}
-                </p>
-
-                <p className="text-xs text-slate-400">Categories</p>
+              <span className="text-xs font-bold text-slate-700">
+                Core Categories
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 font-bold text-xs border border-emerald-100">
+                100%
               </div>
-
-              {/* Insights */}
-
-              <div className="rounded-xl border border-white/10 bg-white/5 px-5 py-3 backdrop-blur-sm">
-                <p className="text-lg font-bold text-white">Expert</p>
-
-                <p className="text-xs text-slate-400">Insights</p>
-              </div>
+              <span className="text-xs font-bold text-slate-700">
+                Verified Insights
+              </span>
             </div>
           </div>
         </div>
       </section>
 
       {/* ==========================================
-          MAIN CONTENT
+          MAIN CONTENT CONTAINER
       ========================================== */}
 
-      <main className="mx-auto max-w-7xl px-6 lg:px-8">
+      <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10">
         {/* ==========================================
-            FEATURED ARTICLES
+            FEATURED ARTICLES (Editor's Picks Carousel / Grid)
         ========================================== */}
 
         {!loading && featuredBlogs.length > 0 && (
-          <section className="py-14">
-            {/* Section Heading */}
-
-            <div className="mb-8 flex items-end justify-between">
+          <section className="mb-14">
+            <div className="mb-6 flex items-center justify-between">
               <div>
-                <p className="text-sm font-semibold uppercase tracking-wider text-indigo-600">
-                  Featured
-                </p>
-
-                <h2 className="mt-2 text-2xl font-bold text-slate-950 sm:text-3xl">
-                  Editor's Picks
+                <span className="text-xs font-bold uppercase tracking-wider text-blue-600">
+                  EDITOR'S PICKS
+                </span>
+                <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 mt-0.5">
+                  Featured Masterclass Articles
                 </h2>
-
-                <p className="mt-2 text-sm text-slate-500">
-                  Handpicked articles to help you learn something valuable.
-                </p>
               </div>
             </div>
 
-            {/* Featured Grid */}
-
-            <div className="grid gap-8 lg:grid-cols-2">
+            <div className="grid gap-6 lg:grid-cols-2">
               {featuredBlogs.slice(0, 2).map((blog) => (
                 <FeaturedBlogCard
                   key={blog._id}
@@ -307,124 +273,97 @@ const Blogs = () => {
         )}
 
         {/* ==========================================
-            CATEGORY + SEARCH
+            CATEGORY TABS + SEARCH FILTER BAR
         ========================================== */}
 
-        <section className="border-y border-slate-200 py-6">
-          <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-            {/* Categories */}
-
-            <div className="flex gap-2 overflow-x-auto pb-1">
-              {categories.map((category) => (
-                <button
-                  key={category}
-                  onClick={() => setSelectedCategory(category)}
-                  className={`whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition ${
-                    selectedCategory === category
-                      ? "bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-md"
-                      : "border border-slate-200 bg-white text-slate-600 hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600"
-                  }`}
-                >
-                  {category}
-                </button>
-              ))}
-            </div>
-
-            {/* Search */}
-
-            <div className="relative w-full lg:w-80">
-              <Search
-                size={18}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-              />
-
-              <input
-                type="text"
-                placeholder="Search articles..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="h-11 w-full rounded-xl border border-slate-200 bg-white pl-10 pr-10 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10"
-              />
-
-              {search && (
-                <button
-                  onClick={() => setSearch("")}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 transition hover:text-indigo-600"
-                >
-                  <X size={17} />
-                </button>
-              )}
-            </div>
+        <div className="mb-10 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between bg-white p-4 rounded-3xl border border-slate-200/80 shadow-sm">
+          {/* Category Pills */}
+          <div className="flex gap-2 overflow-x-auto pb-2 lg:pb-0 scrollbar-none">
+            {categories.map((category) => (
+              <button
+                key={category}
+                onClick={() => setSelectedCategory(category)}
+                className={`whitespace-nowrap rounded-xl px-4 py-2.5 text-xs font-bold transition-all ${
+                  selectedCategory === category
+                    ? "bg-blue-600 text-white shadow-md shadow-blue-200"
+                    : "bg-slate-50 text-slate-600 border border-slate-200/60 hover:bg-slate-100 hover:text-blue-600"
+                }`}
+              >
+                {category}
+              </button>
+            ))}
           </div>
-        </section>
+
+          {/* Search Bar */}
+          <div className="relative w-full lg:w-72">
+            <Search
+              size={16}
+              className="absolute left-3.5 top-3.5 text-slate-400"
+            />
+            <input
+              type="text"
+              placeholder="Search articles, tags..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-9 py-2 text-xs font-medium text-slate-800 outline-none focus:border-blue-500 transition"
+            />
+            {search && (
+              <button
+                onClick={() => setSearch("")}
+                className="absolute right-3 top-3 text-slate-400 hover:text-slate-700"
+              >
+                <X size={15} />
+              </button>
+            )}
+          </div>
+        </div>
 
         {/* ==========================================
-            LATEST ARTICLES
+            ARTICLES DIRECTORY GRID SECTION
         ========================================== */}
 
-        <section className="py-14">
-          {/* Header */}
-
-          <div className="mb-9 flex items-end justify-between">
-            <div>
-              <p className="text-sm font-semibold uppercase tracking-wider text-indigo-600">
-                Discover
-              </p>
-
-              <h2 className="mt-2 text-3xl font-bold text-slate-950">
-                Latest Articles
-              </h2>
-
-              <p className="mt-2 text-sm text-slate-500">
-                Explore the latest insights from GuideX.
-              </p>
-            </div>
-
-            <p className="hidden rounded-full bg-indigo-50 px-4 py-2 text-sm font-semibold text-indigo-600 sm:block">
-              {filteredBlogs.length}{" "}
-              {filteredBlogs.length === 1 ? "Article" : "Articles"}
-            </p>
+        <section className="mb-16">
+          <div className="mb-6 flex items-center justify-between">
+            <h2 className="text-xl font-extrabold text-slate-900">
+              {selectedCategory === "All"
+                ? "All Articles"
+                : `${selectedCategory} Insights`}
+            </h2>
+            <span className="text-xs font-semibold text-slate-500">
+              Showing{" "}
+              <span className="text-blue-600 font-bold">
+                {filteredBlogs.length}
+              </span>{" "}
+              articles
+            </span>
           </div>
 
-          {/* ==========================================
-              LOADING
-          ========================================== */}
-
+          {/* Loading Skeleton State */}
           {loading && (
-            <div className="grid gap-x-7 gap-y-12 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {[1, 2, 3, 4, 5, 6].map((item) => (
                 <BlogSkeleton key={item} />
               ))}
             </div>
           )}
 
-          {/* ==========================================
-              ERROR
-          ========================================== */}
-
+          {/* Error State */}
           {!loading && error && (
-            <div className="rounded-2xl border border-red-200 bg-gradient-to-br from-red-50 to-orange-50 p-10 text-center">
-              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-red-100">
-                <BookOpen size={24} className="text-red-500" />
-              </div>
-
-              <p className="mt-4 font-medium text-red-600">{error}</p>
-
+            <div className="rounded-3xl border border-rose-200 bg-rose-50/50 p-12 text-center">
+              <BookOpen size={36} className="mx-auto text-rose-500 mb-3" />
+              <p className="text-sm font-bold text-rose-700">{error}</p>
               <button
                 onClick={fetchBlogs}
-                className="mt-5 rounded-lg bg-gradient-to-r from-red-500 to-orange-500 px-6 py-2.5 text-sm font-semibold text-white shadow-md transition hover:shadow-lg"
+                className="mt-4 rounded-xl bg-slate-900 px-6 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-slate-800"
               >
                 Try Again
               </button>
             </div>
           )}
 
-          {/* ==========================================
-              BLOG GRID
-          ========================================== */}
-
+          {/* Articles Grid */}
           {!loading && !error && filteredBlogs.length > 0 && (
-            <div className="grid gap-x-7 gap-y-12 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {filteredBlogs.map((blog) => (
                 <BlogCard
                   key={blog._id}
@@ -438,33 +377,103 @@ const Blogs = () => {
             </div>
           )}
 
-          {/* ==========================================
-              EMPTY STATE
-          ========================================== */}
-
+          {/* Empty State */}
           {!loading && !error && filteredBlogs.length === 0 && (
-            <div className="rounded-2xl border border-slate-200 bg-gradient-to-br from-indigo-50 via-white to-emerald-50 px-6 py-20 text-center">
-              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-indigo-100">
-                <Search size={28} className="text-indigo-500" />
-              </div>
-
-              <h3 className="mt-5 text-xl font-bold text-slate-900">
+            <div className="rounded-3xl bg-white border border-slate-200 py-20 text-center px-4 shadow-sm">
+              <Search size={36} className="mx-auto text-slate-300" />
+              <h3 className="mt-4 text-lg font-bold text-slate-900">
                 No articles found
               </h3>
-
-              <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-500">
-                We couldn't find any articles matching your search or selected
-                category.
+              <p className="mt-1 text-xs text-slate-500 max-w-sm mx-auto">
+                No articles match your search or selected category. Try checking
+                your spelling or clearing filters.
               </p>
-
               <button
                 onClick={clearFilters}
-                className="mt-6 rounded-lg bg-gradient-to-r from-indigo-600 to-violet-600 px-6 py-2.5 text-sm font-semibold text-white shadow-md transition hover:shadow-lg"
+                className="mt-6 rounded-xl bg-blue-600 px-6 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-blue-700"
               >
                 Clear Filters
               </button>
             </div>
           )}
+        </section>
+
+        {/* ==========================================
+            BLOG METRICS & ECOSYSTEM SUMMARY CARD
+        ========================================== */}
+        <section className="rounded-3xl border border-slate-200/80 bg-white p-6 sm:p-8 shadow-sm">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-100">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600 border border-blue-100">
+                <FileText size={20} />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-slate-900">
+                  GuideX Content & Publication Overview
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Summary metrics across our active learning tracks and
+                  technical journals.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-semibold border border-emerald-100">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                Live Database Feed
+              </span>
+            </div>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-4">
+              <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                Total Publications
+              </p>
+              <p className="text-xl font-black text-slate-900 mt-1">
+                {blogs.length} Articles
+              </p>
+              <p className="text-[11px] text-slate-500 mt-1">
+                Indexed and fully searchable across domains.
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-4">
+              <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                Featured Spotlights
+              </p>
+              <p className="text-xl font-black text-blue-600 mt-1">
+                {featuredBlogs.length} Masterclasses
+              </p>
+              <p className="text-[11px] text-slate-500 mt-1">
+                Hand-picked editor's choices for advanced learning.
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-4">
+              <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                Active Tracks
+              </p>
+              <p className="text-xl font-black text-indigo-600 mt-1">
+                {categories.length - 1} Categories
+              </p>
+              <p className="text-[11px] text-slate-500 mt-1">
+                Covering technical stacks, career growth & interviews.
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-4">
+              <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                Community Access
+              </p>
+              <p className="text-xl font-black text-emerald-600 mt-1">
+                Free & Open
+              </p>
+              <p className="text-[11px] text-slate-500 mt-1">
+                Direct insights contributed by verified mentors.
+              </p>
+            </div>
+          </div>
         </section>
       </main>
     </div>
@@ -473,6 +482,9 @@ const Blogs = () => {
 
 export default Blogs;
 
+// =====================================================
+// STANDARD BLOG CARD (Clean Minimalist White Card UI)
+// =====================================================
 
 const BlogCard = ({
   blog,
@@ -488,167 +500,105 @@ const BlogCard = ({
   return (
     <article
       onClick={handleBlogClick}
-      className="group cursor-pointer overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-indigo-200 hover:shadow-xl"
+      className="group relative flex flex-col justify-between overflow-hidden rounded-3xl border border-slate-200/80 bg-white p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl cursor-pointer"
     >
-      {/* IMAGE */}
+      <div>
+        {/* Cover Image */}
+        <div className="relative aspect-[16/10] w-full overflow-hidden rounded-2xl bg-slate-100 mb-5">
+          {blog.coverImage ? (
+            <img
+              src={getImageUrl(blog.coverImage)}
+              alt={blog.coverImageAlt || blog.title}
+              className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+            />
+          ) : (
+            <div className="flex h-full items-center justify-center bg-blue-50 text-blue-600">
+              <BookOpen size={32} />
+            </div>
+          )}
 
-      <div className="relative block aspect-[16/10] overflow-hidden bg-slate-100">
-        {blog.coverImage ? (
-          <img
-            src={getImageUrl(blog.coverImage)}
-            alt={blog.coverImageAlt || blog.title}
-            className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-          />
-        ) : (
-          <div className="flex h-full items-center justify-center bg-gradient-to-br from-indigo-100 via-violet-50 to-emerald-100">
-            <BookOpen size={42} className="text-indigo-400" />
-          </div>
-        )}
+          {blog.isTrending && (
+            <span className="absolute top-3 left-3 flex items-center gap-1 rounded-full bg-slate-900/80 backdrop-blur-md px-3 py-1 text-[10px] font-bold text-amber-300 shadow">
+              <Flame size={12} className="fill-amber-300" /> Trending
+            </span>
+          )}
+        </div>
 
-        {blog.isTrending && (
-          <span className="absolute left-4 top-4 flex items-center gap-1.5 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 px-3 py-1.5 text-xs font-bold text-white shadow-lg">
-            <TrendingUp size={13} />
-            Trending
-          </span>
-        )}
-      </div>
-
-      {/* CONTENT */}
-
-      <div className="p-6">
-        {/* Category */}
-
-        <div className="flex items-center gap-2">
+        {/* Category & Type */}
+        <div className="flex items-center justify-between mb-3">
           <span
-            className={`rounded-full border px-3 py-1 text-xs font-semibold ${getCategoryStyle(
+            className={`rounded-full border px-3 py-1 text-[10px] font-bold uppercase tracking-wider ${getCategoryStyle(
               blog.category
             )}`}
           >
-            {blog.category}
+            {blog.category || "General"}
           </span>
-
-          <span className="text-xs text-slate-300">•</span>
-
-          <span className="text-xs font-medium text-slate-400">
+          <span className="text-[11px] font-semibold text-slate-400">
             {blog.contentType || "Article"}
           </span>
         </div>
 
         {/* Title */}
-
-        <h3 className="mt-4 line-clamp-2 text-xl font-bold leading-snug text-slate-950 transition group-hover:text-indigo-600">
+        <h3 className="line-clamp-2 text-base font-bold text-slate-900 group-hover:text-blue-600 transition-colors leading-snug mb-2">
           {blog.title}
         </h3>
 
         {/* Excerpt */}
-
-        <p className="mt-3 line-clamp-3 text-sm leading-6 text-slate-500">
+        <p className="line-clamp-2 text-xs leading-relaxed text-slate-500 mb-4">
           {blog.excerpt}
         </p>
 
         {/* Tags */}
-
         {blog.tags?.length > 0 && (
-          <div className="mt-4 flex flex-wrap gap-2">
-            {blog.tags.slice(0, 3).map((tag, index) => (
+          <div className="flex flex-wrap gap-1.5 mb-5">
+            {blog.tags.slice(0, 2).map((tag, index) => (
               <span
-                key={`${tag}-${index}`}
-                className="rounded-md bg-indigo-50 px-2.5 py-1 text-xs font-medium text-indigo-600"
+                key={index}
+                className="rounded-lg bg-slate-50 px-2 py-0.5 text-[10px] font-medium text-slate-600 border border-slate-100"
               >
                 #{tag}
               </span>
             ))}
           </div>
         )}
+      </div>
 
-        {/* AUTHOR + READING TIME */}
-
-        {/* AUTHOR + READING TIME */}
-
-        <div className="mt-6 flex items-center justify-between border-t border-slate-100 pt-5">
-          <div className="flex items-center gap-2">
-            {blog.authorImage ? (
-              <img
-                src={getImageUrl(blog.authorImage)}
-                alt={blog.authorName || "Author"}
-                className="h-9 w-9 rounded-full object-cover ring-2 ring-indigo-50"
-              />
-            ) : (
-              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 text-xs font-bold text-white">
-                {(blog.authorName || "G").charAt(0).toUpperCase()}
-              </div>
-            )}
-
-            <div>
-              <p className="text-xs font-semibold text-slate-700">
-                {blog.authorName || "GuideX Team"}
-              </p>
-
-              <p className="mt-0.5 text-xs text-slate-400">
-                {formatDate(blog.publishedAt || blog.createdAt)}
-              </p>
+      {/* Author & Footer Metadata */}
+      <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
+        <div className="flex items-center gap-2.5">
+          {blog.authorImage ? (
+            <img
+              src={getImageUrl(blog.authorImage)}
+              alt={blog.authorName || "Author"}
+              className="h-8 w-8 rounded-full object-cover border border-slate-100"
+            />
+          ) : (
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-blue-700 text-xs font-bold">
+              {(blog.authorName || "G").charAt(0).toUpperCase()}
             </div>
-          </div>
-
-          {/* Reading Time */}
-
-          <div className="flex items-center gap-1.5 rounded-full bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-500">
-            <Clock size={13} />
-            {blog.readingTime || 1} min
-          </div>
-        </div>
-
-        {/* ENGAGEMENT COUNTS */}
-
-        <div className="mt-5 flex items-center gap-4 border-t border-slate-100 pt-4">
-          {/* Views */}
-
-          <div className="flex items-center gap-1.5 text-xs font-medium text-slate-500">
-            <Eye size={15} className="text-violet-500" />
-            <span>{blog.views || 0}</span>
-            <span>Views</span>
-          </div>
-
-          {/* Likes */}
-
-          <div className="flex items-center gap-1.5 text-xs font-medium text-slate-500">
-            <Heart size={15} className="text-red-500" />
-            <span>{blog.likes || 0}</span>
-            <span>Likes</span>
-          </div>
-
-          {/* Shares */}
-
-          <div className="flex items-center gap-1.5 text-xs font-medium text-slate-500">
-            <Share2 size={15} className="text-indigo-500" />
-            <span>{blog.shares || 0}</span>
-            <span>Shares</span>
+          )}
+          <div className="min-w-0">
+            <p className="text-xs font-bold text-slate-900 truncate">
+              {blog.authorName || "GuideX Team"}
+            </p>
+            <p className="text-[10px] text-slate-400">
+              {formatDate(blog.publishedAt || blog.createdAt)}
+            </p>
           </div>
         </div>
 
-        {/* READ ARTICLE */}
-
-        <button
-          onClick={(event) => {
-            event.stopPropagation();
-            navigate(`/blogs/${blog._id}`);
-          }}
-          className="mt-5 flex w-full items-center justify-between rounded-lg bg-indigo-50 px-4 py-3 text-sm font-semibold text-indigo-600 transition hover:bg-gradient-to-r hover:from-indigo-600 hover:to-violet-600 hover:text-white"
-        >
-          <span>Read Article</span>
-
-          <ArrowRight
-            size={17}
-            className="transition-transform group-hover:translate-x-1"
-          />
-        </button>
+        {/* Reading Time */}
+        <div className="flex items-center gap-1 text-[11px] font-semibold text-slate-400 shrink-0">
+          <Clock size={12} />
+          {blog.readingTime || 1}m read
+        </div>
       </div>
     </article>
   );
 };
 
 // =====================================================
-// FEATURED BLOG CARD
+// FEATURED BLOG CARD (Wide Featured Layout)
 // =====================================================
 
 const FeaturedBlogCard = ({
@@ -660,114 +610,66 @@ const FeaturedBlogCard = ({
   return (
     <Link
       to={`/blogs/${blog._id}`}
-      className="group overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-2xl"
+      className="group relative overflow-hidden rounded-3xl border border-slate-200/80 bg-white p-6 sm:p-8 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl flex flex-col justify-between"
     >
-      <div className="grid md:grid-cols-2">
-        {/* ==========================================
-            IMAGE
-        ========================================== */}
-
-        <div className="relative aspect-[4/3] overflow-hidden bg-gradient-to-br from-indigo-100 to-emerald-100 md:aspect-auto">
+      <div className="grid md:grid-cols-12 gap-6 items-center">
+        {/* Left Image (5 Cols) */}
+        <div className="md:col-span-5 relative aspect-[16/10] md:aspect-square overflow-hidden rounded-2xl bg-slate-100">
           {blog.coverImage ? (
             <img
               src={getImageUrl(blog.coverImage)}
               alt={blog.coverImageAlt || blog.title}
-              className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
+              className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
             />
           ) : (
-            <div className="flex h-full min-h-[300px] items-center justify-center">
-              <BookOpen size={60} className="text-indigo-400" />
+            <div className="flex h-full items-center justify-center bg-blue-50 text-blue-600">
+              <BookOpen size={40} />
             </div>
           )}
-
-          {/* Featured Badge */}
-
-          <span className="absolute left-5 top-5 flex items-center gap-2 rounded-full bg-white px-4 py-2 text-xs font-bold text-indigo-700 shadow-lg">
-            <TrendingUp size={14} />
-            Featured
+          <span className="absolute top-3 left-3 flex items-center gap-1 rounded-full bg-blue-600 text-white px-3 py-1 text-[10px] font-bold shadow">
+            <Sparkles size={12} /> Featured
           </span>
         </div>
 
-        {/* ==========================================
-            CONTENT
-        ========================================== */}
+        {/* Right Content (7 Cols) */}
+        <div className="md:col-span-7 flex flex-col justify-between">
+          <div>
+            <div className="mb-3">
+              <span
+                className={`rounded-full border px-3 py-1 text-[10px] font-bold uppercase tracking-wider ${getCategoryStyle(
+                  blog.category
+                )}`}
+              >
+                {blog.category || "General"}
+              </span>
+            </div>
 
-        <div className="flex flex-col justify-center bg-gradient-to-br from-white via-indigo-50/30 to-emerald-50/40 p-8 lg:p-10">
-          {/* Category */}
+            <h3 className="text-lg sm:text-xl font-bold text-slate-900 group-hover:text-blue-600 transition-colors leading-snug mb-3">
+              {blog.title}
+            </h3>
 
-          <span
-            className={`w-fit rounded-full border px-3 py-1 text-xs font-semibold ${getCategoryStyle(
-              blog.category
-            )}`}
-          >
-            {blog.category}
-          </span>
-
-          {/* Title */}
-
-          <h3 className="mt-5 line-clamp-3 text-2xl font-bold leading-tight text-slate-950 transition group-hover:text-indigo-600 lg:text-3xl">
-            {blog.title}
-          </h3>
-
-          {/* Excerpt */}
-
-          <p className="mt-4 line-clamp-3 text-sm leading-7 text-slate-500">
-            {blog.excerpt}
-          </p>
-
-          {/* Metadata */}
-
-          {/* Metadata */}
-
-          <div className="mt-6 flex flex-wrap items-center gap-4 text-xs text-slate-400">
-            {/* Date */}
-
-            <span className="flex items-center gap-1.5">
-              <CalendarDays size={14} className="text-indigo-500" />
-
-              {formatDate(blog.publishedAt || blog.createdAt)}
-            </span>
-
-            {/* Reading Time */}
-
-            <span className="flex items-center gap-1.5">
-              <Clock size={14} className="text-emerald-500" />
-              {blog.readingTime || 1} min
-            </span>
-
-            {/* Views */}
-
-            <span className="flex items-center gap-1.5">
-              <Eye size={14} className="text-violet-500" />
-
-              {blog.views || 0}
-            </span>
-
-            {/* Likes */}
-
-            <span className="flex items-center gap-1.5">
-              <Heart size={14} className="text-red-500" />
-
-              {blog.likesCount}
-            </span>
-
-            {/* Shares */}
-
-            <span className="flex items-center gap-1.5">
-              <Share2 size={14} className="text-indigo-500" />
-
-              {blog.sharesCount}
-            </span>
+            <p className="text-xs sm:text-sm text-slate-500 leading-relaxed line-clamp-3 mb-6">
+              {blog.excerpt}
+            </p>
           </div>
 
-          {/* Button */}
+          <div className="flex items-center justify-between pt-4 border-t border-slate-100 text-xs">
+            <div className="flex items-center gap-3 text-slate-500">
+              <span className="flex items-center gap-1">
+                <CalendarDays size={13} className="text-blue-600" />
+                {formatDate(blog.publishedAt || blog.createdAt)}
+              </span>
+              <span>•</span>
+              <span className="flex items-center gap-1">
+                <Clock size={13} className="text-emerald-600" />
+                {blog.readingTime || 1} min read
+              </span>
+            </div>
 
-          <div className="mt-7 flex w-fit items-center gap-2 rounded-lg bg-gradient-to-r from-indigo-600 to-violet-600 px-5 py-3 text-sm font-semibold text-white shadow-md transition group-hover:from-indigo-700 group-hover:to-violet-700">
-            Read Featured Article
-            <ArrowRight
-              size={17}
-              className="transition-transform group-hover:translate-x-1"
-            />
+            <div className="flex items-center gap-1 text-xs font-bold text-blue-600 group-hover:translate-x-1 transition-transform">
+              <span>Read Article</span>
+              <ArrowRight size={14} />
+            </div>
           </div>
         </div>
       </div>
@@ -781,25 +683,22 @@ const FeaturedBlogCard = ({
 
 const BlogSkeleton = () => {
   return (
-    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
-      {/* Image */}
-
-      <div className="aspect-[16/10] animate-pulse bg-gradient-to-br from-slate-200 to-indigo-100" />
-
-      {/* Content */}
-
-      <div className="p-6">
-        <div className="h-6 w-24 animate-pulse rounded-full bg-indigo-100" />
-
-        <div className="mt-5 h-6 w-full animate-pulse rounded bg-slate-200" />
-
-        <div className="mt-2 h-6 w-4/5 animate-pulse rounded bg-slate-200" />
-
-        <div className="mt-5 h-4 w-full animate-pulse rounded bg-slate-100" />
-
-        <div className="mt-2 h-4 w-5/6 animate-pulse rounded bg-slate-100" />
-
-        <div className="mt-6 h-9 w-full animate-pulse rounded-lg bg-indigo-50" />
+    <div className="overflow-hidden rounded-3xl border border-slate-200/80 bg-white p-6 shadow-sm">
+      <div className="aspect-[16/10] w-full animate-pulse rounded-2xl bg-slate-100 mb-5" />
+      <div className="h-5 w-20 animate-pulse rounded-full bg-slate-100 mb-3" />
+      <div className="h-6 w-full animate-pulse rounded bg-slate-100 mb-2" />
+      <div className="h-6 w-3/4 animate-pulse rounded bg-slate-100 mb-4" />
+      <div className="h-4 w-full animate-pulse rounded bg-slate-100 mb-2" />
+      <div className="h-4 w-2/3 animate-pulse rounded bg-slate-100 mb-6" />
+      <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
+        <div className="flex items-center gap-2.5">
+          <div className="h-8 w-8 rounded-full animate-pulse bg-slate-100" />
+          <div className="space-y-1">
+            <div className="h-3 w-20 animate-pulse rounded bg-slate-100" />
+            <div className="h-2.5 w-12 animate-pulse rounded bg-slate-100" />
+          </div>
+        </div>
+        <div className="h-3 w-12 animate-pulse rounded bg-slate-100" />
       </div>
     </div>
   );

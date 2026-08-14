@@ -17,6 +17,7 @@ import {
   Mail,
   Phone,
   Calendar,
+  Tag,
   Clock,
   IndianRupee,
   CheckCircle2,
@@ -26,6 +27,7 @@ import {
   MessageSquare,
   ExternalLink,
   Filter,
+  BookOpen,
 } from "lucide-react";
 
 // =====================================================
@@ -57,6 +59,8 @@ const ReviewsManagement = () => {
   const [search, setSearch] = useState("");
 
   const [ratingFilter, setRatingFilter] = useState("All");
+
+  const [typeFilter, setTypeFilter] = useState("All");
 
   const [visibilityFilter, setVisibilityFilter] = useState("All");
 
@@ -161,6 +165,7 @@ const ReviewsManagement = () => {
       const student = review.studentId || {};
       const mentor = review.mentorId || {};
       const booking = review.bookingId || {};
+      const course = review.course || {};
 
       const studentName = `${student.firstName || ""} ${
         student.lastName || ""
@@ -180,6 +185,8 @@ const ReviewsManagement = () => {
 
       const bookingStatus = booking.bookingStatus?.toLowerCase() || "";
 
+      const courseTitle = course.title?.toLowerCase() || "";
+
       const matchesSearch =
         !searchValue ||
         studentName.includes(searchValue) ||
@@ -188,20 +195,26 @@ const ReviewsManagement = () => {
         mentorEmail.includes(searchValue) ||
         reviewText.includes(searchValue) ||
         sessionType.includes(searchValue) ||
-        bookingStatus.includes(searchValue);
+        bookingStatus.includes(searchValue) ||
+        courseTitle.includes(searchValue);
 
       const matchesRating =
         ratingFilter === "All" ||
         Number(review.rating) === Number(ratingFilter);
+
+      const matchesType =
+        typeFilter === "All" ||
+        (typeFilter === "mentorship" && review.reviewType === "mentorship") ||
+        (typeFilter === "course" && review.reviewType === "course");
 
       const matchesVisibility =
         visibilityFilter === "All" ||
         (visibilityFilter === "Visible" && review.isVisible === true) ||
         (visibilityFilter === "Hidden" && review.isVisible === false);
 
-      return matchesSearch && matchesRating && matchesVisibility;
+      return matchesSearch && matchesRating && matchesType && matchesVisibility;
     });
-  }, [reviews, search, ratingFilter, visibilityFilter]);
+  }, [reviews, search, ratingFilter, typeFilter, visibilityFilter]);
 
   // =====================================================
   // STATISTICS
@@ -209,6 +222,12 @@ const ReviewsManagement = () => {
 
   const statistics = useMemo(() => {
     const total = reviews.length;
+
+    const mentorshipCount = reviews.filter(
+      (r) => r.reviewType === "mentorship"
+    ).length;
+
+    const courseCount = reviews.filter((r) => r.reviewType === "course").length;
 
     const visible = reviews.filter(
       (review) => review.isVisible !== false
@@ -235,6 +254,8 @@ const ReviewsManagement = () => {
 
     return {
       total,
+      mentorshipCount,
+      courseCount,
       visible,
       hidden,
       averageRating,
@@ -469,8 +490,7 @@ const ReviewsManagement = () => {
                   </h1>
 
                   <p className="mt-1 text-xs leading-5 text-slate-500 md:text-sm">
-                    Manage student reviews and view related mentors, bookings,
-                    and meetings.
+                    Manage student reviews for mentorship bookings and courses.
                   </p>
                 </div>
               </div>
@@ -496,17 +516,17 @@ const ReviewsManagement = () => {
           <div className="mt-5 flex flex-wrap gap-x-6 gap-y-2 border-t border-indigo-100/70 pt-4">
             <div className="flex items-center gap-2 text-xs font-semibold text-slate-500">
               <span className="h-2 w-2 rounded-full bg-indigo-500" />
-              Student Feedback
+              Mentorship Bookings
             </div>
 
             <div className="flex items-center gap-2 text-xs font-semibold text-slate-500">
               <span className="h-2 w-2 rounded-full bg-violet-500" />
-              Mentor Details
+              Course Feedback
             </div>
 
             <div className="flex items-center gap-2 text-xs font-semibold text-slate-500">
               <span className="h-2 w-2 rounded-full bg-fuchsia-500" />
-              Booking History
+              Mentor Details
             </div>
 
             <div className="flex items-center gap-2 text-xs font-semibold text-slate-500">
@@ -521,7 +541,7 @@ const ReviewsManagement = () => {
           STATISTICS
       ===================================================== */}
 
-      <div className="mb-7 grid grid-cols-2 gap-4 lg:grid-cols-5">
+      <div className="mb-7 grid grid-cols-2 gap-4 lg:grid-cols-6">
         <ReviewStatCard
           icon={<MessageSquare size={20} />}
           label="Total Reviews"
@@ -530,8 +550,22 @@ const ReviewsManagement = () => {
         />
 
         <ReviewStatCard
+          icon={<CalendarCheck size={20} />}
+          label="Mentorship"
+          value={statistics.mentorshipCount}
+          iconClass="bg-blue-50 text-blue-600"
+        />
+
+        <ReviewStatCard
+          icon={<BookOpen size={20} />}
+          label="Courses"
+          value={statistics.courseCount}
+          iconClass="bg-violet-50 text-violet-600"
+        />
+
+        <ReviewStatCard
           icon={<Star size={20} />}
-          label="Average Rating"
+          label="Avg Rating"
           value={statistics.averageRating.toFixed(1)}
           iconClass="bg-yellow-50 text-yellow-600"
         />
@@ -544,15 +578,8 @@ const ReviewsManagement = () => {
         />
 
         <ReviewStatCard
-          icon={<EyeOff size={20} />}
-          label="Hidden"
-          value={statistics.hidden}
-          iconClass="bg-orange-50 text-orange-600"
-        />
-
-        <ReviewStatCard
           icon={<Star size={20} />}
-          label="5 Star Reviews"
+          label="5 Star"
           value={statistics.fiveStar}
           iconClass="bg-purple-50 text-purple-600"
         />
@@ -574,7 +601,7 @@ const ReviewsManagement = () => {
 
             <input
               type="text"
-              placeholder="Search student, mentor, email, booking, or review..."
+              placeholder="Search student, mentor, course, email, booking, or review..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full rounded-xl border border-slate-200 bg-slate-50 py-3 pl-11 pr-4 text-sm outline-none transition focus:border-indigo-500 focus:bg-white"
@@ -584,6 +611,17 @@ const ReviewsManagement = () => {
           {/* FILTERS */}
 
           <div className="flex flex-col gap-3 sm:flex-row">
+            {/* TYPE FILTER */}
+            <select
+              value={typeFilter}
+              onChange={(e) => setTypeFilter(e.target.value)}
+              className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-700 outline-none focus:border-indigo-500 sm:w-44"
+            >
+              <option value="All">All Types</option>
+              <option value="mentorship">Mentorship Bookings</option>
+              <option value="course">Course Reviews</option>
+            </select>
+
             <div className="relative">
               <Filter
                 size={16}
@@ -614,7 +652,7 @@ const ReviewsManagement = () => {
               onChange={(e) => setVisibilityFilter(e.target.value)}
               className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-700 outline-none focus:border-indigo-500"
             >
-              <option value="All">All Reviews</option>
+              <option value="All">All Status</option>
 
               <option value="Visible">Visible</option>
 
@@ -670,6 +708,8 @@ const ReviewsManagement = () => {
 
             const booking = review.bookingId || {};
 
+            const course = review.course || {};
+
             const meeting = review.meeting || null;
 
             const studentName =
@@ -691,6 +731,7 @@ const ReviewsManagement = () => {
             );
 
             const isExpanded = expandedReview === review._id;
+            const isCourseReview = review.reviewType === "course";
 
             return (
               <div
@@ -720,6 +761,18 @@ const ReviewsManagement = () => {
 
                           <span className="rounded-full bg-indigo-50 px-2.5 py-1 text-[11px] font-semibold text-indigo-600">
                             Student
+                          </span>
+
+                          <span
+                            className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${
+                              isCourseReview
+                                ? "bg-violet-50 text-violet-700 border border-violet-200"
+                                : "bg-blue-50 text-blue-700 border border-blue-200"
+                            }`}
+                          >
+                            {isCourseReview
+                              ? "Course Review"
+                              : "Booking Review"}
                           </span>
                         </div>
 
@@ -805,39 +858,71 @@ const ReviewsManagement = () => {
                       iconClass="bg-indigo-50 text-indigo-600"
                     />
 
-                    {/* MENTOR */}
+                    {isCourseReview ? (
+                      <>
+                        {/* COURSE */}
+                        <RelatedCard
+                          icon={<BookOpen size={18} />}
+                          label="Course"
+                          value={course.title || "Course Enrolled"}
+                          secondary={course.category || "General Course"}
+                          iconClass="bg-violet-50 text-violet-600"
+                        />
 
-                    <RelatedCard
-                      icon={<Users size={18} />}
-                      label="Mentor"
-                      value={mentorName}
-                      secondary={
-                        mentor.profession ||
-                        mentor.company ||
-                        "Professional Mentor"
-                      }
-                      iconClass="bg-violet-50 text-violet-600"
-                    />
+                        <RelatedCard
+                          icon={<Tag size={18} />}
+                          label="Level & Price"
+                          value={course.level || "All Levels"}
+                          secondary={
+                            course.price !== undefined
+                              ? `₹${course.price}`
+                              : "Free"
+                          }
+                          iconClass="bg-fuchsia-50 text-fuchsia-600"
+                        />
 
-                    {/* BOOKING */}
+                        <RelatedCard
+                          icon={<Calendar size={18} />}
+                          label="Submitted On"
+                          value={formatDate(review.createdAt)}
+                          secondary="Course Feedback"
+                          iconClass="bg-emerald-50 text-emerald-600"
+                        />
+                      </>
+                    ) : (
+                      <>
+                        {/* MENTOR */}
+                        <RelatedCard
+                          icon={<Users size={18} />}
+                          label="Mentor"
+                          value={mentorName}
+                          secondary={
+                            mentor.profession ||
+                            mentor.company ||
+                            "Professional Mentor"
+                          }
+                          iconClass="bg-violet-50 text-violet-600"
+                        />
 
-                    <RelatedCard
-                      icon={<CalendarCheck size={18} />}
-                      label="Booking"
-                      value={booking.sessionType || "Session Booking"}
-                      secondary={booking.bookingStatus || "Unknown Status"}
-                      iconClass="bg-blue-50 text-blue-600"
-                    />
+                        {/* BOOKING */}
+                        <RelatedCard
+                          icon={<CalendarCheck size={18} />}
+                          label="Booking"
+                          value={booking.sessionType || "Session Booking"}
+                          secondary={booking.bookingStatus || "Unknown Status"}
+                          iconClass="bg-blue-50 text-blue-600"
+                        />
 
-                    {/* MEETING */}
-
-                    <RelatedCard
-                      icon={<Video size={18} />}
-                      label="Meeting"
-                      value={meeting?.roomId || "No Meeting"}
-                      secondary={meeting?.status || "Not available"}
-                      iconClass="bg-emerald-50 text-emerald-600"
-                    />
+                        {/* MEETING */}
+                        <RelatedCard
+                          icon={<Video size={18} />}
+                          label="Meeting"
+                          value={meeting?.roomId || "No Meeting"}
+                          secondary={meeting?.status || "Not available"}
+                          iconClass="bg-emerald-50 text-emerald-600"
+                        />
+                      </>
+                    )}
                   </div>
 
                   {/* =================================================
@@ -859,20 +944,6 @@ const ReviewsManagement = () => {
                     </button>
 
                     <div className="flex flex-wrap gap-2">
-                      {/* <button
-                        onClick={() => toggleVisibility(review)}
-                        disabled={visibilityLoading === review._id}
-                        className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-600 transition hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600 disabled:opacity-50"
-                      >
-                        {review.isVisible !== false ? (
-                          <EyeOff size={16} />
-                        ) : (
-                          <Eye size={16} />
-                        )}
-
-                        {review.isVisible !== false ? "Hide" : "Show"}
-                      </button> */}
-
                       <button
                         onClick={() => deleteReview(review._id)}
                         disabled={deleteLoading === review._id}
@@ -942,192 +1013,251 @@ const ReviewsManagement = () => {
                       </EntityDetailsCard>
 
                       {/* ============================================
-                          MENTOR DETAILS
+                          COURSE OR MENTOR DETAILS
                       ============================================= */}
 
-                      <EntityDetailsCard
-                        title="Mentor Details"
-                        icon={<Users size={20} />}
-                        iconClass="bg-violet-100 text-violet-600"
-                      >
-                        <DetailItem
-                          icon={<UserRound size={16} />}
-                          label="Name"
-                          value={mentorName}
-                        />
+                      {isCourseReview ? (
+                        <EntityDetailsCard
+                          title="Course Details"
+                          icon={<BookOpen size={20} />}
+                          iconClass="bg-violet-100 text-violet-600"
+                        >
+                          <DetailItem
+                            icon={<BookOpen size={16} />}
+                            label="Course Title"
+                            value={course.title}
+                          />
 
-                        <DetailItem
-                          icon={<Mail size={16} />}
-                          label="Email"
-                          value={mentor.email}
-                        />
+                          <DetailItem
+                            icon={<Tag size={16} />}
+                            label="Category"
+                            value={course.category}
+                          />
 
-                        <DetailItem
-                          icon={<Phone size={16} />}
-                          label="Phone"
-                          value={mentor.phone}
-                        />
+                          <DetailItem
+                            icon={<Star size={16} />}
+                            label="Level"
+                            value={course.level}
+                          />
 
-                        <DetailItem
-                          icon={<Users size={16} />}
-                          label="Profession"
-                          value={mentor.profession}
-                        />
-
-                        <DetailItem
-                          icon={<CheckCircle2 size={16} />}
-                          label="Verification"
-                          value={mentor.verificationStatus}
-                        />
-
-                        {mentor._id && (
-                          <button
-                            onClick={() =>
-                              navigate(`/admin/mentors/${mentor._id}`)
+                          <DetailItem
+                            icon={<IndianRupee size={16} />}
+                            label="Price"
+                            value={
+                              course.price !== undefined
+                                ? `₹${course.price}`
+                                : "Free"
                             }
-                            className="mt-2 inline-flex items-center gap-2 text-sm font-semibold text-violet-600 hover:text-violet-700"
-                          >
-                            View Mentor
-                            <ExternalLink size={14} />
-                          </button>
-                        )}
-                      </EntityDetailsCard>
+                          />
+
+                          {course._id && (
+                            <button
+                              onClick={() =>
+                                navigate(`/admin/courses/${course._id}`)
+                              }
+                              className="mt-2 inline-flex items-center gap-2 text-sm font-semibold text-violet-600 hover:text-violet-700"
+                            >
+                              View Course
+                              <ExternalLink size={14} />
+                            </button>
+                          )}
+                        </EntityDetailsCard>
+                      ) : (
+                        <EntityDetailsCard
+                          title="Mentor Details"
+                          icon={<Users size={20} />}
+                          iconClass="bg-violet-100 text-violet-600"
+                        >
+                          <DetailItem
+                            icon={<UserRound size={16} />}
+                            label="Name"
+                            value={mentorName}
+                          />
+
+                          <DetailItem
+                            icon={<Mail size={16} />}
+                            label="Email"
+                            value={mentor.email}
+                          />
+
+                          <DetailItem
+                            icon={<Phone size={16} />}
+                            label="Phone"
+                            value={mentor.phone}
+                          />
+
+                          <DetailItem
+                            icon={<Users size={16} />}
+                            label="Profession"
+                            value={mentor.profession}
+                          />
+
+                          <DetailItem
+                            icon={<CheckCircle2 size={16} />}
+                            label="Verification"
+                            value={mentor.verificationStatus}
+                          />
+
+                          {mentor._id && (
+                            <button
+                              onClick={() =>
+                                navigate(`/admin/mentors/${mentor._id}`)
+                              }
+                              className="mt-2 inline-flex items-center gap-2 text-sm font-semibold text-violet-600 hover:text-violet-700"
+                            >
+                              View Mentor
+                              <ExternalLink size={14} />
+                            </button>
+                          )}
+                        </EntityDetailsCard>
+                      )}
 
                       {/* ============================================
-                          BOOKING DETAILS
+                          BOOKING DETAILS (Only for mentorship)
                       ============================================= */}
 
-                      <EntityDetailsCard
-                        title="Booking Details"
-                        icon={<CalendarCheck size={20} />}
-                        iconClass="bg-blue-100 text-blue-600"
-                      >
-                        <DetailItem
-                          icon={<Calendar size={16} />}
-                          label="Session Date"
-                          value={formatDate(booking.sessionDate)}
-                        />
+                      {!isCourseReview && (
+                        <EntityDetailsCard
+                          title="Booking Details"
+                          icon={<CalendarCheck size={20} />}
+                          iconClass="bg-blue-100 text-blue-600"
+                        >
+                          <DetailItem
+                            icon={<Calendar size={16} />}
+                            label="Session Date"
+                            value={formatDate(booking.sessionDate)}
+                          />
 
-                        <DetailItem
-                          icon={<Clock size={16} />}
-                          label="Time"
-                          value={
-                            booking.startTime
-                              ? `${booking.startTime}${
-                                  booking.endTime ? ` - ${booking.endTime}` : ""
-                                }`
-                              : null
-                          }
-                        />
+                          <DetailItem
+                            icon={<Clock size={16} />}
+                            label="Time"
+                            value={
+                              booking.startTime
+                                ? `${booking.startTime}${
+                                    booking.endTime
+                                      ? ` - ${booking.endTime}`
+                                      : ""
+                                  }`
+                                : null
+                            }
+                          />
 
-                        <DetailItem
-                          icon={<CalendarCheck size={16} />}
-                          label="Session Type"
-                          value={booking.sessionType}
-                        />
+                          <DetailItem
+                            icon={<CalendarCheck size={16} />}
+                            label="Session Type"
+                            value={booking.sessionType}
+                          />
 
-                        <DetailItem
-                          icon={<IndianRupee size={16} />}
-                          label="Amount"
-                          value={
-                            booking.amount !== undefined
-                              ? `${booking.currency || "INR"} ${Number(
-                                  booking.amount
-                                ).toLocaleString("en-US")}`
-                              : null
-                          }
-                        />
+                          <DetailItem
+                            icon={<IndianRupee size={16} />}
+                            label="Amount"
+                            value={
+                              booking.amount !== undefined
+                                ? `${booking.currency || "INR"} ${Number(
+                                    booking.amount
+                                  ).toLocaleString("en-US")}`
+                                : null
+                            }
+                          />
 
-                        <DetailItem
-                          icon={<CheckCircle2 size={16} />}
-                          label="Booking Status"
-                          value={booking.bookingStatus}
-                        />
+                          <DetailItem
+                            icon={<CheckCircle2 size={16} />}
+                            label="Booking Status"
+                            value={booking.bookingStatus}
+                          />
 
-                        <DetailItem
-                          icon={<CheckCircle2 size={16} />}
-                          label="Payment Status"
-                          value={booking.paymentStatus}
-                        />
-                      </EntityDetailsCard>
+                          <DetailItem
+                            icon={<CheckCircle2 size={16} />}
+                            label="Payment Status"
+                            value={booking.paymentStatus}
+                          />
+                        </EntityDetailsCard>
+                      )}
 
                       {/* ============================================
-                          MEETING DETAILS
+                          MEETING DETAILS (Only for mentorship)
                       ============================================= */}
 
-                      <EntityDetailsCard
-                        title="Meeting Details"
-                        icon={<Video size={20} />}
-                        iconClass="bg-emerald-100 text-emerald-600"
-                      >
-                        {meeting ? (
-                          <>
-                            <DetailItem
-                              icon={<Video size={16} />}
-                              label="Room ID"
-                              value={meeting.roomId}
-                            />
+                      {!isCourseReview && (
+                        <EntityDetailsCard
+                          title="Meeting Details"
+                          icon={<Video size={20} />}
+                          iconClass="bg-emerald-100 text-emerald-600"
+                        >
+                          {meeting ? (
+                            <>
+                              <DetailItem
+                                icon={<Video size={16} />}
+                                label="Room ID"
+                                value={meeting.roomId}
+                              />
 
-                            <DetailItem
-                              icon={<Calendar size={16} />}
-                              label="Scheduled Date"
-                              value={formatDate(meeting.createdAt)}
-                            />
+                              <DetailItem
+                                icon={<Calendar size={16} />}
+                                label="Scheduled Date"
+                                value={formatDate(meeting.createdAt)}
+                              />
 
-                            <DetailItem
-                              icon={<Clock size={16} />}
-                              label="Start Time"
-                              value={meeting.scheduledStartTime}
-                            />
+                              <DetailItem
+                                icon={<Clock size={16} />}
+                                label="Start Time"
+                                value={meeting.scheduledStartTime}
+                              />
 
-                            <DetailItem
-                              icon={<Clock size={16} />}
-                              label="End Time"
-                              value={meeting.scheduledEndTime}
-                            />
+                              <DetailItem
+                                icon={<Clock size={16} />}
+                                label="End Time"
+                                value={meeting.scheduledEndTime}
+                              />
 
-                            <DetailItem
-                              icon={<CheckCircle2 size={16} />}
-                              label="Meeting Status"
-                              value={meeting.status}
-                            />
+                              <DetailItem
+                                icon={<CheckCircle2 size={16} />}
+                                label="Meeting Status"
+                                value={meeting.status}
+                              />
 
-                            <div className="mt-3 flex flex-wrap gap-2">
-                              <span
-                                className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
-                                  meeting.mentorJoined
-                                    ? "bg-emerald-50 text-emerald-700"
-                                    : "bg-slate-100 text-slate-500"
-                                }`}
-                              >
-                                Mentor{" "}
-                                {meeting.mentorJoined ? "Joined" : "Not Joined"}
-                              </span>
+                              <div className="mt-3 flex flex-wrap gap-2">
+                                <span
+                                  className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
+                                    meeting.mentorJoined
+                                      ? "bg-emerald-50 text-emerald-700"
+                                      : "bg-slate-100 text-slate-500"
+                                  }`}
+                                >
+                                  Mentor{" "}
+                                  {meeting.mentorJoined
+                                    ? "Joined"
+                                    : "Not Joined"}
+                                </span>
 
-                              <span
-                                className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
-                                  meeting.studentJoined
-                                    ? "bg-emerald-50 text-emerald-700"
-                                    : "bg-slate-100 text-slate-500"
-                                }`}
-                              >
-                                Student{" "}
-                                {meeting.studentJoined
-                                  ? "Joined"
-                                  : "Not Joined"}
-                              </span>
+                                <span
+                                  className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
+                                    meeting.studentJoined
+                                      ? "bg-emerald-50 text-emerald-700"
+                                      : "bg-slate-100 text-slate-500"
+                                  }`}
+                                >
+                                  Student{" "}
+                                  {meeting.studentJoined
+                                    ? "Joined"
+                                    : "Not Joined"}
+                                </span>
+                              </div>
+                            </>
+                          ) : (
+                            <div className="flex items-center gap-3 rounded-xl bg-white p-4">
+                              <AlertCircle
+                                size={20}
+                                className="text-slate-400"
+                              />
+
+                              <p className="text-sm text-slate-500">
+                                No meeting record found for this booking.
+                              </p>
                             </div>
-                          </>
-                        ) : (
-                          <div className="flex items-center gap-3 rounded-xl bg-white p-4">
-                            <AlertCircle size={20} className="text-slate-400" />
-
-                            <p className="text-sm text-slate-500">
-                              No meeting record found for this booking.
-                            </p>
-                          </div>
-                        )}
-                      </EntityDetailsCard>
+                          )}
+                        </EntityDetailsCard>
+                      )}
                     </div>
 
                     {/* ================================================
@@ -1147,15 +1277,19 @@ const ReviewsManagement = () => {
                         />
 
                         <DetailItem
-                          icon={<Calendar size={16} />}
-                          label="Created"
-                          value={formatDate(review.createdAt)}
+                          icon={<Tag size={16} />}
+                          label="Review Category"
+                          value={
+                            isCourseReview
+                              ? "Course Feedback"
+                              : "Mentorship Session"
+                          }
                         />
 
                         <DetailItem
                           icon={<Calendar size={16} />}
-                          label="Updated"
-                          value={formatDate(review.updatedAt)}
+                          label="Created"
+                          value={formatDate(review.createdAt)}
                         />
 
                         <DetailItem

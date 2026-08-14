@@ -23,6 +23,8 @@ import {
   ShieldCheck,
   DollarSign,
   CalendarDays,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -39,6 +41,9 @@ const AdminRegistrationDetails = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [paymentFilter, setPaymentFilter] = useState("All");
   const [attendanceFilter, setAttendanceFilter] = useState("All");
+
+  // Single Master Dropdown Toggle State
+  const [isDetailsExpanded, setIsDetailsExpanded] = useState(false);
 
   const getAdminToken = () => localStorage.getItem("AdminToken");
 
@@ -148,7 +153,6 @@ const AdminRegistrationDetails = () => {
   const event = registration.event || {};
   const studentImage = getImageUrl(student?.profileImage || student?.avatar);
 
-  // Filter attributes that actually exist (excluding N/A/empty ones)
   const studentAttributes = [
     { icon: Mail, label: "Email Address", value: student.email },
     { icon: Phone, label: "Phone Number", value: student.phone },
@@ -362,129 +366,144 @@ const AdminRegistrationDetails = () => {
             </div>
           </div>
 
-          {/* CONTENT SECTION (FULL WIDTH HORIZONTAL CARDS LAYOUT) */}
-          <div className="p-6 sm:p-8 space-y-8">
-            {/* STUDENT SECTION */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-3 border-b border-gray-100 pb-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 shadow-inner">
-                  <UserCheck size={20} />
-                </div>
-                <div>
-                  <h2 className="text-base font-extrabold text-gray-900">
-                    Enrolled Student Profile & Identifiers
-                  </h2>
-                  <p className="text-xs text-gray-500">
-                    Student profile information rendered in horizontal cards
-                  </p>
-                </div>
-              </div>
-
-              {/* Main Student Header Card */}
-              <div className="flex items-center gap-4 bg-gray-50/60 p-4 rounded-2xl border border-gray-100 shadow-sm">
-                {studentImage ? (
-                  <img
-                    src={studentImage}
-                    alt={getStudentName(student)}
-                    className="h-16 w-16 rounded-2xl object-cover ring-2 ring-indigo-50 shadow-sm"
-                  />
-                ) : (
-                  <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600 shadow-sm">
-                    <UserRound size={30} />
-                  </div>
-                )}
-                <div className="min-w-0 flex-1">
-                  <h3 className="text-base font-bold text-gray-900 truncate">
-                    {getStudentName(student)}
-                  </h3>
-                  {student?._id && (
-                    <p className="text-[11px] text-gray-400 font-mono truncate">
-                      ID: {student._id}
-                    </p>
+          {/* MASTER CARD WITH SINGLE DROPDOWN */}
+          <div className="p-6 sm:p-8">
+            <div className="rounded-3xl border border-gray-200/80 bg-white shadow-sm overflow-hidden transition">
+              {/* Always-visible student profile header with dropdown toggle */}
+              <button
+                onClick={() => setIsDetailsExpanded(!isDetailsExpanded)}
+                className="w-full flex flex-col sm:flex-row items-start sm:items-center justify-between p-5 bg-gray-50/70 hover:bg-gray-100/70 transition text-left cursor-pointer gap-4"
+              >
+                <div className="flex items-center gap-4 min-w-0">
+                  {studentImage ? (
+                    <img
+                      src={studentImage}
+                      alt={getStudentName(student)}
+                      className="h-14 w-14 rounded-2xl object-cover ring-2 ring-indigo-50 shadow-sm shrink-0"
+                    />
+                  ) : (
+                    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600 shadow-sm">
+                      <UserRound size={26} />
+                    </div>
                   )}
-                  <button
-                    onClick={() =>
-                      navigate(`/admin/students/${student._id || student.id}`)
-                    }
-                    className="mt-1.5 inline-flex items-center gap-1 text-xs font-bold text-indigo-600 hover:text-indigo-700 transition"
-                  >
-                    Inspect Full Student Profile <ExternalLink size={12} />
-                  </button>
+                  <div className="min-w-0">
+                    <h2 className="text-base font-bold text-gray-900 truncate">
+                      {getStudentName(student)}
+                    </h2>
+                    <p className="text-xs text-gray-500 truncate mt-0.5 font-medium">
+                      {student?.email || "No email available"}
+                    </p>
+                  </div>
                 </div>
-              </div>
 
-              {/* Horizontal Cards Grid for Student Details */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {studentAttributes.map((attr, idx) => {
-                  const IconComp = attr.icon;
-                  return (
-                    <div
-                      key={idx}
-                      className="flex items-center gap-3.5 rounded-2xl bg-gray-50/80 p-4 border border-gray-100 shadow-xs transition hover:border-indigo-200"
-                    >
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 shadow-inner">
-                        <IconComp size={18} />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
-                          {attr.label}
-                        </p>
-                        <p className="mt-0.5 text-xs font-bold text-gray-800 truncate">
-                          {attr.value}
-                        </p>
-                      </div>
+                <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
+                  <span className="text-xs font-bold text-indigo-600">
+                    {isDetailsExpanded ? "Hide Details" : "View Details"}
+                  </span>
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white border border-gray-200 text-gray-600 shadow-2xs">
+                    {isDetailsExpanded ? (
+                      <ChevronUp size={18} />
+                    ) : (
+                      <ChevronDown size={18} />
+                    )}
+                  </div>
+                </div>
+              </button>
+
+              {/* Collapsible Details Content */}
+              {isDetailsExpanded && (
+                <div className="p-6 border-t border-gray-100 space-y-8 animate-in fade-in duration-200">
+                  {/* STUDENT DETAILS GRID */}
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+                      <h3 className="text-sm font-extrabold uppercase tracking-wider text-gray-800">
+                        Student Identifiers & Profile Data
+                      </h3>
+                      {student?._id && (
+                        <span className="text-[11px] text-gray-400 font-mono">
+                          ID: {student._id}
+                        </span>
+                      )}
                     </div>
-                  );
-                })}
-              </div>
-            </div>
 
-            {/* PAYMENT & SESSION TELEMETRY SECTION */}
-            <div className="space-y-4 pt-4 border-t border-gray-100">
-              <div className="flex items-center gap-3 border-b border-gray-100 pb-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 shadow-inner">
-                  <CreditCard size={20} />
-                </div>
-                <div>
-                  <h2 className="text-base font-extrabold text-gray-900">
-                    Payment & Session Telemetry Logs
-                  </h2>
-                  <p className="text-xs text-gray-500">
-                    Billing details, gateway logs, and attendance indicators
-                  </p>
-                </div>
-              </div>
-
-              {/* Horizontal Cards Grid for Payment & Session Telemetry */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {paymentAttributes.map((attr, idx) => {
-                  const IconComp = attr.icon;
-                  return (
-                    <div
-                      key={idx}
-                      className="flex items-center gap-3.5 rounded-2xl bg-gray-50/80 p-4 border border-gray-100 shadow-xs transition hover:border-indigo-200"
-                    >
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 shadow-inner">
-                        <IconComp size={18} />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
-                          {attr.label}
-                        </p>
-                        <p
-                          className={`mt-0.5 text-xs font-bold text-gray-800 truncate ${
-                            attr.isMono
-                              ? "font-mono select-all bg-white px-2 py-0.5 rounded border border-gray-200"
-                              : ""
-                          }`}
-                        >
-                          {attr.value}
-                        </p>
-                      </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {studentAttributes.map((attr, idx) => {
+                        const IconComp = attr.icon;
+                        return (
+                          <div
+                            key={idx}
+                            className="flex items-center gap-3.5 rounded-2xl bg-gray-50/80 p-4 border border-gray-100 shadow-xs transition hover:border-indigo-200"
+                          >
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 shadow-inner">
+                              <IconComp size={18} />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
+                                {attr.label}
+                              </p>
+                              <p className="mt-0.5 text-xs font-bold text-gray-800 truncate">
+                                {attr.value}
+                              </p>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
-                  );
-                })}
-              </div>
+
+                    <div className="pt-1">
+                      <button
+                        onClick={() =>
+                          navigate(
+                            `/admin/students/${student._id || student.id}`
+                          )
+                        }
+                        className="inline-flex items-center gap-1 text-xs font-bold text-indigo-600 hover:text-indigo-700 transition cursor-pointer"
+                      >
+                        Inspect Full Student Profile <ExternalLink size={12} />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* PAYMENT & SESSION TELEMETRY SECTION */}
+                  <div className="space-y-4 pt-4 border-t border-gray-100">
+                    <div className="border-b border-gray-100 pb-3">
+                      <h3 className="text-sm font-extrabold uppercase tracking-wider text-gray-800">
+                        Payment & Session Telemetry Logs
+                      </h3>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {paymentAttributes.map((attr, idx) => {
+                        const IconComp = attr.icon;
+                        return (
+                          <div
+                            key={idx}
+                            className="flex items-center gap-3.5 rounded-2xl bg-gray-50/80 p-4 border border-gray-100 shadow-xs transition hover:border-indigo-200"
+                          >
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 shadow-inner">
+                              <IconComp size={18} />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
+                                {attr.label}
+                              </p>
+                              <p
+                                className={`mt-0.5 text-xs font-bold text-gray-800 truncate ${
+                                  attr.isMono
+                                    ? "font-mono select-all bg-white px-2 py-0.5 rounded border border-gray-200"
+                                    : ""
+                                }`}
+                              >
+                                {attr.value}
+                              </p>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

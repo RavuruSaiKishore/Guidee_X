@@ -1,5 +1,6 @@
 import { Course, Enrollment } from "../models/Course.js";
 import path from "path";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 // Get all courses catalog
 export const getAllCourses = async (req, res) => {
@@ -14,39 +15,41 @@ export const getAllCourses = async (req, res) => {
   }
 };
 
-
 export const getCourseById = async (req, res) => {
   try {
-    const course = await Course.findById(req.params.id).populate(
-      "instructor",
-      "firstName lastName profileImage"
-    );
-    
+    const course = await Course.findById(req.params.id)
+      .populate("instructor", "firstName lastName profileImage")
+      .populate({
+        path: "reviews.student",
+        select: "_id firstName lastName", // Explicitly include _id for comparison
+      });
+
     if (!course) {
-      return res.status(404).json({ success: false, message: "Course not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Course not found" });
     }
 
     let isEnrolled = false;
     let paymentStatus = null;
 
-    // Check enrollment if user is logged in
     if (req.user) {
       const enrollment = await Enrollment.findOne({
         student: req.user.id,
         course: req.params.id,
       });
-      
+
       if (enrollment) {
         isEnrolled = true;
         paymentStatus = enrollment.paymentStatus;
       }
     }
 
-    res.status(200).json({ 
-      success: true, 
-      course, 
-      isEnrolled, 
-      paymentStatus 
+    res.status(200).json({
+      success: true,
+      course,
+      isEnrolled,
+      paymentStatus,
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -65,6 +68,7 @@ export const createCourse = async (req, res) => {
       subCategory,
       level,
       language,
+      isPaid,
       price,
       compareAtPrice,
       isPublished,
@@ -134,9 +138,13 @@ export const createCourse = async (req, res) => {
       subCategory,
       level,
       language,
-      price,
-      compareAtPrice,
-      isPublished,
+      isPaid: isPaid === "true" || isPaid === true,
+      price: isPaid === "false" || isPaid === false ? 0 : Number(price) || 0,
+      compareAtPrice:
+        isPaid === "false" || isPaid === false
+          ? 0
+          : Number(compareAtPrice) || 0,
+      isPublished: isPublished === "true" || isPublished === true,
       modules: parsedModules || [],
     });
 
@@ -331,23 +339,34 @@ export const deleteCourse = async (req, res) => {
     const course = await Course.findById(courseId);
 
     if (!course) {
-      return res.status(404).json({ success: false, message: "Course not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Course not found" });
     }
 
     // Optional authorization check: ensure mentor owns it or user is admin
-    if (req.user.role === "mentor" && course.instructor.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ success: false, message: "Unauthorized to delete this course" });
+    if (
+      req.user.role === "mentor" &&
+      course.instructor.toString() !== req.user._id.toString()
+    ) {
+      return res
+        .status(403)
+        .json({
+          success: false,
+          message: "Unauthorized to delete this course",
+        });
     }
 
     await Course.findByIdAndDelete(courseId);
     await Enrollment.deleteMany({ course: courseId });
 
-    res.status(200).json({ success: true, message: "Course deleted successfully" });
+    res
+      .status(200)
+      .json({ success: true, message: "Course deleted successfully" });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 };
-
 
 export const updateCourse = async (req, res) => {
   try {
@@ -360,6 +379,7 @@ export const updateCourse = async (req, res) => {
       subCategory,
       level,
       language,
+      isPaid,
       price,
       compareAtPrice,
       isPublished,
@@ -434,9 +454,13 @@ export const updateCourse = async (req, res) => {
         subCategory,
         level,
         language,
-        price,
-        compareAtPrice,
-        isPublished,
+        isPaid: isPaid === "true" || isPaid === true,
+        price: isPaid === "false" || isPaid === false ? 0 : Number(price) || 0,
+        compareAtPrice:
+          isPaid === "false" || isPaid === false
+            ? 0
+            : Number(compareAtPrice) || 0,
+        isPublished: isPublished === "true" || isPublished === true,
         modules: parsedModules || [],
       },
       { new: true, runValidators: true }
@@ -456,28 +480,28 @@ export const getCourseDetailsWithStudents = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // 1. Fetch the course
-    const course = await Course.findById(id);
+    // 1. Fetch the course with modules to calculate total lessons if needed
+    const course = await Course.findById(id).lean();
     if (!course) {
       return res
         .status(404)
         .json({ success: false, message: "Course not found" });
     }
 
-    // 2. Fetch all enrollments for this course
-    // 💡 FIXED: Explicitly set model: "Student" to prevent the MissingSchemaError
+    // 2. Fetch all enrollments for this course and populate student + progress details
     const enrollments = await Enrollment.find({ course: id })
       .populate({
         path: "student",
-        model: "Student", // Matches export default mongoose.model("Student", userSchema)
-        select: "firstName lastName email profileImage",
+        model: "Student",
+        select: "firstName lastName email profileImage phone",
       })
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .lean();
 
     return res.status(200).json({
       success: true,
       course,
-      enrollments,
+      enrollments, // Includes payment status, progressPercentage, completedLessons, etc.
     });
   } catch (error) {
     console.error("Admin Course Details Error:", error);
@@ -511,7 +535,6 @@ export const getEnrollmentByCourseId = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
-
 
 export const getStudentEnrolledCourses = async (req, res) => {
   try {
@@ -548,12 +571,10 @@ export const submitAssessmentScore = async (req, res) => {
     console.log("Course ID from URL:", courseId);
 
     if (!studentId) {
-      return res
-        .status(401)
-        .json({
-          success: false,
-          message: "Unauthorized: User not authenticated properly.",
-        });
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized: User not authenticated properly.",
+      });
     }
 
     // Query using course and student
@@ -601,8 +622,6 @@ export const submitAssessmentScore = async (req, res) => {
   }
 };
 
-
-
 export const solveCodingProblem = async (req, res) => {
   try {
     const courseId = req.params.id;
@@ -639,5 +658,159 @@ export const solveCodingProblem = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const addOrUpdateReview = async (req, res) => {
+  try {
+    const { rating, comment } = req.body;
+    const courseId = req.params.id;
+    const studentId = req.user.id;
+
+    if (!rating || !comment) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Rating and comment are required." });
+    }
+
+    const course = await Course.findById(courseId);
+    if (!course) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Course not found." });
+    }
+
+    // Check if student has already reviewed this course
+    const existingReviewIndex = course.reviews.findIndex(
+      (rev) => rev.student.toString() === studentId.toString()
+    );
+
+    if (existingReviewIndex > -1) {
+      // Update existing review
+      course.reviews[existingReviewIndex].rating = Number(rating);
+      course.reviews[existingReviewIndex].comment = comment;
+    } else {
+      // Push new review
+      course.reviews.push({
+        student: studentId,
+        rating: Number(rating),
+        comment,
+      });
+    }
+
+    // Recalculate average rating
+    const totalRating = course.reviews.reduce(
+      (acc, item) => acc + item.rating,
+      0
+    );
+    course.averageRating = totalRating / course.reviews.length;
+
+    await course.save();
+
+    res.status(200).json({
+      success: true,
+      message:
+        existingReviewIndex > -1
+          ? "Review updated successfully!"
+          : "Review submitted successfully!",
+      reviews: course.reviews,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const getCourseCertificate = async (req, res) => {
+  try {
+    const courseId = req.params.id;
+    const studentId = req.user?.id || req.user?._id;
+
+    if (!studentId) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized: User not authenticated properly.",
+      });
+    }
+
+    const enrollment = await Enrollment.findOne({
+      student: studentId,
+      course: courseId,
+    })
+      .populate("student", "firstName lastName email")
+      .populate("course", "title instructor createdAt");
+
+    if (!enrollment) {
+      return res.status(404).json({
+        success: false,
+        message: "Enrollment record not found.",
+      });
+    }
+
+    if (!enrollment.isCompleted) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Course is not yet completed. Finish all lessons, module assessments, and coding challenges to unlock your certificate.",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      certificate: {
+        studentName: `${enrollment.student.firstName || ""} ${
+          enrollment.student.lastName || "Student"
+        }`,
+        courseTitle: enrollment.course.title,
+        instructor: enrollment.course.instructor || "Lead Instructor",
+        issuedAt: enrollment.certificateIssuedAt || enrollment.updatedAt,
+        certificateId: enrollment._id,
+      },
+    });
+  } catch (error) {
+    console.error("Get Certificate Error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+
+export const askAI = async (req, res) => {
+  try {
+    const { question } = req.body;
+    const course = await Course.findById(req.params.courseId);
+
+    if (!course) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Course not found" });
+    }
+
+    // Safely map modules in case they are undefined or missing titles
+    const moduleTitles =
+      course.modules && course.modules.length > 0
+        ? course.modules.map((m) => m.title).join(", ")
+        : "General Course";
+
+    const context = `You are a helpful teaching assistant for the course titled "${
+      course.title
+    }". 
+    Course Description: ${course.description || "N/A"}. 
+    Modules: ${moduleTitles}.
+    Answer the student's question based on this context.`;
+
+    // Change the model string from "gemini-1.5-flash" to "gemini-pro"
+    const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
+    const result = await model.generateContent(
+      `${context} \n\n Student Question: ${question}`
+    );
+    const answer = result.response.text();
+
+    res.status(200).json({ success: true, answer });
+  } catch (error) {
+    // 🔥 Prints the exact error stack trace in your backend terminal
+    console.error("AI Doubt Generation Error:", error);
+    res
+      .status(500)
+      .json({ success: false, message: error.message || "AI Error" });
   }
 };

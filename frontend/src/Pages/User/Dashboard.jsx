@@ -9,6 +9,8 @@ import RecommendedMentors from "../../components/StudentDashboard/RecommendedMen
 import LearningAnalytics from "../../components/StudentDashboard/LearningAnalytics";
 import RescheduleRequests from "../../components/StudentDashboard/RescheduleRequest";
 import Notifications from "../../components/StudentDashboard/Notifications";
+import EnrolledCourses from "../../components/StudentDashboard/EnrolledCourses";
+import RegisteredEvents from "../../components/StudentDashboard/RegisteredEvents";
 
 const Dashboard = () => {
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -47,6 +49,7 @@ const Dashboard = () => {
 
     upcomingSessions: [],
     recentBookings: [],
+    enrolledCourses: [],
 
     learningAnalytics: {
       totalSessions: 0,
@@ -104,34 +107,9 @@ const Dashboard = () => {
 
       const data = await response.json();
 
-      console.log("Student Dashboard API Response:", data);
-
       if (!response.ok || !data.success) {
         throw new Error(data.message || "Failed to load dashboard.");
       }
-
-      // =====================================================
-      // IMPORTANT
-      // Backend response:
-      //
-      // {
-      //   success: true,
-      //   dashboard: {
-      //      student,
-      //      stats,
-      //      progress,
-      //      upcomingSessions,
-      //      recentBookings,
-      //      learningAnalytics,
-      //      rescheduleRequests,
-      //      eventRegistrations,
-      //      upcomingEvents,
-      //      badges,
-      //      notifications,
-      //      recommendedMentors
-      //   }
-      // }
-      // =====================================================
 
       const dashboardData = data.dashboard || {};
 
@@ -171,6 +149,10 @@ const Dashboard = () => {
           ? dashboardData.recentBookings
           : [],
 
+        enrolledCourses: Array.isArray(dashboardData.enrolledCourses)
+          ? dashboardData.enrolledCourses
+          : [],
+
         learningAnalytics: dashboardData.learningAnalytics || {
           totalSessions: 0,
           completedSessions: 0,
@@ -183,10 +165,6 @@ const Dashboard = () => {
           completionRate: 0,
           averageSessionDuration: 0,
         },
-
-        // ===================================================
-        // RESCHEDULE REQUESTS
-        // ===================================================
 
         rescheduleRequests: Array.isArray(dashboardData.rescheduleRequests)
           ? dashboardData.rescheduleRequests
@@ -248,6 +226,7 @@ const Dashboard = () => {
 
         upcomingSessions: [],
         recentBookings: [],
+        enrolledCourses: [],
 
         learningAnalytics: {
           totalSessions: 0,
@@ -263,7 +242,6 @@ const Dashboard = () => {
         },
 
         rescheduleRequests: [],
-
         eventRegistrations: [],
         upcomingEvents: [],
 
@@ -298,6 +276,7 @@ const Dashboard = () => {
     progress,
     upcomingSessions,
     recentBookings,
+    enrolledCourses,
     learningAnalytics,
     rescheduleRequests,
     eventRegistrations,
@@ -312,7 +291,7 @@ const Dashboard = () => {
   // =========================================================
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 font-sans">
       <main className="mx-auto w-full max-w-[1600px] px-4 py-5 sm:px-6 sm:py-7 lg:px-8 xl:px-10">
         <div className="space-y-6">
           {/* =================================================
@@ -338,6 +317,22 @@ const Dashboard = () => {
           <UpcomingSession bookings={upcomingSessions} loading={loading} />
 
           {/* =================================================
+              ENROLLED COURSES SECTION (Passing courses along with global progress metrics)
+          ================================================== */}
+
+          <EnrolledCourses
+            courses={enrolledCourses}
+            overallProgress={progress}
+            loading={loading}
+          />
+
+          {/* =================================================
+              REGISTERED EVENTS SECTION
+          ================================================== */}
+
+          <RegisteredEvents events={eventRegistrations} loading={loading} />
+
+          {/* =================================================
               RECENT BOOKINGS
           ================================================== */}
 
@@ -345,7 +340,6 @@ const Dashboard = () => {
 
           {/* =================================================
               RESCHEDULE REQUESTS
-              DATA COMES DIRECTLY FROM BACKEND DASHBOARD
           ================================================== */}
 
           <RescheduleRequests

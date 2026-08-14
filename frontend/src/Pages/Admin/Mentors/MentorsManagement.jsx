@@ -41,8 +41,6 @@ const MentorManagement = () => {
 
       const data = await res.json();
 
-      console.log(data);
-
       if (data.success) {
         setMentors(data.mentors || []);
       }
@@ -324,7 +322,7 @@ const MentorManagement = () => {
               {/* ADD MENTOR */}
 
               <button
-                onClick={() => navigate("/admin/mentors/add")}
+                onClick={() => navigate("/admin/mentor/create")}
                 className="h-11 sm:h-12 px-5 sm:px-6 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-sm sm:text-base font-semibold flex items-center justify-center gap-2 shadow-lg transition"
               >
                 <UserPlus size={18} />
@@ -375,288 +373,151 @@ const MentorManagement = () => {
           </div>
         </div>
       ) : (
-        /* ================= MENTOR LIST ================= */
+        /* ================= MENTOR LIST (COMPACT CARDS) ================= */
 
-        <div className="bg-white rounded-xl shadow overflow-visible">
-          <div className="space-y-3 sm:space-y-4">
+        <div className="bg-white rounded-xl shadow overflow-visible p-3 sm:p-4">
+          <div className="space-y-3">
             {filteredMentors.map((mentor) => (
               <div
                 key={mentor._id}
-                className="overflow-visible rounded-xl border border-slate-200 bg-white shadow-sm transition-all duration-300 hover:shadow-lg"
+                className="overflow-visible rounded-xl border border-slate-200 bg-white shadow-sm transition-all duration-200 hover:shadow-md p-3 sm:p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4"
               >
-                <div className="p-4 sm:p-5 lg:p-6">
-                  {/* ================= TOP SECTION ================= */}
+                {/* LEFT: PROFILE & CORE DETAILS */}
+                <div className="flex items-center gap-3.5 min-w-0 w-full md:w-auto">
+                  <img
+                    src={
+                      mentor.profileImage
+                        ? mentor.profileImage.startsWith("http")
+                          ? mentor.profileImage
+                          : `${API_BASE_URL}${
+                              mentor.profileImage.startsWith("/") ? "" : "/"
+                            }${mentor.profileImage}`
+                        : "/default-avatar.png"
+                    }
+                    alt={`${mentor.firstName || ""} ${mentor.lastName || ""}`}
+                    className="h-12 w-12 sm:h-14 sm:w-14 shrink-0 rounded-full border-2 border-slate-200 object-cover shadow-sm"
+                    onError={(e) => {
+                      e.currentTarget.onerror = null;
+                      e.currentTarget.src = "/default-avatar.png";
+                    }}
+                  />
 
-                  <div className="flex flex-col gap-5">
-                    {/* PROFILE AREA */}
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h2 className="text-base font-bold text-slate-800 truncate">
+                        {mentor.firstName} {mentor.lastName}
+                      </h2>
+                      <span
+                        className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                          mentor.verificationStatus === "Approved"
+                            ? "bg-emerald-100 text-emerald-700"
+                            : "bg-amber-100 text-amber-700"
+                        }`}
+                      >
+                        {mentor.verificationStatus}
+                      </span>
+                    </div>
 
-                    <div className="flex flex-col sm:flex-row justify-between gap-5">
-                      {/* LEFT */}
+                    <p className="text-xs text-slate-500 truncate mt-0.5">
+                      {mentor.profession || "Profession"} •{" "}
+                      {mentor.company || "Company"}
+                    </p>
 
-                      <div className="flex flex-col xs:flex-row sm:flex-row gap-4 min-w-0">
-                        {/* PROFILE IMAGE */}
+                    <p className="text-xs text-slate-400 truncate mt-0.5">
+                      {mentor.email || "No email"} |{" "}
+                      {mentor.phone || "No phone"}
+                    </p>
+                  </div>
+                </div>
 
-                        <img
-                          src={
-                            mentor.profileImage
-                              ? mentor.profileImage.startsWith("http")
-                                ? mentor.profileImage
-                                : `${API_BASE_URL}${
-                                    mentor.profileImage.startsWith("/")
-                                      ? ""
-                                      : "/"
-                                  }${mentor.profileImage}`
-                              : "/default-avatar.png"
-                          }
-                          alt={`${mentor.firstName || ""} ${
-                            mentor.lastName || ""
-                          }`}
-                          className="h-20 w-20 sm:h-20 sm:w-20 shrink-0 rounded-xl border-4 border-blue-100 object-cover shadow"
-                          onError={(e) => {
-                            console.error(
-                              "Profile image failed:",
-                              e.target.src
-                            );
-                            e.currentTarget.onerror = null;
-                            e.currentTarget.src = "/default-avatar.png";
-                          }}
-                        />
+                {/* RIGHT: METRICS, STATUS & ACTIONS */}
+                <div className="flex flex-wrap items-center justify-between md:justify-end gap-3 w-full md:w-auto">
+                  {/* QUICK STATS */}
+                  <div className="flex items-center gap-2 text-xs">
+                    <div className="rounded-md bg-yellow-50 px-2 py-1 text-center border border-yellow-100">
+                      <span className="font-bold text-yellow-700">
+                        ⭐ {mentor.averageRating || 0}
+                      </span>
+                    </div>
 
-                        {/* DETAILS */}
+                    <div className="rounded-md bg-cyan-50 px-2 py-1 text-center border border-cyan-100">
+                      <span className="font-bold text-cyan-700">
+                        {mentor.experience || 0} Yrs
+                      </span>
+                    </div>
 
-                        <div className="flex-1 min-w-0">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <h2 className="text-lg sm:text-xl font-bold text-slate-800 break-words">
-                              {mentor.firstName} {mentor.lastName}
-                            </h2>
+                    <div className="rounded-md bg-emerald-50 px-2 py-1 text-center border border-emerald-100">
+                      <span className="font-bold text-emerald-700">
+                        ₹{mentor.pricing?.sessionPrice || 0}
+                      </span>
+                    </div>
+                  </div>
 
-                            <span
-                              className={`rounded-full px-3 py-1 text-[11px] sm:text-xs font-semibold ${
-                                mentor.verificationStatus === "Approved"
-                                  ? "bg-emerald-100 text-emerald-700"
-                                  : "bg-amber-100 text-amber-700"
-                              }`}
-                            >
-                              ✓ {mentor.verificationStatus}
-                            </span>
-                          </div>
+                  {/* STATUS DROPDOWN */}
+                  <div className="relative">
+                    <button
+                      onClick={() =>
+                        setOpenDropdown(
+                          openDropdown === mentor._id ? null : mentor._id
+                        )
+                      }
+                      className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold transition ${
+                        mentor.accountStatus === "Active"
+                          ? "border-green-200 bg-green-50 text-green-700 hover:bg-green-100"
+                          : "border-red-200 bg-red-50 text-red-700 hover:bg-red-100"
+                      }`}
+                    >
+                      <span
+                        className={`h-2 w-2 rounded-full ${
+                          mentor.accountStatus === "Active"
+                            ? "bg-green-500"
+                            : "bg-red-500"
+                        }`}
+                      />
+                      {mentor.accountStatus}
+                      <ChevronDown size={14} />
+                    </button>
 
-                          <div className="mt-2 flex flex-wrap items-center gap-2 text-xs sm:text-sm">
-                            <span className="rounded-full bg-blue-50 px-3 py-1 font-medium text-blue-700">
-                              {mentor.profession || "Profession"}
-                            </span>
-
-                            <span className="hidden sm:inline text-slate-400">
-                              •
-                            </span>
-
-                            <span className="rounded-full bg-violet-50 px-3 py-1 font-medium text-violet-700">
-                              {mentor.company || "Company"}
-                            </span>
-                          </div>
-
-                          <p className="mt-2 line-clamp-2 text-sm leading-6 text-slate-500">
-                            {mentor.headline || "No headline available."}
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* RIGHT SIDE */}
-
-                      <div className="flex flex-col sm:items-end gap-3 w-full sm:w-auto">
-                        {/* STATUS DROPDOWN */}
-
-                        <div className="relative w-full sm:w-auto">
+                    {openDropdown === mentor._id && (
+                      <div className="absolute right-0 top-10 z-50 w-32 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-lg">
+                        {mentor.accountStatus === "Active" ? (
                           <button
-                            onClick={() =>
-                              setOpenDropdown(
-                                openDropdown === mentor._id ? null : mentor._id
-                              )
-                            }
-                            className={`w-full sm:min-w-[150px] flex items-center justify-between rounded-lg border px-4 py-2.5 text-sm font-semibold transition ${
-                              mentor.accountStatus === "Active"
-                                ? "border-green-200 bg-green-50 text-green-700 hover:bg-green-100"
-                                : "border-red-200 bg-red-50 text-red-700 hover:bg-red-100"
-                            }`}
+                            onClick={() => handleToggleStatus(mentor)}
+                            className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-medium text-amber-700 transition hover:bg-amber-50"
                           >
-                            <div className="flex items-center gap-2">
-                              <span
-                                className={`h-2.5 w-2.5 rounded-full ${
-                                  mentor.accountStatus === "Active"
-                                    ? "bg-green-500"
-                                    : "bg-red-500"
-                                }`}
-                              />
-
-                              {mentor.accountStatus}
-                            </div>
-
-                            <ChevronDown size={16} />
+                            <span className="h-2 w-2 rounded-full bg-amber-500"></span>
+                            Suspend
                           </button>
-
-                          {openDropdown === mentor._id && (
-                            <div className="absolute right-0 top-12 z-50 w-full sm:w-40 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl">
-                              {mentor.accountStatus === "Active" ? (
-                                <button
-                                  onClick={() => handleToggleStatus(mentor)}
-                                  className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm font-medium text-amber-700 transition hover:bg-amber-50"
-                                >
-                                  <span className="h-2.5 w-2.5 rounded-full bg-amber-500"></span>
-                                  Suspend
-                                </button>
-                              ) : (
-                                <button
-                                  onClick={() => handleToggleStatus(mentor)}
-                                  className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm font-medium text-green-700 transition hover:bg-green-50"
-                                >
-                                  <span className="h-2.5 w-2.5 rounded-full bg-green-500"></span>
-                                  Activate
-                                </button>
-                              )}
-                            </div>
-                          )}
-                        </div>
-
-                        {/* STATS */}
-
-                        <div className="grid grid-cols-3 gap-2 w-full sm:w-auto">
-                          <div className="rounded-lg bg-yellow-50 px-2 sm:px-4 py-2 text-center">
-                            <p className="text-[10px] sm:text-[11px] text-yellow-700">
-                              Rating
-                            </p>
-
-                            <p className="font-bold text-sm sm:text-base text-yellow-600">
-                              ⭐ {mentor.averageRating || 0}
-                            </p>
-                          </div>
-
-                          <div className="rounded-lg bg-cyan-50 px-2 sm:px-4 py-2 text-center">
-                            <p className="text-[10px] sm:text-[11px] text-cyan-700">
-                              Experience
-                            </p>
-
-                            <p className="font-bold text-sm sm:text-base text-cyan-600">
-                              {mentor.experience || 0} Yrs
-                            </p>
-                          </div>
-
-                          <div className="rounded-lg bg-emerald-50 px-2 sm:px-4 py-2 text-center">
-                            <p className="text-[10px] sm:text-[11px] text-emerald-700">
-                              Fee
-                            </p>
-
-                            <p className="font-bold text-sm sm:text-base text-emerald-600">
-                              ₹{mentor.pricing?.sessionPrice || 0}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* DIVIDER */}
-
-                    <div className="border-t border-slate-200"></div>
-
-                    {/* CONTACT */}
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                      {/* EMAIL */}
-
-                      <div className="flex items-center gap-3 rounded-lg bg-slate-50 p-3 min-w-0">
-                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-100">
-                          📧
-                        </div>
-
-                        <div className="min-w-0">
-                          <p className="text-xs text-slate-400">Email</p>
-
-                          <p className="truncate text-sm font-medium text-slate-700">
-                            {mentor.email || "Not available"}
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* PHONE */}
-
-                      <div className="flex items-center gap-3 rounded-lg bg-slate-50 p-3 min-w-0">
-                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-green-100">
-                          📱
-                        </div>
-
-                        <div className="min-w-0">
-                          <p className="text-xs text-slate-400">Phone</p>
-
-                          <p className="truncate text-sm font-medium text-slate-700">
-                            {mentor.phone || "Not available"}
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* LOCATION */}
-
-                      <div className="flex items-center gap-3 rounded-lg bg-slate-50 p-3 min-w-0">
-                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-red-100">
-                          📍
-                        </div>
-
-                        <div className="min-w-0">
-                          <p className="text-xs text-slate-400">Location</p>
-
-                          <p className="truncate text-sm font-medium text-slate-700">
-                            {mentor.location?.city || "N/A"},{" "}
-                            {mentor.location?.state || "N/A"}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* SKILLS */}
-
-                    {mentor.primarySkill?.length > 0 && (
-                      <div className="flex flex-wrap gap-2">
-                        {mentor.primarySkill.map((skill, index) => (
-                          <span
-                            key={index}
-                            className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-medium text-indigo-700 hover:bg-indigo-100"
+                        ) : (
+                          <button
+                            onClick={() => handleToggleStatus(mentor)}
+                            className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-medium text-green-700 transition hover:bg-green-50"
                           >
-                            {skill}
-                          </span>
-                        ))}
+                            <span className="h-2 w-2 rounded-full bg-green-500"></span>
+                            Activate
+                          </button>
+                        )}
                       </div>
                     )}
+                  </div>
 
-                    {/* ABOUT */}
+                  {/* ACTION BUTTONS */}
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={() => navigate(`/admin/mentors/${mentor._id}`)}
+                      className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-blue-700"
+                    >
+                      View
+                    </button>
 
-                    <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-                      <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-700">
-                        About
-                      </h3>
-
-                      <p className="line-clamp-3 text-sm leading-6 text-slate-600">
-                        {mentor.about ||
-                          "No information available about this mentor."}
-                      </p>
-                    </div>
-
-                    {/* ACTIONS */}
-
-                    <div className="flex flex-col sm:flex-row justify-end gap-2">
-                      <button
-                        onClick={() => navigate(`/admin/mentors/${mentor._id}`)}
-                        className="w-full sm:w-auto rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-blue-700"
-                      >
-                        View Profile
-                      </button>
-
-                      <button
-                        onClick={() =>
-                          navigate(`/admin/mentors/${mentor._id}/edit`)
-                        }
-                        className="w-full sm:w-auto rounded-lg bg-amber-500 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-amber-600"
-                      >
-                        Edit
-                      </button>
-                    </div>
+                    <button
+                      onClick={() =>
+                        navigate(`/admin/mentors/${mentor._id}/edit`)
+                      }
+                      className="rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-amber-600"
+                    >
+                      Edit
+                    </button>
                   </div>
                 </div>
               </div>

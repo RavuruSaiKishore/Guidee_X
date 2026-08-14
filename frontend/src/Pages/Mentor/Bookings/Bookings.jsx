@@ -1,13 +1,19 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { ToastContainer, toast } from "react-toastify";
+
 import {
   CalendarCheck2,
   Search,
   ExternalLink,
   FileText,
   X,
+  Sparkles,
+  Clock3,
+  Calendar,
+  User,
+  ShieldCheck,
 } from "lucide-react";
-import { ToastContainer, toast } from "react-toastify";
 
 const ConfirmedSessions = () => {
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -47,7 +53,6 @@ const ConfirmedSessions = () => {
       );
 
       const data = await response.json();
-      console.log(data);
 
       if (!response.ok) {
         throw new Error(data.message || "Failed to fetch confirmed sessions");
@@ -148,7 +153,6 @@ const ConfirmedSessions = () => {
         return toast.error(data.message || "Unable to join meeting.");
       }
 
-      // Open Google Meet link in a new tab
       window.open(data.googleMeetLink, "_blank");
     } catch (err) {
       console.error(err);
@@ -178,7 +182,7 @@ const ConfirmedSessions = () => {
   });
 
   // ==================================================
-  // MEETING TIMES (FIXED LOCAL TIMEZONE PARSING)
+  // MEETING TIMES
   // ==================================================
 
   const getMeetingTimes = (session) => {
@@ -196,7 +200,6 @@ const ConfirmedSessions = () => {
       };
     }
 
-    // START TIME
     let [startTime, startPeriod] = session.startTime.split(" ");
     let [startHour, startMinute] = startTime.split(":").map(Number);
     startPeriod = startPeriod?.toLowerCase();
@@ -206,7 +209,6 @@ const ConfirmedSessions = () => {
 
     meetingStart.setHours(startHour, startMinute, 0, 0);
 
-    // END TIME
     let [endTime, endPeriod] = session.endTime.split(" ");
     let [endHour, endMinute] = endTime.split(":").map(Number);
     endPeriod = endPeriod?.toLowerCase();
@@ -216,7 +218,6 @@ const ConfirmedSessions = () => {
 
     meetingEnd.setHours(endHour, endMinute, 0, 0);
 
-    // JOIN 10 MINUTES BEFORE
     const joinTime = new Date(meetingStart.getTime() - 10 * 60 * 1000);
 
     return {
@@ -246,7 +247,7 @@ const ConfirmedSessions = () => {
 
   const getProfileImage = (image) => {
     if (!image) {
-      return "https://ui-avatars.com/api/?name=Student&background=10b981&color=fff";
+      return "https://ui-avatars.com/api/?name=Student";
     }
 
     if (image.startsWith("http://") || image.startsWith("https://")) {
@@ -262,112 +263,129 @@ const ConfirmedSessions = () => {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 pt-16 lg:ml-64 lg:pt-0">
-        <div className="flex flex-col items-center">
-          <div className="relative h-14 w-14">
-            <div className="h-14 w-14 rounded-full border-4 border-emerald-100" />
-            <div className="absolute inset-0 h-14 w-14 animate-spin rounded-full border-4 border-transparent border-t-emerald-600" />
+      <div
+        className="min-h-screen bg-slate-50 pt-20 lg:ml-64 lg:pt-0 text-slate-900"
+        style={{ fontFamily: "'Poppins', sans-serif" }}
+      >
+        <div className="flex min-h-[70vh] flex-col items-center justify-center px-5">
+          <div className="relative">
+            <div className="h-14 w-14 rounded-full border-4 border-slate-200" />
+            <div className="absolute inset-0 h-14 w-14 animate-spin rounded-full border-4 border-transparent border-t-blue-600" />
           </div>
-          <p className="mt-5 text-center font-medium text-gray-700">
+          <p
+            className="mt-5 text-center text-xs font-semibold tracking-tight"
+            style={{ fontWeight: 600 }}
+          >
             Loading your Bookings...
           </p>
-          <p className="mt-1 text-sm text-gray-400">Please wait a moment</p>
+          <p
+            className="mt-1 text-center text-[11px] text-slate-400 font-medium"
+            style={{ fontWeight: 600 }}
+          >
+            Please wait a moment
+          </p>
         </div>
       </div>
     );
   }
 
   return (
-    <>
-      <main className="min-h-screen w-full min-w-0 overflow-x-hidden bg-gray-50 px-3 pb-8 pt-20 sm:px-5 sm:pb-10 sm:pt-20 lg:ml-64 lg:w-[calc(100%-16rem)] lg:px-6 lg:pt-8 xl:px-8">
+    <div
+      className="min-h-screen bg-slate-50 pt-20 lg:ml-64 lg:pt-0 text-slate-900"
+      style={{ fontFamily: "'Poppins', sans-serif", fontStyle: "normal" }}
+    >
+      <main className="w-full max-w-[1600px] mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
         {/* ==================================================
-            HEADER
+            HEADER - POLISHED EXECUTIVE BANNER
         ================================================== */}
-        <section className="mb-5 sm:mb-8">
-          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-violet-700 via-indigo-700 to-fuchsia-700 p-4 text-white shadow-xl sm:rounded-3xl sm:p-6 lg:p-8">
-            <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-white/10 blur-3xl sm:h-44 sm:w-44" />
-            <div className="absolute -bottom-16 -left-10 h-40 w-40 rounded-full bg-white/10 blur-3xl sm:h-56 sm:w-56" />
+        <section className="relative overflow-hidden rounded-3xl bg-black p-6 sm:p-8 text-white shadow-md">
+          <div className="absolute -right-16 -top-16 h-48 w-48 rounded-full bg-blue-600/20 blur-3xl" />
+          <div className="absolute -bottom-20 left-1/4 h-40 w-40 rounded-full bg-blue-400/10 blur-2xl" />
 
-            <div className="relative flex flex-col gap-5 sm:gap-6 lg:flex-row lg:items-center lg:justify-between">
-              <div className="flex min-w-0 items-start gap-3 sm:items-center sm:gap-5">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-white/20 bg-white/20 backdrop-blur-md sm:h-16 sm:w-16 sm:rounded-2xl">
-                  <CalendarCheck2
-                    size={25}
-                    className="sm:h-[34px] sm:w-[34px]"
-                  />
-                </div>
-
-                <div className="min-w-0">
-                  <h1 className="break-words text-xl font-bold leading-tight sm:text-2xl lg:text-3xl">
-                    Confirmed Booking Sessions
-                  </h1>
-                  <p className="mt-1 text-sm leading-5 text-green-100 sm:mt-2 sm:text-base">
-                    View and manage all confirmed mentorship sessions.
-                  </p>
-                </div>
+          <div className="relative z-10 flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-start sm:items-center gap-4 sm:gap-5 min-w-0">
+              <div
+                className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-white/15 bg-white/10 backdrop-blur shadow-inner text-blue-400"
+                style={{ fontWeight: 600 }}
+              >
+                <CalendarCheck2 size={26} />
               </div>
 
-              <div className="w-full rounded-xl border border-white/20 bg-white/15 px-4 py-3 backdrop-blur-md sm:w-auto sm:rounded-2xl sm:px-6 sm:py-4">
-                <div className="flex items-center justify-between gap-4">
-                  <div>
-                    <p className="text-xs uppercase tracking-wider text-green-100">
-                      Total
-                    </p>
-                    <h3 className="mt-1 text-lg font-semibold sm:text-xl">
-                      Confirmed
-                    </h3>
-                  </div>
-
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white text-xl font-bold text-green-700 sm:h-14 sm:w-14 sm:text-2xl">
-                    {filteredSessions.length}
-                  </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <span
+                    className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[11px] font-semibold text-blue-300 backdrop-blur"
+                    style={{ fontWeight: 600 }}
+                  >
+                    <Sparkles size={13} className="text-blue-400" />
+                    Confirmed Suite
+                  </span>
                 </div>
+
+                <h1
+                  className="mt-2 text-2xl sm:text-3xl font-semibold tracking-tight text-white"
+                  style={{ fontWeight: 600 }}
+                >
+                  Confirmed Booking Sessions
+                </h1>
+
+                <p
+                  className="mt-1 text-xs sm:text-sm text-slate-300 font-medium leading-relaxed"
+                  style={{ fontWeight: 600 }}
+                >
+                  View, track readiness, and manage all verified mentorship
+                  bookings.
+                </p>
+              </div>
+            </div>
+
+            <div
+              className="flex items-center gap-4 rounded-2xl border border-white/15 bg-white/10 px-5 py-4 backdrop-blur shadow-inner shrink-0"
+              style={{ fontWeight: 600 }}
+            >
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white text-base font-semibold text-black shadow-xs">
+                {filteredSessions.length}
+              </div>
+              <div>
+                <p className="text-[10px] uppercase tracking-wider text-slate-400">
+                  Total
+                </p>
+                <h3 className="text-sm font-semibold text-white">Confirmed</h3>
               </div>
             </div>
           </div>
         </section>
 
         {/* ==================================================
-            SEARCH
+            SEARCH & FILTER BAR
         ================================================== */}
-        <section className="mb-5 sm:mb-8">
-          <div className="mb-2">
-            <h3 className="text-sm font-semibold text-gray-700">
-              Search Sessions
-            </h3>
-            <p className="text-xs leading-5 text-gray-500">
-              Search by student name, email or session type.
-            </p>
-          </div>
-
-          <div className="flex flex-col gap-3 lg:flex-row">
-            <div className="relative min-w-0 flex-1">
+        <section className="space-y-3">
+          <div className="flex flex-col lg:flex-row items-center gap-3 bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
+            <div className="relative min-w-0 flex-1 w-full">
               <Search
-                size={19}
-                className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
+                size={17}
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
               />
               <input
                 type="text"
-                placeholder="Search by student or session type..."
+                placeholder="Search by student name, email or session type..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="h-14 w-full rounded-xl border border-gray-200 bg-white pl-11 pr-4 text-sm text-gray-700 shadow-sm outline-none transition-all focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 sm:h-16 sm:rounded-2xl sm:text-base"
+                className="w-full h-11 pl-11 pr-4 rounded-xl border border-slate-200 bg-slate-50 text-xs font-semibold text-slate-800 outline-none transition-all placeholder:text-slate-400 focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                style={{ fontWeight: 600 }}
               />
             </div>
 
-            <div className="flex h-14 w-full items-center justify-between rounded-xl border border-emerald-200 bg-emerald-50 px-4 shadow-sm sm:h-16 sm:px-6 lg:w-[240px] lg:shrink-0 lg:rounded-2xl">
-              <div>
-                <p className="text-xs font-medium uppercase tracking-wide text-emerald-600">
-                  Search Results
-                </p>
-                <p className="text-xs text-gray-600 sm:text-sm">
-                  Matching sessions
-                </p>
-              </div>
-
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-base font-bold text-white sm:h-10 sm:w-10 sm:text-lg">
+            <div
+              className="flex h-11 w-full lg:w-64 items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-4 text-xs font-semibold text-slate-700 shrink-0"
+              style={{ fontWeight: 600 }}
+            >
+              <span className="text-slate-500 uppercase tracking-wide text-[10px]">
+                Matching Sessions
+              </span>
+              <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-black text-white text-xs">
                 {filteredSessions.length}
-              </div>
+              </span>
             </div>
           </div>
         </section>
@@ -376,29 +394,30 @@ const ConfirmedSessions = () => {
             EMPTY STATE
         ================================================== */}
         {filteredSessions.length === 0 ? (
-          <section className="rounded-2xl border border-gray-200 bg-white px-4 py-12 shadow-sm sm:rounded-3xl sm:p-14">
-            <div className="flex flex-col items-center text-center">
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 sm:h-20 sm:w-20">
-                <CalendarCheck2
-                  size={32}
-                  className="text-emerald-600 sm:h-[38px] sm:w-[38px]"
-                />
-              </div>
-
-              <h2 className="mt-5 text-xl font-bold text-gray-800 sm:text-2xl">
-                No Confirmed Sessions
-              </h2>
-              <p className="mt-2 max-w-md text-sm leading-6 text-gray-500 sm:text-base">
-                There are currently no confirmed mentorship sessions. Once
-                students book and you confirm them, they will appear here.
-              </p>
+          <section className="flex min-h-[400px] w-full flex-col items-center justify-center rounded-3xl border border-slate-200 bg-white px-5 py-16 text-center shadow-xs">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 mb-4">
+              <CalendarCheck2 size={26} />
             </div>
+
+            <h2
+              className="text-base font-semibold text-slate-900 tracking-tight"
+              style={{ fontWeight: 600 }}
+            >
+              No Confirmed Sessions
+            </h2>
+            <p
+              className="mt-1 max-w-sm text-center text-xs text-slate-500 font-medium leading-relaxed"
+              style={{ fontWeight: 600 }}
+            >
+              There are currently no confirmed mentorship sessions matching your
+              criteria.
+            </p>
           </section>
         ) : (
           /* ==================================================
-              SESSION LIST
+              SESSION CARDS - STRUCTURED MASTER-DETAIL LAYOUT
           ================================================== */
-          <section className="space-y-4 sm:space-y-5">
+          <section className="w-full space-y-4">
             {filteredSessions.map((session) => {
               const { meetingEnd, joinTime } = getMeetingTimes(session);
 
@@ -415,216 +434,260 @@ const ConfirmedSessions = () => {
               return (
                 <article
                   key={session._id}
-                  className="w-full overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition hover:shadow-lg sm:rounded-2xl"
+                  className="w-full overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xs transition duration-200 hover:border-blue-300 hover:shadow-md p-5 sm:p-6"
                 >
-                  <div className="h-1 bg-emerald-500" />
-
-                  <div className="p-4 sm:p-5 lg:p-6">
-                    {/* STUDENT + FEE */}
-                    <div className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
-                      <div className="flex min-w-0 items-start gap-3 sm:gap-4">
+                  <div className="w-full space-y-5">
+                    {/* TOP: STUDENT IDENTITY & STATUS */}
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between pb-4 border-b border-slate-100">
+                      <div className="flex items-center gap-3.5 min-w-0">
                         <img
                           src={getProfileImage(session.student?.profileImage)}
                           alt={`${session.student?.firstName || ""} ${
                             session.student?.lastName || ""
                           }`}
-                          className="h-12 w-12 shrink-0 rounded-full border-4 border-emerald-100 object-cover sm:h-16 sm:w-16"
+                          className="h-12 w-12 shrink-0 rounded-2xl border border-slate-200 object-cover shadow-2xs"
                           onError={(e) => {
                             e.currentTarget.src =
                               "https://ui-avatars.com/api/?name=Student";
                           }}
                         />
 
-                        <div className="min-w-0 flex-1">
+                        <div className="min-w-0">
                           <div className="flex flex-wrap items-center gap-2">
-                            <h2 className="max-w-full break-words text-base font-bold text-gray-800 sm:text-lg">
+                            <h2
+                              className="text-xs sm:text-sm font-semibold text-slate-900 tracking-tight truncate"
+                              style={{ fontWeight: 600 }}
+                            >
                               {session.student?.firstName}{" "}
                               {session.student?.lastName}
                             </h2>
 
-                            <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-700">
+                            <span
+                              className="rounded-full px-3 py-0.5 text-[10px] font-semibold border border-emerald-200 bg-emerald-50 text-emerald-700"
+                              style={{ fontWeight: 600 }}
+                            >
                               {session.bookingStatus}
                             </span>
 
                             {session.paymentStatus && (
                               <span
-                                className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
+                                className={`rounded-full px-3 py-0.5 text-[10px] font-semibold border ${
                                   session.paymentStatus === "Paid"
-                                    ? "bg-blue-100 text-blue-700"
-                                    : "bg-red-100 text-red-700"
+                                    ? "border-blue-200 bg-blue-50 text-blue-700"
+                                    : "border-red-200 bg-red-50 text-red-700"
                                 }`}
+                                style={{ fontWeight: 600 }}
                               >
                                 {session.paymentStatus}
                               </span>
                             )}
                           </div>
 
-                          <p className="mt-1 break-all text-xs text-gray-500 sm:text-sm">
+                          <p
+                            className="mt-0.5 text-[11px] text-slate-500 font-medium truncate"
+                            style={{ fontWeight: 600 }}
+                          >
                             {session.student?.email}
                           </p>
-
-                          <div className="mt-2 inline-flex max-w-full rounded-lg bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-700 sm:text-sm">
-                            <span className="truncate">
-                              {session.sessionType}
-                            </span>
-                          </div>
                         </div>
                       </div>
 
-                      <div className="border-t border-gray-100 pt-4 xl:border-0 xl:pt-0 xl:text-right">
-                        <p className="text-xs text-gray-500">Session Fee</p>
-                        <h2 className="text-xl font-bold text-emerald-600 sm:text-2xl">
+                      {/* SESSION FEE BADGE */}
+                      <div className="flex items-center justify-between sm:justify-end gap-3 bg-slate-50 border border-slate-100 rounded-2xl px-4 py-2.5">
+                        <span
+                          className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold"
+                          style={{ fontWeight: 600 }}
+                        >
+                          Fee Earned:
+                        </span>
+                        <span
+                          className="text-sm font-semibold text-emerald-600"
+                          style={{ fontWeight: 600 }}
+                        >
                           ₹{session.amount}
-                        </h2>
+                        </span>
                       </div>
                     </div>
 
-                    {/* DETAILS */}
-                    <div className="mt-5 grid grid-cols-1 gap-3 min-[420px]:grid-cols-2 lg:grid-cols-4">
-                      <div className="rounded-xl border border-gray-100 bg-gray-50 p-3 sm:p-4">
-                        <p className="text-[10px] uppercase tracking-wide text-gray-500 sm:text-[11px]">
-                          Session Date
+                    {/* MIDDLE: SESSION SCHEDULING METRICS */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-semibold">
+                      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3.5">
+                        <p
+                          className="text-[10px] uppercase tracking-wide text-slate-400 mb-1"
+                          style={{ fontWeight: 600 }}
+                        >
+                          Type
                         </p>
-                        <h3 className="mt-1 text-sm font-semibold text-gray-800 sm:text-base">
-                          {new Date(session.sessionDate).toLocaleDateString()}
-                        </h3>
-                      </div>
-
-                      <div className="rounded-xl border border-gray-100 bg-gray-50 p-3 sm:p-4">
-                        <p className="text-[10px] uppercase tracking-wide text-gray-500 sm:text-[11px]">
-                          Time
-                        </p>
-                        <h3 className="mt-1 text-sm font-semibold text-gray-800 sm:text-base">
-                          {session.startTime}
-                        </h3>
-                        <p className="text-xs text-gray-500 sm:text-sm">
-                          {session.endTime}
+                        <p
+                          className="text-slate-900 truncate"
+                          style={{ fontWeight: 600 }}
+                        >
+                          {session.sessionType || "Mentorship"}
                         </p>
                       </div>
 
-                      <div className="rounded-xl border border-gray-100 bg-gray-50 p-3 sm:p-4">
-                        <p className="text-[10px] uppercase tracking-wide text-gray-500 sm:text-[11px]">
+                      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3.5">
+                        <p
+                          className="text-[10px] uppercase tracking-wide text-slate-400 mb-1"
+                          style={{ fontWeight: 600 }}
+                        >
+                          Date & Time
+                        </p>
+                        <p
+                          className="text-slate-900 truncate"
+                          style={{ fontWeight: 600 }}
+                        >
+                          {new Date(session.sessionDate).toLocaleDateString(
+                            "en-GB",
+                            {
+                              day: "2-digit",
+                              month: "short",
+                            }
+                          )}{" "}
+                          • {session.startTime}
+                        </p>
+                      </div>
+
+                      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3.5">
+                        <p
+                          className="text-[10px] uppercase tracking-wide text-slate-400 mb-1"
+                          style={{ fontWeight: 600 }}
+                        >
                           Duration
                         </p>
-                        <h3 className="mt-1 text-sm font-semibold text-gray-800 sm:text-base">
+                        <p
+                          className="text-slate-900"
+                          style={{ fontWeight: 600 }}
+                        >
                           {session.duration} mins
-                        </h3>
+                        </p>
                       </div>
 
-                      <div className="rounded-xl border border-gray-100 bg-gray-50 p-3 sm:p-4">
-                        <p className="text-[10px] uppercase tracking-wide text-gray-500 sm:text-[11px]">
+                      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3.5">
+                        <p
+                          className="text-[10px] uppercase tracking-wide text-slate-400 mb-1"
+                          style={{ fontWeight: 600 }}
+                        >
                           Booked On
                         </p>
-                        <h3 className="mt-1 text-sm font-semibold text-gray-800 sm:text-base">
-                          {new Date(session.createdAt).toLocaleDateString()}
-                        </h3>
+                        <p
+                          className="text-slate-900 truncate"
+                          style={{ fontWeight: 600 }}
+                        >
+                          {new Date(session.createdAt).toLocaleDateString(
+                            "en-GB",
+                            {
+                              day: "2-digit",
+                              month: "short",
+                              year: "numeric",
+                            }
+                          )}
+                        </p>
                       </div>
                     </div>
 
-                    {/* NOTES */}
+                    {/* NOTES ACCORDION / BOX */}
                     {session.notes && (
-                      <div className="mt-4 overflow-hidden rounded-xl border border-amber-200 bg-gradient-to-r from-amber-50 to-yellow-50 shadow-sm sm:mt-5 sm:rounded-2xl">
-                        <div className="flex items-center gap-3 border-b border-amber-200 bg-white/60 px-4 py-3 sm:px-5">
-                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-100 sm:h-10 sm:w-10">
-                            <FileText size={19} className="text-amber-600" />
-                          </div>
-                          <div className="min-w-0">
-                            <h3 className="text-sm font-bold text-gray-800">
-                              Session Notes
-                            </h3>
-                            <p className="text-xs text-gray-500">
-                              Instructions shared by the student
-                            </p>
-                          </div>
-                        </div>
-
-                        <div className="px-4 py-4 sm:px-5">
-                          <p className="whitespace-pre-wrap break-words text-sm leading-6 text-gray-700 sm:text-base sm:leading-7">
-                            {session.notes}
+                      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-xs font-semibold">
+                        <div className="flex items-center gap-2 mb-1.5 text-blue-600">
+                          <FileText size={14} />
+                          <p
+                            className="text-[10px] uppercase tracking-wider text-slate-400"
+                            style={{ fontWeight: 600 }}
+                          >
+                            Student Instructions / Notes
                           </p>
                         </div>
+                        <p
+                          className="break-words leading-relaxed text-slate-700 font-medium pl-6"
+                          style={{ fontWeight: 600 }}
+                        >
+                          {session.notes}
+                        </p>
                       </div>
                     )}
 
-                    {/* MEETING STATUS */}
-                    <div className="mt-4 rounded-xl border border-gray-200 bg-gradient-to-r from-slate-50 to-gray-100 p-4 sm:mt-5 sm:rounded-2xl sm:p-5">
-                      <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+                    {/* BOTTOM: MEETING LAUNCH CONTROLS & CANCELLATION */}
+                    <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 sm:p-5">
+                      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                         <div className="min-w-0">
-                          <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">
-                            Meeting Status
+                          <p
+                            className="text-[10px] font-semibold uppercase tracking-wider text-slate-400"
+                            style={{ fontWeight: 600 }}
+                          >
+                            Room Readiness
                           </p>
 
                           {canJoin ? (
-                            <>
-                              <div className="mt-2 flex items-center gap-2">
-                                <span className="h-3 w-3 shrink-0 animate-pulse rounded-full bg-emerald-500" />
-                                <span className="text-sm font-semibold text-emerald-700 sm:text-base">
-                                  Live • Ready to Join
-                                </span>
-                              </div>
-                              <p className="mt-2 text-xs leading-5 text-gray-500 sm:text-sm">
-                                Your session is live now. Click the button to
-                                join Google Meet.
-                              </p>
-                            </>
+                            <div className="mt-1.5 flex items-center gap-2">
+                              <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-emerald-500" />
+                              <span
+                                className="text-xs font-semibold text-emerald-700"
+                                style={{ fontWeight: 600 }}
+                              >
+                                Live • Room is open for entry
+                              </span>
+                            </div>
                           ) : meetingExpired ? (
-                            <>
-                              <div className="mt-2 flex items-center gap-2">
-                                <span className="h-3 w-3 shrink-0 rounded-full bg-gray-500" />
-                                <span className="text-sm font-semibold text-gray-700 sm:text-base">
-                                  Meeting Completed
-                                </span>
-                              </div>
-                              <p className="mt-2 text-xs leading-5 text-gray-500 sm:text-sm">
-                                This mentorship session has already ended.
-                              </p>
-                            </>
+                            <div className="mt-1.5 flex items-center gap-2">
+                              <span className="h-2.5 w-2.5 rounded-full bg-slate-400" />
+                              <span
+                                className="text-xs font-semibold text-slate-600"
+                                style={{ fontWeight: 600 }}
+                              >
+                                Meeting Concluded
+                              </span>
+                            </div>
                           ) : (
-                            <>
-                              <div className="mt-2 flex items-center gap-2">
-                                <span className="h-3 w-3 shrink-0 animate-pulse rounded-full bg-orange-500" />
-                                <span className="text-sm font-semibold text-orange-700 sm:text-base">
-                                  Waiting for Meeting Window
-                                </span>
-                              </div>
-
-                              <div className="mt-3 inline-flex max-w-full rounded-xl bg-orange-100 px-3 py-2 font-mono text-base font-bold text-orange-700 shadow-sm sm:px-4 sm:text-lg">
+                            <div className="mt-1.5 flex items-center gap-2">
+                              <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-blue-600" />
+                              <span
+                                className="text-xs font-semibold text-blue-700"
+                                style={{ fontWeight: 600 }}
+                              >
+                                Unlocks in
+                              </span>
+                              <span
+                                className="font-mono font-bold tracking-wider text-xs bg-white px-2.5 py-0.5 rounded-lg border border-slate-200 text-slate-800"
+                                style={{ fontWeight: 600 }}
+                              >
                                 {formatCountdown(secondsUntilJoin)}
-                              </div>
-
-                              <p className="mt-2 text-xs leading-5 text-gray-500 sm:text-sm">
-                                Join button will unlock{" "}
-                                <strong>10 minutes</strong> before the session
-                                starts.
-                              </p>
-                            </>
+                              </span>
+                            </div>
                           )}
                         </div>
 
-                        {/* ACTIONS */}
-                        <div className="flex w-full flex-col gap-3 sm:flex-row lg:w-auto">
+                        {/* ACTION BUTTONS */}
+                        <div className="flex w-full flex-col gap-2.5 sm:flex-row lg:w-auto">
                           {canJoin ? (
                             <button
                               onClick={() =>
                                 handleJoinGoogleMeet(session.meeting?.roomId)
                               }
-                              className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 py-3 text-sm font-semibold text-white shadow-lg transition hover:bg-emerald-700 sm:w-auto sm:px-6"
+                              className="flex w-full items-center justify-center gap-2 rounded-xl bg-black hover:bg-slate-800 px-5 py-2.5 text-xs font-semibold text-white shadow-xs transition sm:w-auto"
+                              style={{ fontWeight: 600 }}
                             >
-                              <ExternalLink size={18} />
+                              <ExternalLink
+                                size={14}
+                                className="text-blue-400"
+                              />
                               Join Google Meet
                             </button>
                           ) : meetingExpired ? (
                             <button
                               disabled
-                              className="w-full cursor-not-allowed rounded-xl bg-gray-400 px-5 py-3 text-sm font-semibold text-white sm:w-auto sm:px-6"
+                              className="w-full cursor-not-allowed rounded-xl bg-slate-200 px-5 py-2.5 text-xs font-semibold text-slate-500 sm:w-auto"
+                              style={{ fontWeight: 600 }}
                             >
                               Meeting Ended
                             </button>
                           ) : (
                             <button
                               disabled
-                              className="w-full cursor-not-allowed rounded-xl bg-orange-300 px-5 py-3 text-sm font-semibold text-white sm:w-auto sm:px-6"
+                              className="flex w-full items-center justify-center gap-2 rounded-xl bg-slate-100 border border-slate-200 px-5 py-2.5 text-xs font-semibold text-slate-500 sm:w-auto"
+                              style={{ fontWeight: 600 }}
                             >
+                              <Clock3 size={14} />
                               Join Locked
                             </button>
                           )}
@@ -635,7 +698,8 @@ const ConfirmedSessions = () => {
                               setCancelReason("");
                               setShowCancelModal(true);
                             }}
-                            className="w-full rounded-xl bg-red-600 px-5 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-red-700 sm:w-auto sm:px-6"
+                            className="w-full rounded-xl bg-red-50 border border-red-200 hover:bg-red-100 px-5 py-2.5 text-xs font-semibold text-red-600 transition shadow-2xs sm:w-auto"
+                            style={{ fontWeight: 600 }}
                           >
                             Cancel Booking
                           </button>
@@ -654,12 +718,26 @@ const ConfirmedSessions = () => {
           CANCEL MODAL
       ================================================== */}
       {showCancelModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto bg-black/50 p-3 backdrop-blur-sm sm:p-5">
-          <div className="my-auto w-full max-w-md rounded-2xl bg-white p-5 shadow-2xl sm:rounded-3xl sm:p-6">
-            <div className="flex items-center justify-between gap-4">
-              <h2 className="text-xl font-bold text-gray-800 sm:text-2xl">
-                Cancel Booking
-              </h2>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto bg-slate-950/60 p-4 backdrop-blur-sm">
+          <div className="my-auto w-full max-w-md rounded-3xl bg-white p-6 shadow-xl border border-slate-200">
+            <div className="flex items-start justify-between gap-4 border-b border-slate-100 pb-4">
+              <div>
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-50 text-red-600 border border-red-200">
+                  <X size={20} />
+                </div>
+                <h2
+                  className="mt-3 text-base font-semibold text-slate-900 tracking-tight"
+                  style={{ fontWeight: 600 }}
+                >
+                  Cancel Booking
+                </h2>
+                <p
+                  className="mt-1 text-xs text-slate-500 font-medium"
+                  style={{ fontWeight: 600 }}
+                >
+                  Please provide a reason for cancelling this booking.
+                </p>
+              </div>
 
               <button
                 type="button"
@@ -668,25 +746,24 @@ const ConfirmedSessions = () => {
                   setCancelReason("");
                   setSelectedBookingId(null);
                 }}
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-gray-500 transition hover:bg-gray-100 hover:text-gray-700"
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
               >
-                <X size={20} />
+                <X size={18} />
               </button>
             </div>
 
-            <p className="mt-2 text-sm leading-6 text-gray-500">
-              Please enter the reason for cancelling this booking.
-            </p>
+            <div className="mt-4">
+              <textarea
+                rows={4}
+                value={cancelReason}
+                onChange={(e) => setCancelReason(e.target.value)}
+                placeholder="Enter cancellation reason..."
+                className="w-full resize-none rounded-2xl border border-slate-200 bg-slate-50 p-3.5 text-xs font-semibold text-slate-800 outline-none transition focus:border-blue-600 focus:bg-white focus:ring-2 focus:ring-blue-100"
+                style={{ fontWeight: 600 }}
+              />
+            </div>
 
-            <textarea
-              rows={5}
-              value={cancelReason}
-              onChange={(e) => setCancelReason(e.target.value)}
-              placeholder="Enter cancellation reason..."
-              className="mt-4 w-full resize-none rounded-xl border border-gray-200 p-3 text-sm outline-none transition focus:border-red-500 focus:ring-4 focus:ring-red-100 sm:mt-5 sm:p-4"
-            />
-
-            <div className="mt-5 flex flex-col-reverse gap-3 sm:mt-6 sm:flex-row sm:justify-end">
+            <div className="mt-5 flex flex-col-reverse gap-2.5 sm:flex-row sm:justify-end pt-3 border-t border-slate-100">
               <button
                 type="button"
                 onClick={() => {
@@ -694,7 +771,8 @@ const ConfirmedSessions = () => {
                   setCancelReason("");
                   setSelectedBookingId(null);
                 }}
-                className="w-full rounded-xl border border-gray-300 px-5 py-3 font-medium text-gray-700 transition hover:bg-gray-100 sm:w-auto"
+                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 sm:w-auto"
+                style={{ fontWeight: 600 }}
               >
                 Cancel
               </button>
@@ -703,7 +781,8 @@ const ConfirmedSessions = () => {
                 type="button"
                 onClick={cancelBooking}
                 disabled={!cancelReason.trim()}
-                className="w-full rounded-xl bg-red-600 px-6 py-3 font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+                className="w-full rounded-xl bg-red-600 px-5 py-2.5 text-xs font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto shadow-xs"
+                style={{ fontWeight: 600 }}
               >
                 Confirm Cancel
               </button>
@@ -713,7 +792,7 @@ const ConfirmedSessions = () => {
       )}
 
       <ToastContainer position="top-right" autoClose={3000} />
-    </>
+    </div>
   );
 };
 

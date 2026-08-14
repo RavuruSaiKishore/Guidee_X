@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { toast } from "react-toastify";
 
 import {
   ArrowLeft,
@@ -21,7 +22,6 @@ import {
   Trash2,
 } from "lucide-react";
 
-import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -112,73 +112,21 @@ const MentorStudentProfile = () => {
 
       const data = await res.json();
 
-      console.log("MENTOR STUDENT PROFILE:", data);
-
       if (!res.ok) {
         throw new Error(data.message || "Unable to fetch student profile.");
       }
 
-      // =====================================================
-      // STUDENT
-      // Backend:
-      // data.student
-      // =====================================================
-
       setStudent(data.student || null);
-
-      // =====================================================
-      // SESSION HISTORY
-      // Backend:
-      // data.sessionHistory
-      //
-      // IMPORTANT:
-      // Previously frontend was using data.sessions
-      // but backend sends data.sessionHistory
-      // =====================================================
 
       setSessions(
         Array.isArray(data.sessionHistory) ? data.sessionHistory : []
       );
 
-      // =====================================================
-      // REVIEWS
-      // Backend:
-      // data.reviews
-      // =====================================================
-
       setReviews(Array.isArray(data.reviews) ? data.reviews : []);
-
-      // =====================================================
-      // NOTES
-      // Backend:
-      // data.notes
-      // =====================================================
 
       setNotes(Array.isArray(data.notes) ? data.notes : []);
 
-      // =====================================================
-      // GOALS
-      //
-      // Your current response does not contain goals.
-      // This safely supports goals if backend sends them.
-      // =====================================================
-
       setGoals(Array.isArray(data.goals) ? data.goals : []);
-
-      // =====================================================
-      // STATISTICS
-      //
-      // Backend:
-      //
-      // statistics: {
-      //   cancelledSessions: 0,
-      //   completedSessions: 0,
-      //   totalSessions: 1,
-      //   upcomingSessions: 1
-      // }
-      //
-      // We directly use backend statistics.
-      // =====================================================
 
       setStatistics({
         totalSessions: Number(data.statistics?.totalSessions || 0),
@@ -196,6 +144,22 @@ const MentorStudentProfile = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // =========================================================
+  // FORMAT PROFILE IMAGE URL
+  // =========================================================
+
+  const getProfileImageUrl = (image) => {
+    if (!image || typeof image !== "string") {
+      return null;
+    }
+
+    if (image.startsWith("http://") || image.startsWith("https://")) {
+      return image;
+    }
+
+    return `${API_BASE_URL}/${image}`.replace(/([^:]\/)\/+/g, "$1");
   };
 
   // =========================================================
@@ -239,22 +203,22 @@ const MentorStudentProfile = () => {
   const getSessionStatusStyle = (status) => {
     switch (status) {
       case "Completed":
-        return "bg-emerald-50 text-emerald-700 border-emerald-200";
+        return "border-emerald-200 bg-emerald-50 text-emerald-700";
 
       case "Confirmed":
-        return "bg-blue-50 text-blue-700 border-blue-200";
+        return "border-blue-200 bg-blue-50 text-blue-700";
 
       case "Cancelled":
-        return "bg-red-50 text-red-700 border-red-200";
+        return "border-red-200 bg-red-50 text-red-700";
 
       case "Rejected":
-        return "bg-slate-100 text-slate-600 border-slate-200";
+        return "border-slate-200 bg-slate-100 text-slate-600";
 
       case "Rescheduled":
-        return "bg-purple-50 text-purple-700 border-purple-200";
+        return "border-purple-200 bg-purple-50 text-purple-700";
 
       default:
-        return "bg-amber-50 text-amber-700 border-amber-200";
+        return "border-amber-200 bg-amber-50 text-amber-700";
     }
   };
 
@@ -364,25 +328,31 @@ const MentorStudentProfile = () => {
     }
   };
 
- 
-
   // =========================================================
   // LOADING
   // =========================================================
 
   if (loading) {
     return (
-      <div className="lg:ml-64 min-h-screen bg-slate-50 pt-16 lg:pt-0 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 rounded-2xl bg-indigo-50 flex items-center justify-center mx-auto">
-            <Loader2 size={32} className="animate-spin text-indigo-600" />
+      <div
+        className="min-h-screen bg-slate-50 pt-16 sm:pt-20 lg:ml-64 lg:pt-0 text-slate-900"
+        style={{ fontFamily: "'Poppins', sans-serif" }}
+      >
+        <div className="flex min-h-[70vh] flex-col items-center justify-center px-2 sm:px-5">
+          <div className="relative">
+            <div className="h-14 w-14 rounded-full border-4 border-slate-200" />
+            <div className="absolute inset-0 h-14 w-14 animate-spin rounded-full border-4 border-transparent border-t-blue-600" />
           </div>
-
-          <p className="mt-5 font-semibold text-slate-700">
+          <p
+            className="mt-5 text-center text-xs font-semibold tracking-tight"
+            style={{ fontWeight: 600 }}
+          >
             Loading student profile...
           </p>
-
-          <p className="text-sm text-slate-400 mt-1">
+          <p
+            className="mt-1 text-center text-[11px] text-slate-400 font-medium"
+            style={{ fontWeight: 600 }}
+          >
             Please wait while we fetch the student details.
           </p>
         </div>
@@ -396,17 +366,25 @@ const MentorStudentProfile = () => {
 
   if (!student) {
     return (
-      <div className="lg:ml-64 min-h-screen bg-slate-50 pt-16 lg:pt-0 flex items-center justify-center">
-        <div className="text-center">
-          <UserRound size={60} className="mx-auto text-slate-300" />
-
-          <h2 className="text-2xl font-bold text-slate-800 mt-5">
+      <div
+        className="min-h-screen bg-slate-50 pt-16 sm:pt-20 lg:ml-64 lg:pt-0 text-slate-900 flex items-center justify-center px-4"
+        style={{ fontFamily: "'Poppins', sans-serif" }}
+      >
+        <div className="text-center bg-white p-8 rounded-3xl border border-slate-200 shadow-xs max-w-sm w-full">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 mb-4">
+            <UserRound size={26} />
+          </div>
+          <h2
+            className="text-base font-semibold text-slate-900 tracking-tight"
+            style={{ fontWeight: 600 }}
+          >
             Student not found
           </h2>
 
           <button
             onClick={() => navigate("/mentor/students")}
-            className="mt-6 px-5 py-3 rounded-xl bg-indigo-600 text-white font-semibold"
+            className="mt-5 w-full flex items-center justify-center gap-2 rounded-xl bg-black hover:bg-slate-800 px-5 py-2.5 text-xs font-semibold text-white transition shadow-xs"
+            style={{ fontWeight: 600 }}
           >
             Back to Students
           </button>
@@ -415,739 +393,866 @@ const MentorStudentProfile = () => {
     );
   }
 
+  const profileImageUrl = getProfileImageUrl(student.profileImage);
+
   return (
-    <>
-      <main className="lg:ml-64 min-h-screen bg-slate-50 pt-16 lg:pt-0">
-        <ToastContainer position="top-right" autoClose={2500} />
+    <div
+      className="min-h-screen bg-slate-50 pt-16 sm:pt-20 lg:ml-64 lg:pt-0 text-slate-900 pb-16"
+      style={{ fontFamily: "'Poppins', sans-serif", fontStyle: "normal" }}
+    >
+      <main className="w-full max-w-[1600px] mx-auto px-2 sm:px-6 lg:px-8 py-3 sm:py-6 lg:py-8 space-y-4 sm:space-y-6">
+        {/* =====================================================
+            BACK BUTTON
+        ====================================================== */}
+        <button
+          onClick={() => navigate("/mentor/students")}
+          className="flex items-center gap-2 text-slate-600 hover:text-blue-600 font-semibold text-xs transition"
+          style={{ fontWeight: 600 }}
+        >
+          <ArrowLeft size={15} />
+          Back to My Students
+        </button>
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-10">
-          {/* =====================================================
-              BACK BUTTON
-          ====================================================== */}
-
-          <button
-            onClick={() => navigate("/mentor/students")}
-            className="flex items-center gap-2 text-slate-600 hover:text-indigo-600 font-semibold mb-6 transition"
-          >
-            <ArrowLeft size={19} />
-            Back to My Students
-          </button>
-
-          {/* =====================================================
-              PROFILE HEADER
-          ====================================================== */}
-
-          <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
-            <div className="h-32 bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-700" />
-
-            <div className="px-5 sm:px-8 pb-8">
-              <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 -mt-14">
-                <div className="flex flex-col sm:flex-row sm:items-end gap-5">
-                  {/* PROFILE IMAGE */}
-
-                  <div className="w-28 h-28 rounded-3xl bg-white p-2 shadow-xl">
-                    {student.profileImage ? (
-                      <img
-                        src={
-                          student.profileImage.startsWith("http")
-                            ? student.profileImage
-                            : `${API_BASE_URL}${student.profileImage}`
-                        }
-                        alt={student.firstName || "Student"}
-                        className="w-full h-full object-cover rounded-2xl"
-                        onError={(e) => {
-                          e.currentTarget.style.display = "none";
-                        }}
-                      />
-                    ) : (
-                      <div className="w-full h-full rounded-2xl bg-indigo-100 flex items-center justify-center">
-                        <UserRound size={42} className="text-indigo-600" />
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="pb-1">
-                    <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">
-                      {student.firstName} {student.lastName}
-                    </h1>
-
-                    <p className="text-slate-500 mt-1">{student.email}</p>
-
-                    {student.careerGoal && (
-                      <div className="flex items-center gap-2 mt-3 text-indigo-600 font-semibold">
-                        <Target size={17} />
-
-                        {student.careerGoal}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* =================================================
-                  QUICK STATS
-              ================================================== */}
-
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-8">
-                {/* TOTAL SESSIONS */}
-
-                <div className="rounded-2xl bg-slate-50 border border-slate-100 p-5">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center">
-                      <BookOpen size={20} className="text-indigo-600" />
-                    </div>
-
-                    <div>
-                      <p className="text-xs text-slate-400">Total Sessions</p>
-
-                      <p className="text-xl font-bold text-slate-800">
-                        {statistics.totalSessions}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* COMPLETED SESSIONS */}
-
-                <div className="rounded-2xl bg-slate-50 border border-slate-100 p-5">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center">
-                      <CheckCircle2 size={20} className="text-emerald-600" />
-                    </div>
-
-                    <div>
-                      <p className="text-xs text-slate-400">Completed</p>
-
-                      <p className="text-xl font-bold text-slate-800">
-                        {statistics.completedSessions}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* UPCOMING SESSIONS */}
-
-                <div className="rounded-2xl bg-slate-50 border border-slate-100 p-5">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
-                      <CalendarDays size={20} className="text-blue-600" />
-                    </div>
-
-                    <div>
-                      <p className="text-xs text-slate-400">Upcoming</p>
-
-                      <p className="text-xl font-bold text-slate-800">
-                        {statistics.upcomingSessions}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* GOALS */}
-
-                <div className="rounded-2xl bg-slate-50 border border-slate-100 p-5">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center">
-                      <TrendingUp size={20} className="text-purple-600" />
-                    </div>
-
-                    <div>
-                      <p className="text-xs text-slate-400">Goals</p>
-
-                      <p className="text-xl font-bold text-slate-800">
-                        {goals.length}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+        {/* =====================================================
+            PROFILE HEADER
+        ====================================================== */}
+        <section className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200 shadow-xs overflow-hidden w-full">
+          <div className="h-28 sm:h-36 bg-gradient-to-r from-black via-slate-900 to-blue-950 relative">
+            <div className="absolute -right-16 -top-16 h-40 w-40 rounded-full bg-blue-600/20 blur-3xl" />
           </div>
 
-          {/* =====================================================
-              TABS
-          ====================================================== */}
-
-          <div className="mt-8 bg-white border border-slate-200 rounded-2xl p-2 flex gap-2 overflow-x-auto">
-            {[
-              {
-                id: "overview",
-                label: "Overview",
-                icon: UserRound,
-              },
-              {
-                id: "sessions",
-                label: "Session History",
-                icon: CalendarDays,
-              },
-              {
-                id: "notes",
-                label: "Private Notes",
-                icon: FileText,
-              },
-              {
-                id: "goals",
-                label: "Goals & Progress",
-                icon: Target,
-              },
-              {
-                id: "feedback",
-                label: "Feedback",
-                icon: Star,
-              },
-            ].map((tab) => {
-              const Icon = tab.icon;
-
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-2 px-5 py-3 rounded-xl font-semibold whitespace-nowrap transition ${
-                    activeTab === tab.id
-                      ? "bg-indigo-600 text-white shadow-lg shadow-indigo-200"
-                      : "text-slate-600 hover:bg-slate-100"
-                  }`}
-                >
-                  <Icon size={17} />
-
-                  {tab.label}
-                </button>
-              );
-            })}
-          </div>
-
-          {/* =====================================================
-              OVERVIEW
-          ====================================================== */}
-
-          {activeTab === "overview" && (
-            <div className="grid lg:grid-cols-3 gap-6 mt-6">
-              {/* PERSONAL DETAILS */}
-
-              <div className="lg:col-span-2 bg-white rounded-3xl border border-slate-200 p-6">
-                <h2 className="text-xl font-bold text-slate-900">
-                  Student Overview
-                </h2>
-
-                <div className="grid sm:grid-cols-2 gap-5 mt-6">
-                  {/* EMAIL */}
-
-                  <div className="p-4 rounded-2xl bg-slate-50">
-                    <div className="flex items-center gap-3">
-                      <Mail size={19} className="text-indigo-600" />
-
-                      <div>
-                        <p className="text-xs text-slate-400">Email</p>
-
-                        <p className="font-semibold text-slate-700">
-                          {student.email || "Not available"}
-                        </p>
-                      </div>
+          <div className="px-4 sm:px-8 pb-6 sm:pb-8 w-full">
+            <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-5 -mt-12 sm:-mt-14 w-full">
+              <div className="flex flex-col sm:flex-row sm:items-end gap-4 sm:gap-5 w-full">
+                {/* PROFILE IMAGE */}
+                <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl sm:rounded-3xl bg-white p-1.5 shadow-md border border-slate-200 shrink-0">
+                  {profileImageUrl ? (
+                    <img
+                      src={profileImageUrl}
+                      alt={student.firstName || "Student"}
+                      className="w-full h-full object-cover rounded-xl sm:rounded-2xl"
+                      onError={(e) => {
+                        e.currentTarget.style.display = "none";
+                      }}
+                    />
+                  ) : (
+                    <div className="w-full h-full rounded-xl sm:rounded-2xl bg-black flex items-center justify-center text-white">
+                      <UserRound size={36} className="text-blue-400" />
                     </div>
-                  </div>
-
-                  {/* PHONE */}
-
-                  <div className="p-4 rounded-2xl bg-slate-50">
-                    <div className="flex items-center gap-3">
-                      <Phone size={19} className="text-indigo-600" />
-
-                      <div>
-                        <p className="text-xs text-slate-400">Phone</p>
-
-                        <p className="font-semibold text-slate-700">
-                          {student.phone || "Not available"}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* EDUCATION */}
-
-                  <div className="p-4 rounded-2xl bg-slate-50">
-                    <div className="flex items-center gap-3">
-                      <GraduationCap size={19} className="text-indigo-600" />
-
-                      <div>
-                        <p className="text-xs text-slate-400">Education</p>
-
-                        <p className="font-semibold text-slate-700">
-                          {student.education || "Not available"}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* CAREER GOAL */}
-
-                  <div className="p-4 rounded-2xl bg-slate-50">
-                    <div className="flex items-center gap-3">
-                      <Target size={19} className="text-indigo-600" />
-
-                      <div>
-                        <p className="text-xs text-slate-400">Career Goal</p>
-
-                        <p className="font-semibold text-slate-700">
-                          {student.careerGoal || "Not specified"}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
+                  )}
                 </div>
 
-                {/* SKILLS */}
+                <div className="pb-1 min-w-0 flex-1">
+                  <h1
+                    className="text-lg sm:text-2xl font-semibold text-slate-900 tracking-tight truncate"
+                    style={{ fontWeight: 600 }}
+                  >
+                    {student.firstName} {student.lastName}
+                  </h1>
 
-                <div className="mt-7">
-                  <h3 className="font-bold text-slate-800">Skills</h3>
-
-                  <div className="flex flex-wrap gap-2 mt-3">
-                    {Array.isArray(student.skills) &&
-                    student.skills.length > 0 ? (
-                      student.skills.map((skill, index) => (
-                        <span
-                          key={index}
-                          className="px-3 py-2 rounded-xl bg-indigo-50 text-indigo-700 text-sm font-semibold"
-                        >
-                          {skill}
-                        </span>
-                      ))
-                    ) : (
-                      <p className="text-sm text-slate-400">No skills added.</p>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* RECENT ACTIVITY */}
-
-              <div className="bg-white rounded-3xl border border-slate-200 p-6">
-                <h2 className="text-xl font-bold text-slate-900">
-                  Recent Activity
-                </h2>
-
-                {sessions.length > 0 ? (
-                  <div className="mt-6">
-                    <div className="w-12 h-12 rounded-xl bg-indigo-100 flex items-center justify-center">
-                      <CalendarDays className="text-indigo-600" size={22} />
-                    </div>
-
-                    <p className="text-xs text-slate-400 mt-5">Last Session</p>
-
-                    <p className="font-bold text-slate-800 mt-1">
-                      {formatDate(sessions[0].sessionDate)}
-                    </p>
-
-                    <p className="text-sm text-slate-500 mt-1">
-                      {sessions[0].sessionType || "Session"}
-                    </p>
-
-                    {sessions[0].bookingStatus && (
-                      <span
-                        className={`inline-flex mt-3 px-3 py-1.5 rounded-lg border text-xs font-semibold ${getSessionStatusStyle(
-                          sessions[0].bookingStatus
-                        )}`}
-                      >
-                        {sessions[0].bookingStatus}
-                      </span>
-                    )}
-                  </div>
-                ) : (
-                  <p className="text-sm text-slate-400 mt-6">
-                    No sessions yet.
+                  <p
+                    className="text-[11px] sm:text-xs text-slate-500 font-medium truncate mt-0.5"
+                    style={{ fontWeight: 600 }}
+                  >
+                    {student.email}
                   </p>
-                )}
+
+                  {student.careerGoal && (
+                    <div
+                      className="flex items-center gap-1.5 mt-2 text-xs font-semibold text-blue-600"
+                      style={{ fontWeight: 600 }}
+                    >
+                      <Target size={14} className="shrink-0" />
+                      <span className="truncate">{student.careerGoal}</span>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
-          )}
 
-          {/* =====================================================
-              SESSION HISTORY
-          ====================================================== */}
-
-          {activeTab === "sessions" && (
-            <div className="mt-6 bg-white rounded-3xl border border-slate-200 overflow-hidden">
-              <div className="p-6 border-b border-slate-100">
-                <h2 className="text-xl font-bold text-slate-900">
-                  Session History
-                </h2>
-
-                <p className="text-sm text-slate-500 mt-1">
-                  All mentoring sessions with this student.
-                </p>
+            {/* =================================================
+                QUICK STATS
+            ================================================== */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4 mt-6 sm:mt-8 w-full text-xs font-semibold">
+              <div className="rounded-2xl bg-slate-50 border border-slate-200 p-3.5 sm:p-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-blue-600 shrink-0">
+                    <BookOpen size={18} />
+                  </div>
+                  <div className="min-w-0">
+                    <p
+                      className="text-[9px] sm:text-[10px] uppercase tracking-wide text-slate-400"
+                      style={{ fontWeight: 600 }}
+                    >
+                      Total Sessions
+                    </p>
+                    <p
+                      className="text-sm sm:text-base font-semibold text-slate-900 mt-0.5"
+                      style={{ fontWeight: 600 }}
+                    >
+                      {statistics.totalSessions}
+                    </p>
+                  </div>
+                </div>
               </div>
 
-              {sessions.length === 0 ? (
-                <div className="p-12 text-center">
-                  <CalendarDays size={50} className="mx-auto text-slate-300" />
+              <div className="rounded-2xl bg-slate-50 border border-slate-200 p-3.5 sm:p-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-emerald-600 shrink-0">
+                    <CheckCircle2 size={18} />
+                  </div>
+                  <div className="min-w-0">
+                    <p
+                      className="text-[9px] sm:text-[10px] uppercase tracking-wide text-slate-400"
+                      style={{ fontWeight: 600 }}
+                    >
+                      Completed
+                    </p>
+                    <p
+                      className="text-sm sm:text-base font-semibold text-emerald-600 mt-0.5"
+                      style={{ fontWeight: 600 }}
+                    >
+                      {statistics.completedSessions}
+                    </p>
+                  </div>
+                </div>
+              </div>
 
-                  <p className="mt-4 text-slate-500">No sessions found.</p>
+              <div className="rounded-2xl bg-slate-50 border border-slate-200 p-3.5 sm:p-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-blue-600 shrink-0">
+                    <CalendarDays size={18} />
+                  </div>
+                  <div className="min-w-0">
+                    <p
+                      className="text-[9px] sm:text-[10px] uppercase tracking-wide text-slate-400"
+                      style={{ fontWeight: 600 }}
+                    >
+                      Upcoming
+                    </p>
+                    <p
+                      className="text-sm sm:text-base font-semibold text-blue-600 mt-0.5"
+                      style={{ fontWeight: 600 }}
+                    >
+                      {statistics.upcomingSessions}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-2xl bg-slate-50 border border-slate-200 p-3.5 sm:p-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-purple-600 shrink-0">
+                    <TrendingUp size={18} />
+                  </div>
+                  <div className="min-w-0">
+                    <p
+                      className="text-[9px] sm:text-[10px] uppercase tracking-wide text-slate-400"
+                      style={{ fontWeight: 600 }}
+                    >
+                      Goals
+                    </p>
+                    <p
+                      className="text-sm sm:text-base font-semibold text-slate-900 mt-0.5"
+                      style={{ fontWeight: 600 }}
+                    >
+                      {goals.length}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* =====================================================
+            TABS
+        ====================================================== */}
+        <div className="bg-white border border-slate-200 rounded-2xl p-1.5 sm:p-2 flex gap-1.5 sm:gap-2 overflow-x-auto w-full shadow-xs">
+          {[
+            {
+              id: "overview",
+              label: "Overview",
+              icon: UserRound,
+            },
+            {
+              id: "sessions",
+              label: "Session History",
+              icon: CalendarDays,
+            },
+            {
+              id: "notes",
+              label: "Private Notes",
+              icon: FileText,
+            },
+            {
+              id: "goals",
+              label: "Goals & Progress",
+              icon: Target,
+            },
+            {
+              id: "feedback",
+              label: "Feedback",
+              icon: Star,
+            },
+          ].map((tab) => {
+            const Icon = tab.icon;
+
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center gap-2 px-3.5 sm:px-5 py-2.5 sm:py-3 rounded-xl text-xs font-semibold whitespace-nowrap transition ${
+                  activeTab === tab.id
+                    ? "bg-black text-white shadow-xs"
+                    : "text-slate-600 hover:bg-slate-50"
+                }`}
+                style={{ fontWeight: 600 }}
+              >
+                <Icon
+                  size={15}
+                  className={
+                    activeTab === tab.id ? "text-blue-400" : "text-slate-400"
+                  }
+                />
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* =====================================================
+            OVERVIEW
+        ====================================================== */}
+        {activeTab === "overview" && (
+          <div className="grid lg:grid-cols-3 gap-4 sm:gap-6 w-full">
+            {/* PERSONAL DETAILS */}
+            <div className="lg:col-span-2 bg-white rounded-2xl sm:rounded-3xl border border-slate-200 p-4 sm:p-6 shadow-xs w-full space-y-5">
+              <h2
+                className="text-sm sm:text-base font-semibold text-slate-900 tracking-tight"
+                style={{ fontWeight: 600 }}
+              >
+                Student Overview
+              </h2>
+
+              <div className="grid sm:grid-cols-2 gap-3 text-xs">
+                <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 w-full">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-blue-600 shrink-0">
+                      <Mail size={15} />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p
+                        className="text-[9px] sm:text-[10px] uppercase tracking-wider text-slate-400"
+                        style={{ fontWeight: 600 }}
+                      >
+                        Email
+                      </p>
+                      <p
+                        className="font-semibold text-slate-800 truncate mt-0.5"
+                        style={{ fontWeight: 600 }}
+                      >
+                        {student.email || "Not available"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 w-full">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-blue-600 shrink-0">
+                      <Phone size={15} />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p
+                        className="text-[9px] sm:text-[10px] uppercase tracking-wider text-slate-400"
+                        style={{ fontWeight: 600 }}
+                      >
+                        Phone
+                      </p>
+                      <p
+                        className="font-semibold text-slate-800 truncate mt-0.5"
+                        style={{ fontWeight: 600 }}
+                      >
+                        {student.phone || "Not available"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 w-full">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-blue-600 shrink-0">
+                      <GraduationCap size={15} />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p
+                        className="text-[9px] sm:text-[10px] uppercase tracking-wider text-slate-400"
+                        style={{ fontWeight: 600 }}
+                      >
+                        Education
+                      </p>
+                      <p
+                        className="font-semibold text-slate-800 truncate mt-0.5"
+                        style={{ fontWeight: 600 }}
+                      >
+                        {student.education || "Not available"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 w-full">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-blue-600 shrink-0">
+                      <Target size={15} />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p
+                        className="text-[9px] sm:text-[10px] uppercase tracking-wider text-slate-400"
+                        style={{ fontWeight: 600 }}
+                      >
+                        Career Goal
+                      </p>
+                      <p
+                        className="font-semibold text-slate-800 truncate mt-0.5"
+                        style={{ fontWeight: 600 }}
+                      >
+                        {student.careerGoal || "Not specified"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* SKILLS */}
+              <div className="pt-2">
+                <h3
+                  className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2.5"
+                  style={{ fontWeight: 600 }}
+                >
+                  Skills
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  {Array.isArray(student.skills) &&
+                  student.skills.length > 0 ? (
+                    student.skills.map((skill, index) => (
+                      <span
+                        key={index}
+                        className="px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-700"
+                        style={{ fontWeight: 600 }}
+                      >
+                        {skill}
+                      </span>
+                    ))
+                  ) : (
+                    <p className="text-xs text-slate-400 font-medium">
+                      No skills added.
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* RECENT ACTIVITY */}
+            <div className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200 p-4 sm:p-6 shadow-xs w-full space-y-4">
+              <h2
+                className="text-sm sm:text-base font-semibold text-slate-900 tracking-tight"
+                style={{ fontWeight: 600 }}
+              >
+                Recent Activity
+              </h2>
+
+              {sessions.length > 0 ? (
+                <div className="space-y-3 bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-blue-600 shrink-0">
+                      <CalendarDays size={18} />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p
+                        className="text-[10px] uppercase tracking-wide text-slate-400"
+                        style={{ fontWeight: 600 }}
+                      >
+                        Last Session
+                      </p>
+                      <p
+                        className="text-xs font-semibold text-slate-900 mt-0.5 truncate"
+                        style={{ fontWeight: 600 }}
+                      >
+                        {formatDate(sessions[0].sessionDate)}
+                      </p>
+                    </div>
+                  </div>
+
+                  <p
+                    className="text-xs text-slate-600 font-medium truncate"
+                    style={{ fontWeight: 600 }}
+                  >
+                    Type:{" "}
+                    <strong className="text-slate-900">
+                      {sessions[0].sessionType || "Session"}
+                    </strong>
+                  </p>
+
+                  {sessions[0].bookingStatus && (
+                    <span
+                      className={`inline-flex px-3 py-1 rounded-full border text-[11px] font-semibold ${getSessionStatusStyle(
+                        sessions[0].bookingStatus
+                      )}`}
+                      style={{ fontWeight: 600 }}
+                    >
+                      {sessions[0].bookingStatus}
+                    </span>
+                  )}
                 </div>
               ) : (
-                <div className="divide-y divide-slate-100">
-                  {sessions.map((session) => (
-                    <div
-                      key={session._id}
-                      className="p-6 hover:bg-slate-50 transition"
-                    >
-                      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
-                        <div>
-                          <div className="flex items-center gap-3">
-                            <div className="w-11 h-11 rounded-xl bg-indigo-100 flex items-center justify-center">
-                              <CalendarDays
-                                size={20}
-                                className="text-indigo-600"
-                              />
-                            </div>
+                <p className="text-xs text-slate-400 font-medium">
+                  No sessions yet.
+                </p>
+              )}
+            </div>
+          </div>
+        )}
 
-                            <div>
-                              <p className="font-bold text-slate-800">
-                                {formatDate(session.sessionDate)}
-                              </p>
+        {/* =====================================================
+            SESSION HISTORY
+        ====================================================== */}
+        {activeTab === "sessions" && (
+          <div className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200 overflow-hidden shadow-xs w-full">
+            <div className="p-4 sm:p-6 border-b border-slate-100">
+              <h2
+                className="text-sm sm:text-base font-semibold text-slate-900 tracking-tight"
+                style={{ fontWeight: 600 }}
+              >
+                Session History
+              </h2>
+              <p
+                className="text-xs text-slate-500 font-medium mt-0.5"
+                style={{ fontWeight: 600 }}
+              >
+                All mentoring sessions with this student.
+              </p>
+            </div>
 
-                              <p className="text-sm text-slate-500">
-                                {formatTime(session.startTime)} -{" "}
-                                {formatTime(session.endTime)}
-                              </p>
-                            </div>
-                          </div>
+            {sessions.length === 0 ? (
+              <div className="p-12 text-center">
+                <CalendarDays
+                  size={40}
+                  className="mx-auto text-slate-300 mb-3"
+                />
+                <p className="text-xs text-slate-500 font-medium">
+                  No sessions found.
+                </p>
+              </div>
+            ) : (
+              <div className="divide-y divide-slate-100">
+                {sessions.map((session) => (
+                  <div
+                    key={session._id}
+                    className="p-4 sm:p-6 hover:bg-slate-50 transition space-y-3.5"
+                  >
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3.5">
+                      <div className="flex items-center gap-3.5 min-w-0">
+                        <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center text-blue-600 shrink-0">
+                          <CalendarDays size={18} />
                         </div>
-
-                        <div className="flex flex-wrap items-center gap-3">
-                          <span className="px-3 py-2 rounded-xl bg-slate-100 text-slate-700 text-sm font-semibold">
-                            {session.sessionType || "Session"}
-                          </span>
-
-                          <span
-                            className={`px-3 py-2 rounded-xl border text-sm font-semibold ${getSessionStatusStyle(
-                              session.bookingStatus
-                            )}`}
+                        <div className="min-w-0">
+                          <p
+                            className="text-xs font-semibold text-slate-900 truncate"
+                            style={{ fontWeight: 600 }}
                           >
-                            {session.bookingStatus || "Pending"}
-                          </span>
-                        </div>
-                      </div>
-
-                      {session.notes && (
-                        <div className="mt-5 p-4 rounded-2xl bg-indigo-50 border border-indigo-100">
-                          <div className="flex items-center gap-2">
-                            <MessageSquare
-                              size={17}
-                              className="text-indigo-600"
-                            />
-
-                            <span className="text-xs font-bold text-indigo-700 uppercase">
-                              Session Notes
-                            </span>
-                          </div>
-
-                          <p className="text-sm text-slate-700 mt-2">
-                            {session.notes}
+                            {formatDate(session.sessionDate)}
+                          </p>
+                          <p
+                            className="text-[11px] text-slate-500 font-medium truncate mt-0.5"
+                            style={{ fontWeight: 600 }}
+                          >
+                            {formatTime(session.startTime)} -{" "}
+                            {formatTime(session.endTime)}
                           </p>
                         </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* =====================================================
-              PRIVATE NOTES
-          ====================================================== */}
-
-          {activeTab === "notes" && (
-            <div className="grid lg:grid-cols-3 gap-6 mt-6">
-              {/* ADD NOTE */}
-
-              <div className="bg-white rounded-3xl border border-slate-200 p-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-11 h-11 rounded-xl bg-amber-100 flex items-center justify-center">
-                    <FileText size={21} className="text-amber-600" />
-                  </div>
-
-                  <div>
-                    <h2 className="font-bold text-slate-900">
-                      Private Mentor Note
-                    </h2>
-
-                    <p className="text-xs text-slate-400">
-                      Only you can see these notes.
-                    </p>
-                  </div>
-                </div>
-
-                <textarea
-                  rows={7}
-                  value={newNote}
-                  onChange={(e) => setNewNote(e.target.value)}
-                  placeholder="Write your private notes about this student..."
-                  className="w-full mt-5 px-4 py-3 rounded-2xl border border-slate-200 resize-none outline-none focus:ring-2 focus:ring-indigo-500"
-                />
-
-                <button
-                  onClick={handleSaveNote}
-                  disabled={savingNote}
-                  className="w-full mt-4 flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold disabled:opacity-60"
-                >
-                  {savingNote ? (
-                    <>
-                      <Loader2 size={18} className="animate-spin" />
-                      Saving...
-                    </>
-                  ) : (
-                    <>
-                      <Save size={18} />
-                      Save Private Note
-                    </>
-                  )}
-                </button>
-              </div>
-
-              {/* NOTES LIST */}
-
-              <div className="lg:col-span-2 bg-white rounded-3xl border border-slate-200">
-                <div className="p-6 border-b border-slate-100">
-                  <h2 className="text-xl font-bold text-slate-900">
-                    Your Notes
-                  </h2>
-                </div>
-
-                {notes.length === 0 ? (
-                  <div className="p-12 text-center">
-                    <FileText size={50} className="mx-auto text-slate-300" />
-
-                    <p className="text-slate-500 mt-4">No private notes yet.</p>
-                  </div>
-                ) : (
-                  <div className="divide-y divide-slate-100">
-                    {notes.map((note) => (
-                      <div key={note._id} className="p-6">
-                        <div className="flex items-start justify-between gap-4">
-                          <div className="flex-1">
-                            <p className="text-slate-700 whitespace-pre-wrap">
-                              {note.note}
-                            </p>
-
-                            <p className="text-xs text-slate-400 mt-3">
-                              {formatDate(note.createdAt)}
-                            </p>
-                          </div>
-
-                          <button
-                            onClick={() => handleDeleteNote(note._id)}
-                            className="w-9 h-9 rounded-lg bg-red-50 text-red-600 flex items-center justify-center hover:bg-red-100"
-                          >
-                            <Trash2 size={17} />
-                          </button>
-                        </div>
                       </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
 
-          {/* =====================================================
-              GOALS & PROGRESS
-          ====================================================== */}
-
-          {activeTab === "goals" && (
-            <div className="mt-6">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-                <div>
-                  <h2 className="text-2xl font-bold text-slate-900">
-                    Goals & Progress
-                  </h2>
-
-                  <p className="text-sm text-slate-500 mt-1">
-                    Track this student's career development.
-                  </p>
-                </div>
-
-                <button
-                  onClick={() => setShowGoalForm(!showGoalForm)}
-                  className="flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-indigo-600 text-white font-semibold hover:bg-indigo-700"
-                >
-                  <Plus size={18} />
-                  Add Goal
-                </button>
-              </div>
-
-              {/* GOAL FORM */}
-
-              {showGoalForm && (
-                <form
-                  onSubmit={handleCreateGoal}
-                  className="bg-white rounded-3xl border border-slate-200 p-6 mb-6"
-                >
-                  <h3 className="text-lg font-bold text-slate-900">
-                    Create New Goal
-                  </h3>
-
-                  <div className="grid gap-4 mt-5">
-                    <input
-                      value={goalTitle}
-                      onChange={(e) => setGoalTitle(e.target.value)}
-                      placeholder="Goal title"
-                      className="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-500"
-                    />
-
-                    <textarea
-                      rows={4}
-                      value={goalDescription}
-                      onChange={(e) => setGoalDescription(e.target.value)}
-                      placeholder="Describe the student's goal..."
-                      className="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none resize-none focus:ring-2 focus:ring-indigo-500"
-                    />
-
-                    <div>
-                      <label className="text-sm font-semibold text-slate-700">
-                        Progress: {goalProgress}%
-                      </label>
-
-                      <input
-                        type="range"
-                        min="0"
-                        max="100"
-                        value={goalProgress}
-                        onChange={(e) => setGoalProgress(e.target.value)}
-                        className="w-full mt-3"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex justify-end gap-3 mt-5">
-                    <button
-                      type="button"
-                      onClick={() => setShowGoalForm(false)}
-                      className="px-5 py-3 rounded-xl border border-slate-200 font-semibold"
-                    >
-                      Cancel
-                    </button>
-
-                    <button
-                      type="submit"
-                      disabled={savingGoal}
-                      className="px-6 py-3 rounded-xl bg-indigo-600 text-white font-semibold disabled:opacity-60"
-                    >
-                      {savingGoal ? "Saving..." : "Create Goal"}
-                    </button>
-                  </div>
-                </form>
-              )}
-
-              {/* GOALS */}
-
-              {goals.length === 0 ? (
-                <div className="bg-white rounded-3xl border border-slate-200 p-12 text-center">
-                  <Target size={55} className="mx-auto text-slate-300" />
-
-                  <p className="text-slate-500 mt-4">No goals created yet.</p>
-                </div>
-              ) : (
-                <div className="grid md:grid-cols-2 gap-6">
-                  {goals.map((goal) => (
-                    <div
-                      key={goal._id}
-                      className="bg-white rounded-3xl border border-slate-200 p-6"
-                    >
-                      <div className="flex items-start justify-between">
-                        <div className="w-11 h-11 rounded-xl bg-indigo-100 flex items-center justify-center">
-                          <Target size={21} className="text-indigo-600" />
-                        </div>
-
-                        <span className="text-lg font-bold text-indigo-600">
-                          {goal.progress || 0}%
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span
+                          className="px-3 py-1 rounded-full bg-slate-100 border border-slate-200 text-[11px] font-semibold text-slate-700"
+                          style={{ fontWeight: 600 }}
+                        >
+                          {session.sessionType || "Session"}
+                        </span>
+                        <span
+                          className={`px-3 py-1 rounded-full border text-[11px] font-semibold ${getSessionStatusStyle(
+                            session.bookingStatus
+                          )}`}
+                          style={{ fontWeight: 600 }}
+                        >
+                          {session.bookingStatus || "Pending"}
                         </span>
                       </div>
-
-                      <h3 className="text-lg font-bold text-slate-900 mt-5">
-                        {goal.title}
-                      </h3>
-
-                      <p className="text-sm text-slate-500 mt-2">
-                        {goal.description || "No description provided."}
-                      </p>
-
-                      <div className="mt-5">
-                        <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-indigo-600 rounded-full transition-all"
-                            style={{
-                              width: `${goal.progress || 0}%`,
-                            }}
-                          />
-                        </div>
-                      </div>
                     </div>
-                  ))}
+
+                    {session.notes && (
+                      <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold space-y-1">
+                        <div className="flex items-center gap-1.5 text-blue-600">
+                          <MessageSquare size={14} />
+                          <span
+                            className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold"
+                            style={{ fontWeight: 600 }}
+                          >
+                            Session Notes
+                          </span>
+                        </div>
+                        <p
+                          className="text-slate-700 font-medium pl-5"
+                          style={{ fontWeight: 600 }}
+                        >
+                          {session.notes}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* =====================================================
+            PRIVATE NOTES
+        ====================================================== */}
+        {activeTab === "notes" && (
+          <div className="grid lg:grid-cols-3 gap-4 sm:gap-6 w-full">
+            <div className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200 p-4 sm:p-6 shadow-xs space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center text-blue-600 shrink-0">
+                  <FileText size={18} />
                 </div>
-              )}
-            </div>
-          )}
-
-          {/* =====================================================
-              FEEDBACK
-          ====================================================== */}
-
-          {activeTab === "feedback" && (
-            <div className="mt-6 bg-white rounded-3xl border border-slate-200">
-              <div className="p-6 border-b border-slate-100">
-                <h2 className="text-xl font-bold text-slate-900">
-                  Feedback & Reviews
-                </h2>
-
-                <p className="text-sm text-slate-500 mt-1">
-                  Feedback received from this student.
-                </p>
+                <div className="min-w-0">
+                  <h2
+                    className="text-xs sm:text-sm font-semibold text-slate-900 tracking-tight truncate"
+                    style={{ fontWeight: 600 }}
+                  >
+                    Private Mentor Note
+                  </h2>
+                  <p
+                    className="text-[10px] text-slate-400 font-medium truncate"
+                    style={{ fontWeight: 600 }}
+                  >
+                    Only you can see these notes.
+                  </p>
+                </div>
               </div>
 
-              {reviews.length === 0 ? (
-                <div className="p-12 text-center">
-                  <Star size={50} className="mx-auto text-slate-300" />
+              <textarea
+                rows={5}
+                value={newNote}
+                onChange={(e) => setNewNote(e.target.value)}
+                placeholder="Write your private notes about this student..."
+                className="w-full resize-none rounded-2xl border border-slate-200 bg-slate-50 p-3.5 text-xs font-semibold text-slate-800 outline-none transition focus:border-blue-600 focus:bg-white focus:ring-2 focus:ring-blue-100"
+                style={{ fontWeight: 600 }}
+              />
 
-                  <p className="text-slate-500 mt-4">
-                    No feedback received yet.
+              <button
+                onClick={handleSaveNote}
+                disabled={savingNote}
+                className="w-full flex items-center justify-center gap-2 rounded-xl bg-black hover:bg-slate-800 px-5 py-2.5 text-xs font-semibold text-white transition disabled:opacity-50 shadow-xs"
+                style={{ fontWeight: 600 }}
+              >
+                {savingNote ? (
+                  <>
+                    <Loader2 size={15} className="animate-spin text-blue-400" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save size={15} className="text-blue-400" />
+                    Save Private Note
+                  </>
+                )}
+              </button>
+            </div>
+
+            <div className="lg:col-span-2 bg-white rounded-2xl sm:rounded-3xl border border-slate-200 shadow-xs overflow-hidden">
+              <div className="p-4 sm:p-6 border-b border-slate-100">
+                <h2
+                  className="text-sm sm:text-base font-semibold text-slate-900 tracking-tight"
+                  style={{ fontWeight: 600 }}
+                >
+                  Your Notes
+                </h2>
+              </div>
+
+              {notes.length === 0 ? (
+                <div className="p-12 text-center">
+                  <FileText size={40} className="mx-auto text-slate-300 mb-3" />
+                  <p className="text-xs text-slate-500 font-medium">
+                    No private notes yet.
                   </p>
                 </div>
               ) : (
                 <div className="divide-y divide-slate-100">
-                  {reviews.map((review) => (
-                    <div key={review._id} className="p-6">
-                      <div className="flex items-center gap-1">
-                        {[1, 2, 3, 4, 5].map((star) => (
-                          <Star
-                            key={star}
-                            size={18}
-                            className={
-                              star <= review.rating
-                                ? "fill-yellow-400 text-yellow-400"
-                                : "text-slate-300"
-                            }
-                          />
-                        ))}
+                  {notes.map((note) => (
+                    <div
+                      key={note._id}
+                      className="p-4 sm:p-6 flex items-start justify-between gap-4"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <p
+                          className="text-xs text-slate-700 whitespace-pre-wrap font-medium"
+                          style={{ fontWeight: 600 }}
+                        >
+                          {note.note}
+                        </p>
+                        <p
+                          className="text-[10px] text-slate-400 font-medium mt-2"
+                          style={{ fontWeight: 600 }}
+                        >
+                          {formatDate(note.createdAt)}
+                        </p>
                       </div>
 
-                      <p className="text-slate-700 mt-4">
-                        {review.comment ||
-                          review.review ||
-                          "No written feedback."}
-                      </p>
-
-                      <p className="text-xs text-slate-400 mt-4">
-                        {formatDate(review.createdAt)}
-                      </p>
+                      <button
+                        onClick={() => handleDeleteNote(note._id)}
+                        className="w-8 h-8 rounded-xl bg-red-50 text-red-600 flex items-center justify-center hover:bg-red-100 border border-red-200 shrink-0 transition"
+                      >
+                        <Trash2 size={15} />
+                      </button>
                     </div>
                   ))}
                 </div>
               )}
             </div>
-          )}
-        </div>
+          </div>
+        )}
+
+        {/* =====================================================
+            GOALS & PROGRESS
+        ====================================================== */}
+        {activeTab === "goals" && (
+          <div className="space-y-4 sm:space-y-6 w-full">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <h2
+                  className="text-sm sm:text-base font-semibold text-slate-900 tracking-tight"
+                  style={{ fontWeight: 600 }}
+                >
+                  Goals & Progress
+                </h2>
+                <p
+                  className="text-xs text-slate-500 font-medium mt-0.5"
+                  style={{ fontWeight: 600 }}
+                >
+                  Track this student's career development.
+                </p>
+              </div>
+
+              <button
+                onClick={() => setShowGoalForm(!showGoalForm)}
+                className="w-full sm:w-auto flex items-center justify-center gap-2 rounded-xl bg-black hover:bg-slate-800 px-4 py-2.5 text-xs font-semibold text-white transition shadow-xs"
+                style={{ fontWeight: 600 }}
+              >
+                <Plus size={15} className="text-blue-400" />
+                Add Goal
+              </button>
+            </div>
+
+            {showGoalForm && (
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  setShowGoalForm(false);
+                }}
+                className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200 p-4 sm:p-6 shadow-xs space-y-4"
+              >
+                <h3
+                  className="text-xs sm:text-sm font-semibold text-slate-900"
+                  style={{ fontWeight: 600 }}
+                >
+                  Create New Goal
+                </h3>
+
+                <div className="space-y-3.5 text-xs font-semibold">
+                  <input
+                    value={goalTitle}
+                    onChange={(e) => setGoalTitle(e.target.value)}
+                    placeholder="Goal title"
+                    className="w-full h-11 px-4 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 outline-none focus:border-blue-600 focus:bg-white focus:ring-2 focus:ring-blue-100"
+                    style={{ fontWeight: 600 }}
+                  />
+
+                  <textarea
+                    rows={3}
+                    value={goalDescription}
+                    onChange={(e) => setGoalDescription(e.target.value)}
+                    placeholder="Describe the student's goal..."
+                    className="w-full resize-none rounded-xl border border-slate-200 bg-slate-50 p-3.5 text-slate-800 outline-none focus:border-blue-600 focus:bg-white focus:ring-2 focus:ring-blue-100"
+                    style={{ fontWeight: 600 }}
+                  />
+
+                  <div>
+                    <label
+                      className="text-xs font-semibold text-slate-700 block mb-1.5"
+                      style={{ fontWeight: 600 }}
+                    >
+                      Progress: {goalProgress}%
+                    </label>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      value={goalProgress}
+                      onChange={(e) => setGoalProgress(e.target.value)}
+                      className="w-full accent-blue-600"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex justify-end gap-2.5 pt-2 border-t border-slate-100">
+                  <button
+                    type="button"
+                    onClick={() => setShowGoalForm(false)}
+                    className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                    style={{ fontWeight: 600 }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={savingGoal}
+                    className="rounded-xl bg-black hover:bg-slate-800 px-5 py-2.5 text-xs font-semibold text-white shadow-xs disabled:opacity-50"
+                    style={{ fontWeight: 600 }}
+                  >
+                    {savingGoal ? "Saving..." : "Create Goal"}
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {goals.length === 0 ? (
+              <div className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200 p-12 text-center shadow-xs">
+                <Target size={40} className="mx-auto text-slate-300 mb-3" />
+                <p className="text-xs text-slate-500 font-medium">
+                  No goals created yet.
+                </p>
+              </div>
+            ) : (
+              <div className="grid md:grid-cols-2 gap-4">
+                {goals.map((goal) => (
+                  <div
+                    key={goal._id}
+                    className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200 p-4 sm:p-6 shadow-xs space-y-4"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center text-blue-600 shrink-0">
+                        <Target size={18} />
+                      </div>
+                      <span
+                        className="text-sm font-bold text-blue-600"
+                        style={{ fontWeight: 600 }}
+                      >
+                        {goal.progress || 0}%
+                      </span>
+                    </div>
+
+                    <h3
+                      className="text-xs sm:text-sm font-semibold text-slate-900 tracking-tight"
+                      style={{ fontWeight: 600 }}
+                    >
+                      {goal.title}
+                    </h3>
+
+                    <p
+                      className="text-xs text-slate-500 font-medium"
+                      style={{ fontWeight: 600 }}
+                    >
+                      {goal.description || "No description provided."}
+                    </p>
+
+                    <div className="h-2 bg-slate-100 rounded-full overflow-hidden border border-slate-200">
+                      <div
+                        className="h-full bg-blue-600 rounded-full transition-all"
+                        style={{
+                          width: `${goal.progress || 0}%`,
+                        }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* =====================================================
+            FEEDBACK
+        ====================================================== */}
+        {activeTab === "feedback" && (
+          <div className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200 overflow-hidden shadow-xs w-full">
+            <div className="p-4 sm:p-6 border-b border-slate-100">
+              <h2
+                className="text-sm sm:text-base font-semibold text-slate-900 tracking-tight"
+                style={{ fontWeight: 600 }}
+              >
+                Feedback & Reviews
+              </h2>
+              <p
+                className="text-xs text-slate-500 font-medium mt-0.5"
+                style={{ fontWeight: 600 }}
+              >
+                Feedback received from this student.
+              </p>
+            </div>
+
+            {reviews.length === 0 ? (
+              <div className="p-12 text-center">
+                <Star size={40} className="mx-auto text-slate-300 mb-3" />
+                <p className="text-xs text-slate-500 font-medium">
+                  No feedback received yet.
+                </p>
+              </div>
+            ) : (
+              <div className="divide-y divide-slate-100">
+                {reviews.map((review) => (
+                  <div key={review._id} className="p-4 sm:p-6 space-y-3">
+                    <div className="flex items-center gap-1">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <Star
+                          key={star}
+                          size={15}
+                          className={
+                            star <= review.rating
+                              ? "fill-amber-400 text-amber-400"
+                              : "text-slate-200"
+                          }
+                        />
+                      ))}
+                    </div>
+
+                    <p
+                      className="text-xs text-slate-700 font-medium"
+                      style={{ fontWeight: 600 }}
+                    >
+                      {review.comment ||
+                        review.review ||
+                        "No written feedback."}
+                      
+                    </p>
+
+                    <p
+                      className="text-[10px] text-slate-400 font-medium"
+                      style={{ fontWeight: 600 }}
+                    >
+                      {formatDate(review.createdAt)}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </main>
-    </>
+    </div>
   );
 };
 

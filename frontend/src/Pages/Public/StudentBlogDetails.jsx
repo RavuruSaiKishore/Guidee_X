@@ -16,6 +16,7 @@ import {
   MessageSquareOff,
   Share2,
   Tag,
+  Bookmark,
 } from "lucide-react";
 
 const API_BASE_URL =
@@ -24,53 +25,24 @@ const API_BASE_URL =
 const StudentBlogDetails = () => {
   const { id } = useParams();
 
-  // ==========================================
-  // BLOG
-  // ==========================================
-
   const [blog, setBlog] = useState(null);
-
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // ==========================================
-  // LIKE
-  // ==========================================
-
   const [liked, setLiked] = useState(false);
   const [likes, setLikes] = useState(0);
-
-  // ==========================================
-  // SHARE
-  // ==========================================
-
+  const [bookmarked, setBookmarked] = useState(false);
   const [copied, setCopied] = useState(false);
-
-  // ==========================================
-  // COMMENTS
-  // ==========================================
 
   const [commentText, setCommentText] = useState("");
   const [comments, setComments] = useState([]);
-
   const [commentsLoading, setCommentsLoading] = useState(false);
   const [commentSubmitting, setCommentSubmitting] = useState(false);
 
-  // ==========================================
-  // READING PROGRESS
-  // ==========================================
-
   const [readingProgress, setReadingProgress] = useState(0);
 
-  // ==========================================
-  // GET IMAGE URL
-  // ==========================================
-
   const getImageUrl = (image) => {
-    if (!image) {
-      return "";
-    }
-
+    if (!image) return "";
     if (
       image.startsWith("http://") ||
       image.startsWith("https://") ||
@@ -78,45 +50,8 @@ const StudentBlogDetails = () => {
     ) {
       return image;
     }
-
     return `${API_BASE_URL}${image.startsWith("/") ? "" : "/"}${image}`;
   };
-
-  // ==========================================
-  // SANITIZE / NORMALIZE BLOG HTML
-  // ==========================================
-
-  const sanitizeHtml = (html) => {
-    if (!html) {
-      return "";
-    }
-
-    // Browser-side HTML parsing.
-    // This preserves HTML tags such as:
-    // <h2>, <p>, <ul>, <ol>, <li>, <strong>, etc.
-    const parser = new DOMParser();
-    const document = parser.parseFromString(html, "text/html");
-
-    // Remove potentially dangerous elements
-    document
-      .querySelectorAll("script, iframe, object, embed, style")
-      .forEach((element) => element.remove());
-
-    // Remove inline event handlers such as onclick
-    document.querySelectorAll("*").forEach((element) => {
-      [...element.attributes].forEach((attribute) => {
-        if (attribute.name.toLowerCase().startsWith("on")) {
-          element.removeAttribute(attribute.name);
-        }
-      });
-    });
-
-    return document.body.innerHTML;
-  };
-
-  // ==========================================
-  // FETCH BLOG
-  // ==========================================
 
   const fetchBlog = async () => {
     try {
@@ -124,7 +59,6 @@ const StudentBlogDetails = () => {
       setError("");
 
       const userToken = localStorage.getItem("UserToken");
-
       if (!userToken) {
         throw new Error("User token not found. Please login again.");
       }
@@ -142,8 +76,6 @@ const StudentBlogDetails = () => {
 
       const data = await response.json();
 
-      console.log("Blog response:", data);
-
       if (!response.ok) {
         throw new Error(data.message || "Failed to fetch blog");
       }
@@ -153,13 +85,7 @@ const StudentBlogDetails = () => {
       }
 
       setBlog(data.blog);
-
-      // ==========================================
-      // LIKE DATA
-      // ==========================================
-
       setLikes(data.blog.likesCount ?? data.blog.likes ?? 0);
-
       setLiked(
         data.blog.isLiked ??
           data.blog.likedByUser ??
@@ -167,17 +93,11 @@ const StudentBlogDetails = () => {
           false
       );
     } catch (error) {
-      console.error("Fetch blog error:", error);
-
       setError(error.message || "Unable to load this blog.");
     } finally {
       setLoading(false);
     }
   };
-
-  // ==========================================
-  // FETCH COMMENTS
-  // ==========================================
 
   const fetchComments = async () => {
     if (!blog?.commentsEnabled) {
@@ -187,12 +107,8 @@ const StudentBlogDetails = () => {
 
     try {
       setCommentsLoading(true);
-
       const userToken = localStorage.getItem("UserToken");
-
-      if (!userToken) {
-        return;
-      }
+      if (!userToken) return;
 
       const response = await fetch(
         `${API_BASE_URL}/api/blog-interactions/${id}/comments`,
@@ -206,9 +122,6 @@ const StudentBlogDetails = () => {
       );
 
       const data = await response.json();
-
-      console.log("Comments response:", data);
-
       if (!response.ok) {
         throw new Error(data.message || "Failed to fetch comments");
       }
@@ -217,17 +130,11 @@ const StudentBlogDetails = () => {
         setComments(data.comments || []);
       }
     } catch (error) {
-      console.error("Fetch comments error:", error);
-
       toast.error("Unable to load comments.");
     } finally {
       setCommentsLoading(false);
     }
   };
-
-  // ==========================================
-  // FETCH BLOG ON ID CHANGE
-  // ==========================================
 
   useEffect(() => {
     if (!id) {
@@ -235,19 +142,11 @@ const StudentBlogDetails = () => {
       setLoading(false);
       return;
     }
-
     fetchBlog();
   }, [id]);
 
-  // ==========================================
-  // FETCH COMMENTS AFTER BLOG LOAD
-  // ==========================================
-
   useEffect(() => {
-    if (!blog) {
-      return;
-    }
-
+    if (!blog) return;
     if (blog.commentsEnabled === true) {
       fetchComments();
     } else {
@@ -255,14 +154,9 @@ const StudentBlogDetails = () => {
     }
   }, [blog?.commentsEnabled, id]);
 
-  // ==========================================
-  // READING PROGRESS
-  // ==========================================
-
   useEffect(() => {
     const handleScroll = () => {
       const scrollTop = window.scrollY;
-
       const documentHeight =
         document.documentElement.scrollHeight - window.innerHeight;
 
@@ -272,66 +166,36 @@ const StudentBlogDetails = () => {
       }
 
       const progress = (scrollTop / documentHeight) * 100;
-
       setReadingProgress(Math.min(100, Math.max(0, progress)));
     };
 
     window.addEventListener("scroll", handleScroll);
-
     handleScroll();
-
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-    };
+    return () => window.removeEventListener("scroll", handleScroll);
   }, [blog]);
 
-  // ==========================================
-  // DATE FORMAT
-  // ==========================================
-
   const formatDate = (date) => {
-    if (!date) {
-      return "";
-    }
-
+    if (!date) return "";
     return new Date(date).toLocaleDateString("en-GB", {
       day: "2-digit",
-      month: "long",
+      month: "short",
       year: "numeric",
     });
   };
 
-  // ==========================================
-  // SCROLL TO COMMENTS
-  // ==========================================
-
   const scrollToComments = () => {
-    if (!blog?.commentsEnabled) {
-      return;
-    }
-
+    if (!blog?.commentsEnabled) return;
     document.getElementById("comments-section")?.scrollIntoView({
       behavior: "smooth",
       block: "start",
     });
   };
 
-  // ==========================================
-  // RECORD SHARE
-  // ==========================================
-
   const recordShare = async (platform) => {
-    if (!blog) {
-      return;
-    }
-
+    if (!blog) return;
     try {
       const userToken = localStorage.getItem("UserToken");
-
-      if (!userToken) {
-        console.log("No UserToken found.");
-        return;
-      }
+      if (!userToken) return;
 
       const response = await fetch(
         `${API_BASE_URL}/api/blog-interactions/${blog._id}/share`,
@@ -341,19 +205,12 @@ const StudentBlogDetails = () => {
             "Content-Type": "application/json",
             Authorization: `Bearer ${userToken}`,
           },
-          body: JSON.stringify({
-            platform,
-          }),
+          body: JSON.stringify({ platform }),
         }
       );
 
       const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "Failed to record share");
-      }
-
-      if (data.success) {
+      if (response.ok && data.success) {
         setBlog((prev) =>
           prev
             ? {
@@ -367,21 +224,13 @@ const StudentBlogDetails = () => {
         );
       }
     } catch (error) {
-      console.error("Record share error:", error);
+      console.error(error);
     }
   };
 
-  // ==========================================
-  // SHARE BLOG
-  // ==========================================
-
   const handleShare = async () => {
-    if (!blog) {
-      return;
-    }
-
+    if (!blog) return;
     const shareUrl = window.location.href;
-
     const shareData = {
       title: blog.title,
       text: blog.excerpt || `Check out this article: ${blog.title}`,
@@ -391,43 +240,22 @@ const StudentBlogDetails = () => {
     try {
       if (navigator.share) {
         await navigator.share(shareData);
-
         await recordShare("other");
-
         return;
       }
-
       await navigator.clipboard.writeText(shareUrl);
-
       await recordShare("copy");
-
       setCopied(true);
-
-      setTimeout(() => {
-        setCopied(false);
-      }, 2500);
+      setTimeout(() => setCopied(false), 2500);
     } catch (error) {
-      if (error.name === "AbortError") {
-        return;
-      }
-
-      console.error("Share error:", error);
-
+      if (error.name === "AbortError") return;
       toast.error("Unable to share this article.");
     }
   };
 
-  // ==========================================
-  // LIKE BLOG
-  // ==========================================
-
   const handleLike = async () => {
-    if (!blog) {
-      return;
-    }
-
+    if (!blog) return;
     const userToken = localStorage.getItem("UserToken");
-
     if (!userToken) {
       toast.error("Please login to like this blog.");
       return;
@@ -446,54 +274,37 @@ const StudentBlogDetails = () => {
       );
 
       const data = await response.json();
-
       if (!response.ok) {
         throw new Error(data.message || "Failed to like blog");
       }
 
       if (data.success) {
         setLiked(data.liked);
-
         const updatedLikes =
           data.likes ??
           data.likesCount ??
           (data.liked ? likes + 1 : Math.max(0, likes - 1));
-
         setLikes(updatedLikes);
-
         setBlog((prev) =>
-          prev
-            ? {
-                ...prev,
-                likesCount: updatedLikes,
-              }
-            : prev
+          prev ? { ...prev, likesCount: updatedLikes } : prev
         );
       }
     } catch (error) {
-      console.error("Like error:", error);
-
       toast.error(error.message || "Unable to like this blog.");
     }
   };
-
-  // ==========================================
-  // ADD COMMENT
-  // ==========================================
 
   const handleComment = async () => {
     if (!blog?.commentsEnabled) {
       toast.info("Comments are disabled for this article.");
       return;
     }
-
     if (!commentText.trim()) {
       toast.error("Please write a comment.");
       return;
     }
 
     const userToken = localStorage.getItem("UserToken");
-
     if (!userToken) {
       toast.error("Please login to comment.");
       return;
@@ -501,7 +312,6 @@ const StudentBlogDetails = () => {
 
     try {
       setCommentSubmitting(true);
-
       const response = await fetch(
         `${API_BASE_URL}/api/blog-interactions/${blog._id}/comments`,
         {
@@ -510,482 +320,377 @@ const StudentBlogDetails = () => {
             "Content-Type": "application/json",
             Authorization: `Bearer ${userToken}`,
           },
-          body: JSON.stringify({
-            comment: commentText.trim(),
-          }),
+          body: JSON.stringify({ comment: commentText.trim() }),
         }
       );
 
       const data = await response.json();
-
       if (!response.ok) {
         throw new Error(data.message || "Failed to add comment");
       }
 
       if (data.success) {
         setComments((prev) => [data.comment, ...prev]);
-
         setCommentText("");
-
         toast.success("Comment added successfully!");
       }
     } catch (error) {
-      console.error("Comment error:", error);
-
       toast.error(error.message || "Unable to add comment.");
     } finally {
       setCommentSubmitting(false);
     }
   };
 
-  // ==========================================
-  // COMMENT ENTER KEY
-  // ==========================================
-
   const handleCommentKeyDown = (event) => {
     if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault();
-
       handleComment();
     }
   };
 
-  // ==========================================
-  // LOADING
-  // ==========================================
-
   if (loading) {
     return (
-      <div className="min-h-screen bg-white">
-        <div className="h-1 bg-slate-100" />
-
-        <div className="mx-auto max-w-5xl px-6 py-12 lg:py-20">
-          <div className="h-5 w-28 animate-pulse rounded bg-slate-200" />
-
-          <div className="mt-8 h-6 w-32 animate-pulse rounded-full bg-indigo-100" />
-
-          <div className="mt-6 h-14 w-full animate-pulse rounded bg-slate-200" />
-
-          <div className="mt-4 h-14 w-4/5 animate-pulse rounded bg-slate-200" />
-
-          <div className="mt-7 h-6 w-3/5 animate-pulse rounded bg-slate-100" />
-
-          <div className="mt-8 flex gap-4">
-            <div className="h-10 w-32 animate-pulse rounded bg-slate-100" />
-            <div className="h-10 w-24 animate-pulse rounded bg-slate-100" />
-          </div>
-
-          <div className="mt-12 aspect-[16/8] animate-pulse rounded-3xl bg-slate-200" />
-
-          <div className="mx-auto mt-16 max-w-3xl space-y-5">
-            <div className="h-5 animate-pulse rounded bg-slate-200" />
-            <div className="h-5 animate-pulse rounded bg-slate-200" />
-            <div className="h-5 w-4/5 animate-pulse rounded bg-slate-200" />
-          </div>
+      <div
+        className="min-h-screen bg-slate-50 flex items-center justify-center text-slate-900"
+        style={{ fontFamily: "'Poppins', sans-serif" }}
+      >
+        <div className="flex flex-col items-center gap-4">
+          <div className="h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-blue-600" />
+          <p className="text-xs font-semibold" style={{ fontWeight: 600 }}>
+            Loading professional article...
+          </p>
         </div>
       </div>
     );
   }
 
-  // ==========================================
-  // ERROR
-  // ==========================================
-
   if (error || !blog) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-indigo-50 via-white to-emerald-50 px-6">
-        <div className="w-full max-w-md rounded-3xl border border-slate-200 bg-white p-10 text-center shadow-xl">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-indigo-50">
-            <BookOpen size={28} className="text-indigo-600" />
+      <div
+        className="flex min-h-screen items-center justify-center bg-slate-50 px-6 text-slate-900"
+        style={{ fontFamily: "'Poppins', sans-serif" }}
+      >
+        <div className="w-full max-w-md rounded-3xl border border-slate-200 bg-white p-8 text-center shadow-xs">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 mb-4">
+            <BookOpen size={24} />
           </div>
-
-          <h2 className="mt-6 text-2xl font-bold text-slate-950">
-            Blog Not Found
+          <h2 className="text-base font-semibold" style={{ fontWeight: 600 }}>
+            Article Not Found
           </h2>
-
-          <p className="mt-3 text-sm leading-6 text-slate-500">
+          <p
+            className="mt-2 text-xs text-slate-500 font-medium"
+            style={{ fontWeight: 600 }}
+          >
             {error ||
               "The article you are looking for does not exist or has been removed."}
           </p>
-
           <Link
             to="/blogs"
-            className="mt-7 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-indigo-500/20 transition hover:-translate-y-0.5 hover:shadow-xl"
+            className="mt-6 inline-flex items-center gap-2 rounded-xl bg-black px-5 py-2.5 text-xs font-semibold text-white shadow-xs transition hover:bg-slate-800"
+            style={{ fontWeight: 600 }}
           >
-            <ArrowLeft size={17} />
-            Back to Blogs
+            <ArrowLeft size={14} className="text-blue-400" />
+            Back to Articles
           </Link>
         </div>
       </div>
     );
   }
 
-  // ==========================================
-  // MAIN
-  // ==========================================
-
   return (
-    <div className="min-h-screen bg-white">
+    <div
+      className="min-h-screen bg-slate-50 text-slate-900 pb-16 selection:bg-blue-600 selection:text-white"
+      style={{ fontFamily: "'Poppins', sans-serif", fontStyle: "normal" }}
+    >
       <ToastContainer position="top-right" autoClose={2500} />
 
       {/* ==========================================
-          READING PROGRESS
+          READING PROGRESS BAR
       ========================================== */}
-
-      <div className="fixed left-0 right-0 top-0 z-50 h-1 bg-slate-100">
+      <div className="fixed left-0 right-0 top-0 z-50 h-1 bg-slate-200">
         <div
-          className="h-full bg-gradient-to-r from-indigo-500 via-violet-500 to-emerald-500 transition-all duration-150"
-          style={{
-            width: `${readingProgress}%`,
-          }}
+          className="h-full bg-blue-600 transition-all duration-150"
+          style={{ width: `${readingProgress}%` }}
         />
       </div>
 
       {/* ==========================================
-          BREADCRUMB
+          TOP NAVIGATION BAR
       ========================================== */}
-
-      <div className="border-b border-slate-100 bg-white">
-        <div className="mx-auto max-w-7xl px-6 py-5 lg:px-8">
-          <div className="flex items-center gap-2 text-sm">
-            <Link
-              to="/blogs"
-              className="font-medium text-indigo-600 transition hover:text-indigo-700"
-            >
-              GuideX Blog
-            </Link>
-
-            <span className="text-slate-300">/</span>
-
-            <span className="truncate text-slate-500">
-              {blog.category || "Article"}
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* ==========================================
-          ARTICLE HEADER
-      ========================================== */}
-
-      <header className="relative overflow-hidden bg-gradient-to-br from-indigo-50 via-white to-emerald-50">
-        <div className="absolute -left-32 top-0 h-96 w-96 rounded-full bg-indigo-400/10 blur-3xl" />
-
-        <div className="absolute -right-32 bottom-0 h-96 w-96 rounded-full bg-emerald-400/10 blur-3xl" />
-
-        <div className="relative mx-auto max-w-5xl px-6 py-14 lg:px-8 lg:py-20">
+      <header className="border-b border-slate-200 bg-white sticky top-0 z-40 shadow-2xs">
+        <div className="mx-auto max-w-7xl px-5 sm:px-6 lg:px-8 h-18 flex items-center justify-between">
           <Link
             to="/blogs"
-            className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 transition hover:text-indigo-600"
+            className="inline-flex items-center gap-2 text-xs font-semibold text-slate-700 hover:text-blue-600 transition"
+            style={{ fontWeight: 600 }}
           >
-            <ArrowLeft size={17} />
-            Back to all articles
+            <ArrowLeft size={15} className="text-blue-600" />
+            <span>Back to Feed</span>
           </Link>
 
-          <div className="mt-10 flex flex-wrap items-center gap-3">
-            {blog.category && (
-              <span className="rounded-full border border-indigo-200 bg-indigo-50 px-4 py-2 text-xs font-bold text-indigo-700">
-                {blog.category}
-              </span>
-            )}
-
-            {blog.contentType && (
-              <span className="rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-600">
-                {blog.contentType}
-              </span>
-            )}
-
-            {blog.difficulty && (
-              <span className="rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-xs font-semibold text-emerald-700">
-                {blog.difficulty}
-              </span>
-            )}
-          </div>
-
-          <h1 className="mt-7 max-w-5xl text-4xl font-bold leading-[1.1] tracking-tight text-slate-950 sm:text-5xl lg:text-6xl">
-            {blog.title}
-          </h1>
-
-          {blog.excerpt && (
-            <p className="mt-7 max-w-3xl text-lg leading-8 text-slate-600 lg:text-xl">
-              {blog.excerpt}
-            </p>
-          )}
-
-          <div className="mt-9 flex flex-wrap items-center gap-5">
-            {/* AUTHOR */}
-
-            <div className="flex items-center gap-3">
-              {blog.authorImage ? (
-                <img
-                  src={getImageUrl(blog.authorImage)}
-                  alt={blog.authorName || "Author"}
-                  className="h-11 w-11 rounded-full object-cover ring-4 ring-white shadow-sm"
-                  onError={(e) => {
-                    e.currentTarget.style.display = "none";
-                  }}
-                />
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setBookmarked(!bookmarked)}
+              className={`p-2.5 rounded-xl border transition ${
+                bookmarked
+                  ? "bg-black text-white border-black"
+                  : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
+              }`}
+              title="Bookmark article"
+            >
+              <Bookmark
+                size={15}
+                className={bookmarked ? "text-blue-400" : ""}
+              />
+            </button>
+            <button
+              onClick={handleShare}
+              className="p-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 transition"
+              title="Share article"
+            >
+              {copied ? (
+                <Check size={15} className="text-emerald-600" />
               ) : (
-                <div className="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 text-sm font-bold text-white ring-4 ring-white shadow-sm">
-                  {(blog.authorName || "G").charAt(0).toUpperCase()}
-                </div>
+                <Share2 size={15} className="text-blue-600" />
               )}
-
-              <div>
-                <p className="text-sm font-bold text-slate-900">
-                  {blog.authorName || "GuideX Team"}
-                </p>
-
-                <p className="text-xs text-slate-500">
-                  {blog.author || "GuideX"}
-                </p>
-              </div>
-            </div>
-
-            <div className="hidden h-8 w-px bg-slate-200 sm:block" />
-
-            {/* DATE */}
-
-            <div className="flex items-center gap-2 text-sm text-slate-500">
-              <CalendarDays size={16} className="text-indigo-500" />
-
-              {formatDate(blog.publishedAt || blog.createdAt)}
-            </div>
-
-            {/* READING TIME */}
-
-            <div className="flex items-center gap-2 text-sm text-slate-500">
-              <Clock size={16} className="text-emerald-500" />
-              {blog.readingTime || 1} min read
-            </div>
-
-            {/* VIEWS */}
-
-            <div className="flex items-center gap-2 text-sm text-slate-500">
-              <Eye size={16} className="text-violet-500" />
-
-              {blog.views || 0}
-            </div>
+            </button>
           </div>
         </div>
       </header>
 
       {/* ==========================================
-          COVER IMAGE
+          ARTICLE HERO HEADER
       ========================================== */}
+      <section className="mx-auto max-w-7xl px-5 sm:px-6 lg:px-8 pt-10 pb-6">
+        <div className="space-y-3">
+          <div className="flex flex-wrap items-center gap-2">
+            {blog.category && (
+              <span
+                className="rounded-full border border-blue-200 bg-blue-50 px-3.5 py-1 text-xs font-semibold text-blue-700"
+                style={{ fontWeight: 600 }}
+              >
+                {blog.category}
+              </span>
+            )}
+            {blog.difficulty && (
+              <span
+                className="rounded-full border border-slate-200 bg-slate-100 px-3.5 py-1 text-xs font-semibold text-slate-700"
+                style={{ fontWeight: 600 }}
+              >
+                {blog.difficulty}
+              </span>
+            )}
+          </div>
 
-      <section className="mx-auto max-w-6xl px-6 lg:px-8">
-        <div className="relative -mt-2 overflow-hidden rounded-3xl border border-slate-200 bg-slate-100 shadow-2xl shadow-slate-200/60">
-          {blog.coverImage ? (
-            <img
-              src={getImageUrl(blog.coverImage)}
-              alt={blog.coverImageAlt || blog.title}
-              className="aspect-[16/8] w-full object-cover"
-              onError={(e) => {
-                e.currentTarget.style.display = "none";
-              }}
-            />
-          ) : (
-            <div className="flex aspect-[16/8] items-center justify-center bg-gradient-to-br from-indigo-100 via-violet-50 to-emerald-100">
-              <BookOpen size={80} className="text-indigo-300" />
-            </div>
+          <h1
+            className="text-2xl sm:text-3xl lg:text-4xl font-semibold tracking-tight text-slate-950 leading-snug"
+            style={{ fontWeight: 600 }}
+          >
+            {blog.title}
+          </h1>
+
+          {blog.excerpt && (
+            <p
+              className="text-xs sm:text-sm text-slate-600 font-medium leading-relaxed max-w-4xl"
+              style={{ fontWeight: 600 }}
+            >
+              {blog.excerpt}
+            </p>
           )}
+
+          {/* Author & Meta Bar */}
+          <div className="pt-4 pb-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-200">
+            <div className="flex items-center gap-3">
+              {blog.authorImage ? (
+                <img
+                  src={getImageUrl(blog.authorImage)}
+                  alt={blog.authorName || "Author"}
+                  className="h-10 w-10 rounded-xl object-cover shadow-2xs border border-slate-200"
+                  onError={(e) => {
+                    e.currentTarget.style.display = "none";
+                  }}
+                />
+              ) : (
+                <div
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-black text-white text-xs font-semibold shadow-2xs"
+                  style={{ fontWeight: 600 }}
+                >
+                  {(blog.authorName || "G").charAt(0).toUpperCase()}
+                </div>
+              )}
+              <div>
+                <p
+                  className="text-xs font-semibold text-slate-900"
+                  style={{ fontWeight: 600 }}
+                >
+                  {blog.authorName || "GuideX Editorial"}
+                </p>
+                <p
+                  className="text-[10px] text-slate-500 font-medium"
+                  style={{ fontWeight: 600 }}
+                >
+                  Published on {formatDate(blog.publishedAt || blog.createdAt)}
+                </p>
+              </div>
+            </div>
+
+            <div
+              className="flex items-center gap-3 text-xs font-semibold text-slate-500"
+              style={{ fontWeight: 600 }}
+            >
+              <span className="flex items-center gap-1.5 bg-slate-100 px-3 py-1.5 rounded-xl border border-slate-200">
+                <Clock size={13} className="text-blue-600" />
+                {blog.readingTime || 1} min read
+              </span>
+              <span className="flex items-center gap-1.5 bg-slate-100 px-3 py-1.5 rounded-xl border border-slate-200">
+                <Eye size={13} className="text-blue-600" />
+                {blog.views || 0} views
+              </span>
+            </div>
+          </div>
         </div>
       </section>
 
       {/* ==========================================
-          MAIN ARTICLE
+          MAIN ARTICLE BODY & SIDEBAR CONTAINER (FIXED OVERFLOW & CROSSING)
       ========================================== */}
-
-      <main className="mx-auto max-w-7xl px-6 py-16 lg:px-8 lg:py-20">
-        <div className="grid gap-14 lg:grid-cols-[minmax(0,760px)_280px] lg:justify-center">
-          {/* ==========================================
-              ARTICLE
-          ========================================== */}
-
-          <article className="min-w-0">
-            {/* MOBILE ARTICLE INFO */}
-
-            <div className="mb-10 flex flex-wrap gap-3 lg:hidden">
-              <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
-                <p className="text-xs text-slate-400">Reading Time</p>
-
-                <p className="mt-1 text-sm font-bold text-slate-900">
-                  {blog.readingTime || 1} min
-                </p>
+      <main className="mx-auto max-w-7xl px-5 sm:px-6 lg:px-8">
+        <div className="flex flex-col lg:flex-row gap-8 items-start">
+          {/* ARTICLE CONTENT (Flexible layout to prevent container breaking) */}
+          <article className="w-full lg:flex-1 min-w-0 bg-white rounded-3xl border border-slate-200 p-6 sm:p-10 shadow-xs overflow-hidden">
+            {/* Featured Cover Image inside article flow */}
+            {blog.coverImage && (
+              <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 mb-8">
+                <img
+                  src={getImageUrl(blog.coverImage)}
+                  alt={blog.coverImageAlt || blog.title}
+                  className="aspect-[16/9] w-full object-cover"
+                  onError={(e) => {
+                    e.currentTarget.style.display = "none";
+                  }}
+                />
               </div>
-
-              <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
-                <p className="text-xs text-slate-400">Views</p>
-
-                <p className="mt-1 text-sm font-bold text-slate-900">
-                  {blog.views || 0}
-                </p>
-              </div>
-
-              <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
-                <p className="text-xs text-slate-400">Shares</p>
-
-                <p className="mt-1 text-sm font-bold text-slate-900">
-                  {blog.sharesCount || 0}
-                </p>
-              </div>
-            </div>
-
-            {/* ==========================================
-                ARTICLE CONTENT
-            ========================================== */}
-
-            {/* ==========================================
-    ARTICLE CONTENT
-========================================== */}
+            )}
 
             <div
               className="
-    blog-content
-    max-w-none
+                blog-content
+                w-full
+                max-w-none
+                overflow-hidden
+                text-slate-800
+                text-xs
+                sm:text-sm
+                font-medium
+                leading-relaxed
 
-    [&_h1]:mb-6
-    [&_h1]:mt-12
-    [&_h1]:text-4xl
-    [&_h1]:font-extrabold
-    [&_h1]:leading-tight
-    [&_h1]:tracking-tight
-    [&_h1]:text-slate-950
+                [&_*]:max-w-full
+                [&_img]:h-auto
+                [&_table]:block
+                [&_table]:overflow-x-auto
+                [&_pre]:overflow-x-auto
 
-    [&_h2]:mb-5
-    [&_h2]:mt-14
-    [&_h2]:text-3xl
-    [&_h2]:font-bold
-    [&_h2]:leading-tight
-    [&_h2]:tracking-tight
-    [&_h2]:text-slate-950
+                [&_h1]:mb-4
+                [&_h1]:mt-8
+                [&_h1]:text-xl
+                [&_h1]:font-semibold
+                [&_h1]:text-slate-950
 
-    [&_h3]:mb-4
-    [&_h3]:mt-10
-    [&_h3]:text-2xl
-    [&_h3]:font-bold
-    [&_h3]:leading-tight
-    [&_h3]:text-slate-950
+                [&_h2]:mb-3
+                [&_h2]:mt-8
+                [&_h2]:text-lg
+                [&_h2]:font-semibold
+                [&_h2]:text-slate-950
 
-    [&_h4]:mb-3
-    [&_h4]:mt-8
-    [&_h4]:text-xl
-    [&_h4]:font-bold
-    [&_h4]:text-slate-900
+                [&_h3]:mb-3
+                [&_h3]:mt-6
+                [&_h3]:text-base
+                [&_h3]:font-semibold
+                [&_h3]:text-slate-950
 
-    [&_p]:my-6
-    [&_p]:text-[17px]
-    [&_p]:font-normal
-    [&_p]:leading-[1.9]
-    [&_p]:text-slate-600
+                [&_p]:my-4
+                [&_p]:text-xs
+                [&_p]:sm:text-sm
+                [&_p]:leading-relaxed
+                [&_p]:text-slate-700
+                [&_p]:break-words
 
-    [&_strong]:font-bold
-    [&_strong]:text-slate-900
+                [&_strong]:font-semibold
+                [&_strong]:text-slate-950
 
-    [&_em]:italic
-    [&_em]:text-slate-700
+                [&_ul]:my-4
+                [&_ul]:list-disc
+                [&_ul]:space-y-1.5
+                [&_ul]:pl-5
 
-    [&_ul]:my-6
-    [&_ul]:list-disc
-    [&_ul]:space-y-2
-    [&_ul]:pl-7
+                [&_ol]:my-4
+                [&_ol]:list-decimal
+                [&_ol]:space-y-1.5
+                [&_ol]:pl-5
 
-    [&_ol]:my-6
-    [&_ol]:list-decimal
-    [&_ol]:space-y-2
-    [&_ol]:pl-7
+                [&_li]:text-xs
+                [&_li]:sm:text-sm
+                [&_li]:leading-relaxed
+                [&_li]:text-slate-700
 
-    [&_li]:text-[17px]
-    [&_li]:leading-8
-    [&_li]:text-slate-600
+                [&_a]:font-semibold
+                [&_a]:text-blue-600
+                [&_a]:underline
+                [&_a:hover]:text-blue-800
 
-    [&_a]:font-semibold
-    [&_a]:text-indigo-600
-    [&_a]:underline
-    [&_a]:underline-offset-4
-    [&_a]:transition
-    [&_a:hover]:text-indigo-700
+                [&_blockquote]:my-6
+                [&_blockquote]:rounded-2xl
+                [&_blockquote]:border-l-4
+                [&_blockquote]:border-blue-600
+                [&_blockquote]:bg-blue-50/50
+                [&_blockquote]:px-5
+                [&_blockquote]:py-4
+                [&_blockquote]:italic
+                [&_blockquote]:text-slate-700
 
-    [&_blockquote]:my-8
-    [&_blockquote]:rounded-r-2xl
-    [&_blockquote]:border-l-4
-    [&_blockquote]:border-indigo-500
-    [&_blockquote]:bg-indigo-50
-    [&_blockquote]:px-6
-    [&_blockquote]:py-5
-    [&_blockquote]:italic
-    [&_blockquote]:leading-8
-    [&_blockquote]:text-slate-600
+                [&_code]:rounded-md
+                [&_code]:bg-slate-100
+                [&_code]:px-1.5
+                [&_code]:py-0.5
+                [&_code]:font-mono
+                [&_code]:text-xs
+                [&_code]:font-semibold
+                [&_code]:text-blue-700
 
-    [&_code]:rounded-md
-    [&_code]:bg-slate-100
-    [&_code]:px-1.5
-    [&_code]:py-1
-    [&_code]:font-mono
-    [&_code]:text-sm
-    [&_code]:font-semibold
-    [&_code]:text-indigo-700
+                [&_pre]:my-6
+                [&_pre]:overflow-x-auto
+                [&_pre]:rounded-2xl
+                [&_pre]:bg-black
+                [&_pre]:p-5
+                [&_pre]:text-xs
+                [&_pre]:text-slate-100
 
-    [&_pre]:my-8
-    [&_pre]:overflow-x-auto
-    [&_pre]:rounded-2xl
-    [&_pre]:bg-slate-950
-    [&_pre]:p-6
-    [&_pre]:text-sm
-    [&_pre]:leading-7
-    [&_pre]:text-slate-100
-    [&_pre]:shadow-xl
-
-    [&_img]:my-10
-    [&_img]:w-full
-    [&_img]:rounded-2xl
-    [&_img]:object-cover
-    [&_img]:shadow-lg
-
-    [&_hr]:my-10
-    [&_hr]:border-slate-200
-
-    [&_table]:my-8
-    [&_table]:w-full
-    [&_table]:border-collapse
-
-    [&_th]:border
-    [&_th]:border-slate-200
-    [&_th]:bg-slate-50
-    [&_th]:px-4
-    [&_th]:py-3
-    [&_th]:text-left
-    [&_th]:font-bold
-    [&_th]:text-slate-900
-
-    [&_td]:border
-    [&_td]:border-slate-200
-    [&_td]:px-4
-    [&_td]:py-3
-    [&_td]:text-slate-600
-  "
+                [&_img]:my-6
+                [&_img]:w-full
+                [&_img]:rounded-2xl
+                [&_img]:object-cover
+              "
               dangerouslySetInnerHTML={{
                 __html: blog.content || "",
               }}
             />
 
-            {/* ==========================================
-                TAGS
-            ========================================== */}
-
+            {/* TAGS */}
             {blog.tags?.length > 0 && (
-              <div className="mt-14 border-t border-slate-200 pt-8">
-                <div className="flex items-center gap-2 text-sm font-bold text-slate-900">
-                  <Tag size={17} className="text-indigo-600" />
-                  Topics
+              <div className="mt-10 pt-6 border-t border-slate-100">
+                <div
+                  className="flex items-center gap-2 text-xs font-semibold text-slate-900 mb-3"
+                  style={{ fontWeight: 600 }}
+                >
+                  <Tag size={14} className="text-blue-600" />
+                  Related Topics
                 </div>
-
-                <div className="mt-4 flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-2">
                   {blog.tags.map((tag, index) => (
                     <span
                       key={`${tag}-${index}`}
-                      className="rounded-full border border-indigo-100 bg-indigo-50 px-4 py-2 text-sm font-medium text-indigo-600"
+                      className="rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-1.5 text-xs font-semibold text-slate-700"
+                      style={{ fontWeight: 600 }}
                     >
                       #{tag}
                     </span>
@@ -994,135 +699,151 @@ const StudentBlogDetails = () => {
               </div>
             )}
 
-            {/* ==========================================
-                ENGAGEMENT ACTION BAR
-            ========================================== */}
+            {/* ACTION FOOTER BAR */}
+            <div className="mt-8 pt-6 border-t border-slate-100 flex flex-wrap items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={handleLike}
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-xs font-semibold transition ${
+                    liked
+                      ? "bg-red-50 text-red-600 border-red-200"
+                      : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
+                  }`}
+                  style={{ fontWeight: 600 }}
+                >
+                  <Heart size={15} fill={liked ? "currentColor" : "none"} />
+                  <span>{likes}</span> Likes
+                </button>
 
-            <div className="mt-12 border-y border-slate-200 py-6">
-              <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex flex-wrap items-center gap-3">
-                  {/* LIKE */}
-
+                {blog.commentsEnabled === true && (
                   <button
-                    onClick={handleLike}
-                    className={`group flex items-center gap-2 rounded-full border px-5 py-2.5 text-sm font-semibold transition-all ${
-                      liked
-                        ? "border-red-200 bg-red-50 text-red-600"
-                        : "border-slate-200 bg-white text-slate-600 hover:border-red-200 hover:bg-red-50 hover:text-red-600"
-                    }`}
+                    onClick={scrollToComments}
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 text-xs font-semibold hover:bg-slate-100 transition"
+                    style={{ fontWeight: 600 }}
                   >
-                    <Heart size={18} fill={liked ? "currentColor" : "none"} />
-
-                    <span>{likes}</span>
-
-                    <span className="hidden sm:inline">
-                      {liked ? "Liked" : "Like"}
-                    </span>
+                    <MessageCircle size={15} className="text-blue-600" />
+                    <span>{comments.length}</span> Comments
                   </button>
-
-                  {/* COMMENTS */}
-
-                  {blog.commentsEnabled === true && (
-                    <button
-                      onClick={scrollToComments}
-                      className="group flex items-center gap-2 rounded-full border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-600 transition-all hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600"
-                    >
-                      <MessageCircle size={18} />
-
-                      <span>{comments.length}</span>
-
-                      <span className="hidden sm:inline">
-                        {comments.length === 1 ? "Comment" : "Comments"}
-                      </span>
-                    </button>
-                  )}
-
-                  {/* SHARE */}
-
-                  <button
-                    onClick={handleShare}
-                    className="group flex items-center gap-2 rounded-full border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-600 transition-all hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-600"
-                  >
-                    {copied ? <Check size={18} /> : <Share2 size={18} />}
-
-                    <span>{copied ? "Link Copied" : "Share"}</span>
-
-                    <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-500">
-                      {blog.sharesCount || 0}
-                    </span>
-                  </button>
-                </div>
-
-                <div className="flex items-center gap-2 text-sm text-slate-400">
-                  <Eye size={16} />
-
-                  <span>{blog.views || 0} views</span>
-                </div>
+                )}
               </div>
+
+              <button
+                onClick={handleShare}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 text-xs font-semibold hover:bg-slate-100 transition"
+                style={{ fontWeight: 600 }}
+              >
+                {copied ? (
+                  <Check size={15} className="text-emerald-600" />
+                ) : (
+                  <Share2 size={15} className="text-blue-600" />
+                )}
+                <span>{copied ? "Link Copied" : "Share Article"}</span>
+              </button>
             </div>
 
-            {/* ==========================================
-                AUTHOR CARD
-            ========================================== */}
-
-            <div className="mt-12 overflow-hidden rounded-3xl border border-indigo-100 bg-gradient-to-br from-indigo-50 via-white to-emerald-50 p-7 sm:p-8">
-              <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
-                {blog.authorImage ? (
-                  <img
-                    src={getImageUrl(blog.authorImage)}
-                    alt={blog.authorName || "Author"}
-                    className="h-20 w-20 rounded-2xl object-cover shadow-md"
-                  />
-                ) : (
-                  <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 text-2xl font-bold text-white shadow-md">
-                    {(blog.authorName || "G").charAt(0).toUpperCase()}
-                  </div>
-                )}
-
-                <div>
-                  <p className="text-xs font-bold uppercase tracking-wider text-indigo-600">
-                    About the Author
-                  </p>
-
-                  <h3 className="mt-2 text-xl font-bold text-slate-950">
-                    {blog.authorName || "GuideX Team"}
-                  </h3>
-
-                  <p className="mt-2 text-sm leading-6 text-slate-600">
-                    {blog.authorBio ||
-                      "Sharing practical knowledge and insights to help students and professionals grow their technology careers."}
-                  </p>
+            {/* AUTHOR CARD */}
+            <div className="mt-10 rounded-2xl border border-slate-200 bg-slate-50 p-6 flex flex-col sm:flex-row items-start sm:items-center gap-5">
+              {blog.authorImage ? (
+                <img
+                  src={getImageUrl(blog.authorImage)}
+                  alt={blog.authorName || "Author"}
+                  className="h-16 w-16 rounded-2xl object-cover border border-slate-200 shadow-2xs"
+                />
+              ) : (
+                <div
+                  className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-black text-white text-lg font-semibold shadow-2xs"
+                  style={{ fontWeight: 600 }}
+                >
+                  {(blog.authorName || "G").charAt(0).toUpperCase()}
                 </div>
+              )}
+              <div>
+                <span
+                  className="text-[10px] uppercase font-semibold tracking-wider text-blue-600"
+                  style={{ fontWeight: 600 }}
+                >
+                  Written By
+                </span>
+                <h3
+                  className="text-sm font-semibold text-slate-900 mt-0.5"
+                  style={{ fontWeight: 600 }}
+                >
+                  {blog.authorName || "GuideX Team"}
+                </h3>
+                <p
+                  className="text-xs text-slate-600 font-medium mt-1 leading-relaxed"
+                  style={{ fontWeight: 600 }}
+                >
+                  {blog.authorBio ||
+                    "Sharing practical knowledge and technical insights to empower learners and professionals."}
+                </p>
               </div>
             </div>
           </article>
 
-          {/* ==========================================
-              SIDEBAR
-          ========================================== */}
+          {/* SIDEBAR (Fixed width to prevent overlap) */}
+          <aside className="w-full lg:w-[320px] shrink-0 space-y-6">
+            <div className="sticky top-24 space-y-6">
+              {/* ARTICLE SUMMARY */}
+              <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-xs">
+                <h3
+                  className="text-xs font-semibold uppercase tracking-wider text-slate-900 mb-4 pb-3 border-b border-slate-100"
+                  style={{ fontWeight: 600 }}
+                >
+                  Article Summary
+                </h3>
+                <div
+                  className="space-y-3.5 text-xs font-semibold text-slate-700"
+                  style={{ fontWeight: 600 }}
+                >
+                  <div className="flex justify-between items-center py-1">
+                    <span className="text-slate-400">Category</span>
+                    <span className="text-slate-900 font-semibold">
+                      {blog.category || "Technology"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center py-1">
+                    <span className="text-slate-400">Level</span>
+                    <span className="text-slate-900 font-semibold">
+                      {blog.difficulty || "Advanced"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center py-1">
+                    <span className="text-slate-400">Views</span>
+                    <span className="text-slate-900 font-semibold">
+                      {blog.views || 0}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center py-1">
+                    <span className="text-slate-400">Likes</span>
+                    <span className="text-slate-900 font-semibold">
+                      {likes || 0}
+                    </span>
+                  </div>
+                </div>
+              </div>
 
-          <aside className="hidden lg:block">
-            <div className="sticky top-8 space-y-6">
-              {/* TABLE OF CONTENTS */}
-
+              {/* Table of Contents */}
               {blog.tableOfContents?.length > 0 && (
-                <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                  <div className="flex items-center gap-2">
-                    <List size={18} className="text-indigo-600" />
-
-                    <h3 className="font-bold text-slate-900">
-                      In This Article
+                <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-xs">
+                  <div className="flex items-center gap-2 mb-4 pb-3 border-b border-slate-100">
+                    <List size={16} className="text-blue-600" />
+                    <h3
+                      className="text-xs font-semibold uppercase tracking-wider text-slate-900"
+                      style={{ fontWeight: 600 }}
+                    >
+                      Table of Contents
                     </h3>
                   </div>
-
-                  <div className="mt-5 space-y-3">
+                  <div className="space-y-2.5">
                     {blog.tableOfContents.map((item, index) => (
                       <a
                         key={item.id || index}
                         href={`#${item.id}`}
-                        className={`block text-sm leading-5 text-slate-500 transition hover:text-indigo-600 ${
-                          item.level === 2 ? "pl-4" : ""
+                        className={`block text-xs font-medium text-slate-600 hover:text-blue-600 transition truncate ${
+                          item.level === 2 ? "pl-3" : ""
                         }`}
+                        style={{ fontWeight: 600 }}
                       >
                         {item.title}
                       </a>
@@ -1130,97 +851,6 @@ const StudentBlogDetails = () => {
                   </div>
                 </div>
               )}
-
-              {/* ARTICLE INFORMATION */}
-
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-6">
-                <h3 className="font-bold text-slate-900">
-                  Article Information
-                </h3>
-
-                <div className="mt-5 space-y-4">
-                  <div className="flex items-center justify-between gap-4">
-                    <span className="text-sm text-slate-500">Category</span>
-
-                    <span className="text-right text-sm font-semibold text-slate-900">
-                      {blog.category}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between gap-4">
-                    <span className="text-sm text-slate-500">Difficulty</span>
-
-                    <span className="text-sm font-semibold text-slate-900">
-                      {blog.difficulty || "Beginner"}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between gap-4">
-                    <span className="text-sm text-slate-500">Read Time</span>
-
-                    <span className="text-sm font-semibold text-slate-900">
-                      {blog.readingTime || 1} min
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between gap-4">
-                    <span className="text-sm text-slate-500">Views</span>
-
-                    <span className="text-sm font-semibold text-slate-900">
-                      {blog.views || 0}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between gap-4">
-                    <span className="text-sm text-slate-500">Likes</span>
-
-                    <span className="text-sm font-semibold text-slate-900">
-                      {likes || 0}
-                    </span>
-                  </div>
-
-                  {blog.commentsEnabled === true && (
-                    <div className="flex items-center justify-between gap-4">
-                      <span className="text-sm text-slate-500">Comments</span>
-
-                      <span className="text-sm font-semibold text-slate-900">
-                        {comments.length}
-                      </span>
-                    </div>
-                  )}
-
-                  <div className="flex items-center justify-between gap-4">
-                    <span className="text-sm text-slate-500">Shares</span>
-
-                    <span className="text-sm font-semibold text-slate-900">
-                      {blog.sharesCount || 0}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* SHARE CARD */}
-
-              <div className="rounded-2xl bg-gradient-to-br from-indigo-600 to-violet-700 p-6 text-white shadow-lg shadow-indigo-500/20">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/15">
-                  <Share2 size={19} />
-                </div>
-
-                <h3 className="mt-5 font-bold">Found this useful?</h3>
-
-                <p className="mt-2 text-sm leading-6 text-indigo-100">
-                  Share this article with someone who might find it helpful.
-                </p>
-
-                <button
-                  onClick={handleShare}
-                  className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-white px-4 py-3 text-sm font-bold text-indigo-700 transition hover:bg-indigo-50"
-                >
-                  {copied ? <Check size={17} /> : <Share2 size={17} />}
-
-                  {copied ? "Link Copied" : "Share Article"}
-                </button>
-              </div>
             </div>
           </aside>
         </div>
@@ -1228,313 +858,247 @@ const StudentBlogDetails = () => {
         {/* ==========================================
             COMMENTS SECTION
         ========================================== */}
-
         <section
           id="comments-section"
-          className="mx-auto mt-20 max-w-5xl scroll-mt-24"
+          className="mx-auto mt-16 max-w-4xl scroll-mt-28"
         >
           {blog.commentsEnabled === true ? (
-            <>
-              {/* HEADER */}
-
-              <div className="flex items-center justify-between">
+            <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-xs">
+              <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-100">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-indigo-50">
-                    <MessageCircle size={21} className="text-indigo-600" />
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-black text-white">
+                    <MessageCircle size={18} className="text-blue-400" />
                   </div>
-
                   <div>
-                    <h3 className="text-2xl font-bold text-slate-950">
-                      Join the Conversation
+                    <h3
+                      className="text-sm font-semibold text-slate-900 tracking-tight"
+                      style={{ fontWeight: 600 }}
+                    >
+                      Discussion ({comments.length})
                     </h3>
-
-                    <p className="mt-1 text-sm text-slate-500">
-                      {comments.length}{" "}
-                      {comments.length === 1 ? "comment" : "comments"}
+                    <p
+                      className="text-[11px] text-slate-500 font-medium"
+                      style={{ fontWeight: 600 }}
+                    >
+                      Share your thoughts or ask questions
                     </p>
                   </div>
                 </div>
               </div>
 
-              {/* COMMENT INPUT */}
-
-              <div className="mt-8 overflow-hidden rounded-3xl border border-slate-200 bg-gradient-to-br from-slate-50 to-indigo-50/40 p-5 sm:p-6">
-                <div className="flex gap-4">
-                  <div className="hidden h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 text-sm font-bold text-white sm:flex">
-                    {blog.authorName?.charAt(0)?.toUpperCase() || "U"}
-                  </div>
-
-                  <div className="min-w-0 flex-1">
-                    <textarea
-                      id="comment-input"
-                      value={commentText}
-                      onChange={(e) => setCommentText(e.target.value)}
-                      onKeyDown={handleCommentKeyDown}
-                      placeholder="What are your thoughts on this article?"
-                      rows={4}
-                      maxLength={1000}
-                      className="w-full resize-none rounded-2xl border border-slate-200 bg-white px-5 py-4 text-sm leading-6 text-slate-700 shadow-sm outline-none transition-all placeholder:text-slate-400 focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100"
-                    />
-
-                    <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                      <div className="flex items-center gap-3">
-                        <p className="text-xs text-slate-400">
-                          Press Enter to post
-                        </p>
-
-                        <span className="text-xs text-slate-300">•</span>
-
-                        <p className="text-xs text-slate-400">
-                          {commentText.length}/1000
-                        </p>
-                      </div>
-
-                      <button
-                        onClick={handleComment}
-                        disabled={commentSubmitting || !commentText.trim()}
-                        className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 px-6 py-3 text-sm font-semibold text-white shadow-md shadow-indigo-500/20 transition-all hover:-translate-y-0.5 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-50"
-                      >
-                        {commentSubmitting ? (
-                          <>
-                            <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                            Posting...
-                          </>
-                        ) : (
-                          <>
-                            Post Comment
-                            <ArrowRight size={16} />
-                          </>
-                        )}
-                      </button>
-                    </div>
-                  </div>
+              {/* Comment Input */}
+              <div className="space-y-3">
+                <textarea
+                  id="comment-input"
+                  value={commentText}
+                  onChange={(e) => setCommentText(e.target.value)}
+                  onKeyDown={handleCommentKeyDown}
+                  placeholder="Write a constructive response..."
+                  rows={3}
+                  maxLength={1000}
+                  className="w-full resize-none rounded-2xl border border-slate-200 bg-slate-50 p-4 text-xs font-semibold text-slate-800 outline-none transition focus:border-blue-600 focus:bg-white focus:ring-2 focus:ring-blue-100"
+                  style={{ fontWeight: 600 }}
+                />
+                <div className="flex items-center justify-between">
+                  <span
+                    className="text-[10px] text-slate-400 font-semibold"
+                    style={{ fontWeight: 600 }}
+                  >
+                    Press Enter to post • {commentText.length}/1000
+                  </span>
+                  <button
+                    onClick={handleComment}
+                    disabled={commentSubmitting || !commentText.trim()}
+                    className="inline-flex items-center gap-2 rounded-xl bg-black hover:bg-slate-800 px-5 py-2.5 text-xs font-semibold text-white shadow-sm transition disabled:opacity-50"
+                    style={{ fontWeight: 600 }}
+                  >
+                    {commentSubmitting ? (
+                      <>
+                        <span className="h-3 w-3 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                        Posting...
+                      </>
+                    ) : (
+                      <>
+                        Post Comment
+                        <ArrowRight size={14} className="text-blue-400" />
+                      </>
+                    )}
+                  </button>
                 </div>
               </div>
 
-              {/* COMMENTS LIST */}
-
-              <div className="mt-10">
+              {/* Comments List */}
+              <div className="mt-8 space-y-4">
                 {commentsLoading ? (
-                  <div className="space-y-5">
-                    {[1, 2, 3].map((item) => (
-                      <div
-                        key={item}
-                        className="animate-pulse rounded-2xl border border-slate-100 bg-white p-6"
-                      >
-                        <div className="flex gap-4">
-                          <div className="h-11 w-11 rounded-full bg-slate-200" />
-
-                          <div className="flex-1">
-                            <div className="h-4 w-32 rounded bg-slate-200" />
-
-                            <div className="mt-3 h-3 w-20 rounded bg-slate-100" />
-
-                            <div className="mt-5 h-4 w-full rounded bg-slate-100" />
-
-                            <div className="mt-2 h-4 w-4/5 rounded bg-slate-100" />
-                          </div>
-                        </div>
-                      </div>
-                    ))}
+                  <div
+                    className="text-center py-6 text-xs text-slate-400 font-semibold"
+                    style={{ fontWeight: 600 }}
+                  >
+                    Loading comments...
                   </div>
                 ) : comments.length === 0 ? (
-                  <div className="rounded-3xl border border-dashed border-slate-300 bg-slate-50 px-6 py-14 text-center">
-                    <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-white shadow-sm">
-                      <MessageCircle size={28} className="text-indigo-400" />
-                    </div>
-
-                    <h4 className="mt-5 text-lg font-bold text-slate-900">
-                      No comments yet
-                    </h4>
-
-                    <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-500">
-                      Be the first to share your thoughts, ask a question, or
-                      start a discussion about this article.
-                    </p>
-
-                    <button
-                      onClick={() =>
-                        document.querySelector("#comment-input")?.focus()
-                      }
-                      className="mt-5 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-700"
+                  <div className="text-center py-10 bg-slate-50 rounded-2xl border border-slate-100">
+                    <p
+                      className="text-xs text-slate-500 font-semibold"
+                      style={{ fontWeight: 600 }}
                     >
-                      Start the Conversation
-                    </button>
+                      No comments yet. Start the discussion!
+                    </p>
                   </div>
                 ) : (
-                  <div className="space-y-5">
-                    {comments.map((item) => {
-                      const user = item.user || {};
+                  comments.map((item) => {
+                    const user = item.user || {};
+                    const fullName =
+                      `${user.firstName || ""} ${user.lastName || ""}`.trim() ||
+                      "GuideX User";
 
-                      const fullName =
-                        `${user.firstName || ""} ${
-                          user.lastName || ""
-                        }`.trim() || "GuideX User";
-
-                      return (
-                        <div
-                          key={item._id}
-                          className="group rounded-3xl border border-slate-200 bg-white p-5 shadow-sm transition-all duration-200 hover:border-indigo-100 hover:shadow-md sm:p-6"
-                        >
-                          <div className="flex gap-4">
-                            {user.profileImage ? (
-                              <img
-                                src={getImageUrl(user.profileImage)}
-                                alt={fullName}
-                                className="h-11 w-11 shrink-0 rounded-full object-cover ring-2 ring-indigo-50"
-                              />
-                            ) : (
-                              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 text-sm font-bold text-white">
-                                {fullName.charAt(0).toUpperCase()}
-                              </div>
-                            )}
-
-                            <div className="min-w-0 flex-1">
-                              <div className="flex flex-wrap items-center gap-2">
-                                <h4 className="text-sm font-bold text-slate-900">
-                                  {fullName}
-                                </h4>
-
-                                <span className="h-1 w-1 rounded-full bg-slate-300" />
-
-                                <span className="text-xs text-slate-400">
-                                  {formatDate(item.createdAt)}
-                                </span>
-                              </div>
-
-                              <p className="mt-3 text-sm leading-7 text-slate-600">
-                                {item.comment}
-                              </p>
-
-                              <div className="mt-4 flex items-center gap-5">
-                                <button className="text-xs font-semibold text-slate-400 transition hover:text-indigo-600">
-                                  Reply
-                                </button>
-
-                                <button className="text-xs font-semibold text-slate-400 transition hover:text-red-500">
-                                  Like
-                                </button>
-                              </div>
+                    return (
+                      <div
+                        key={item._id}
+                        className="rounded-2xl border border-slate-200 bg-slate-50/50 p-4 sm:p-5"
+                      >
+                        <div className="flex gap-3">
+                          {user.profileImage ? (
+                            <img
+                              src={getImageUrl(user.profileImage)}
+                              alt={fullName}
+                              className="h-9 w-9 shrink-0 rounded-xl object-cover border border-slate-200"
+                            />
+                          ) : (
+                            <div
+                              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-black text-white text-xs font-semibold"
+                              style={{ fontWeight: 600 }}
+                            >
+                              {fullName.charAt(0).toUpperCase()}
                             </div>
+                          )}
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center justify-between">
+                              <h4
+                                className="text-xs font-semibold text-slate-900"
+                                style={{ fontWeight: 600 }}
+                              >
+                                {fullName}
+                              </h4>
+                              <span
+                                className="text-[10px] text-slate-400 font-semibold"
+                                style={{ fontWeight: 600 }}
+                              >
+                                {formatDate(item.createdAt)}
+                              </span>
+                            </div>
+                            <p
+                              className="mt-2 text-xs leading-relaxed text-slate-700 font-medium"
+                              style={{ fontWeight: 600 }}
+                            >
+                              {item.comment}
+                            </p>
                           </div>
                         </div>
-                      );
-                    })}
-                  </div>
+                      </div>
+                    );
+                  })
                 )}
               </div>
-            </>
+            </div>
           ) : (
-            <div className="overflow-hidden rounded-3xl border border-slate-200 bg-gradient-to-br from-slate-50 via-white to-indigo-50/40">
-              <div className="relative px-6 py-14 text-center sm:px-10 sm:py-16">
-                <div className="absolute -left-20 -top-20 h-48 w-48 rounded-full bg-indigo-100/50 blur-3xl" />
-
-                <div className="absolute -bottom-20 -right-20 h-48 w-48 rounded-full bg-violet-100/50 blur-3xl" />
-
-                <div className="relative mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border border-slate-200 bg-white shadow-sm">
-                  <MessageSquareOff size={28} className="text-slate-400" />
-                </div>
-
-                <h3 className="relative mt-6 text-2xl font-bold text-slate-900">
-                  Comments are currently disabled
-                </h3>
-
-                <p className="relative mx-auto mt-3 max-w-lg text-sm leading-7 text-slate-500">
-                  The author or administrator has disabled comments for this
-                  article. You can still read the article and share it with
-                  others.
-                </p>
-
-                <div className="relative mx-auto mt-7 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-500 shadow-sm">
-                  <span className="h-2 w-2 rounded-full bg-slate-400" />
-                  Discussion unavailable for this article
-                </div>
-              </div>
+            <div className="rounded-3xl border border-slate-200 bg-white p-10 text-center shadow-xs">
+              <MessageSquareOff
+                size={24}
+                className="mx-auto text-slate-400 mb-2"
+              />
+              <h3
+                className="text-sm font-semibold text-slate-900"
+                style={{ fontWeight: 600 }}
+              >
+                Comments are disabled
+              </h3>
+              <p
+                className="text-xs text-slate-500 font-medium mt-1"
+                style={{ fontWeight: 600 }}
+              >
+                The author has turned off comments for this article.
+              </p>
             </div>
           )}
         </section>
 
         {/* ==========================================
-            RELATED BLOGS
+            RELATED BLOGS SECTION
         ========================================== */}
-
         {blog.relatedBlogs?.length > 0 && (
-          <section className="mt-20 border-t border-slate-200 pt-16">
-            <div className="flex items-end justify-between">
+          <section className="mx-auto mt-16 max-w-4xl border-t border-slate-200 pt-12">
+            <div className="flex items-center justify-between mb-6">
               <div>
-                <p className="text-sm font-bold uppercase tracking-wider text-indigo-600">
-                  Keep Reading
-                </p>
-
-                <h2 className="mt-2 text-3xl font-bold text-slate-950">
+                <span
+                  className="text-[10px] uppercase font-semibold tracking-wider text-blue-600"
+                  style={{ fontWeight: 600 }}
+                >
+                  Explore More
+                </span>
+                <h2
+                  className="text-lg font-semibold text-slate-950 tracking-tight"
+                  style={{ fontWeight: 600 }}
+                >
                   Related Articles
                 </h2>
-
-                <p className="mt-2 text-sm text-slate-500">
-                  Continue exploring topics related to this article.
-                </p>
               </div>
-
               <Link
                 to="/blogs"
-                className="hidden items-center gap-2 text-sm font-bold text-indigo-600 sm:flex"
+                className="text-xs font-semibold text-blue-600 hover:text-blue-800 transition"
+                style={{ fontWeight: 600 }}
               >
-                View All
-                <ArrowRight size={17} />
+                View Feed &rarr;
               </Link>
             </div>
 
-            <div className="mt-9 grid gap-7 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-6 md:grid-cols-2">
               {blog.relatedBlogs.map((relatedBlog) => (
                 <Link
                   key={relatedBlog._id}
                   to={`/blogs/${relatedBlog._id}`}
-                  className="group overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:border-indigo-200 hover:shadow-xl"
+                  className="group overflow-hidden rounded-3xl border border-slate-200 bg-white p-5 shadow-xs transition hover:border-blue-300 hover:shadow-md flex flex-col justify-between"
                 >
-                  <div className="aspect-[16/9] overflow-hidden bg-gradient-to-br from-indigo-100 to-emerald-100">
-                    {relatedBlog.coverImage ? (
-                      <img
-                        src={getImageUrl(relatedBlog.coverImage)}
-                        alt={relatedBlog.title}
-                        className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-                      />
-                    ) : (
-                      <div className="flex h-full items-center justify-center">
-                        <BookOpen size={40} className="text-indigo-300" />
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="p-6">
-                    <span className="text-xs font-bold text-indigo-600">
+                  <div>
+                    <div className="aspect-[16/9] overflow-hidden rounded-2xl bg-slate-100 mb-4">
+                      {relatedBlog.coverImage ? (
+                        <img
+                          src={getImageUrl(relatedBlog.coverImage)}
+                          alt={relatedBlog.title}
+                          className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+                        />
+                      ) : (
+                        <div className="flex h-full items-center justify-center">
+                          <BookOpen size={28} className="text-slate-400" />
+                        </div>
+                      )}
+                    </div>
+                    <span
+                      className="text-[10px] font-semibold text-blue-600 uppercase tracking-wider"
+                      style={{ fontWeight: 600 }}
+                    >
                       {relatedBlog.category}
                     </span>
-
-                    <h3 className="mt-3 line-clamp-2 text-lg font-bold leading-snug text-slate-950 transition group-hover:text-indigo-600">
+                    <h3
+                      className="mt-1 line-clamp-2 text-sm font-semibold text-slate-950 group-hover:text-blue-600 transition"
+                      style={{ fontWeight: 600 }}
+                    >
                       {relatedBlog.title}
                     </h3>
+                  </div>
 
-                    {relatedBlog.excerpt && (
-                      <p className="mt-3 line-clamp-2 text-sm leading-6 text-slate-500">
-                        {relatedBlog.excerpt}
-                      </p>
-                    )}
-
-                    <div className="mt-5 flex items-center justify-between">
-                      <span className="text-xs text-slate-400">
-                        {formatDate(
-                          relatedBlog.publishedAt || relatedBlog.createdAt
-                        )}
-                      </span>
-
-                      <span className="flex items-center gap-1 text-xs font-semibold text-indigo-600">
-                        Read
-                        <ArrowRight
-                          size={14}
-                          className="transition-transform group-hover:translate-x-1"
-                        />
-                      </span>
-                    </div>
+                  <div
+                    className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400 font-semibold"
+                    style={{ fontWeight: 600 }}
+                  >
+                    <span>
+                      {formatDate(
+                        relatedBlog.publishedAt || relatedBlog.createdAt
+                      )}
+                    </span>
+                    <span className="text-blue-600 flex items-center gap-1 group-hover:translate-x-0.5 transition">
+                      Read article <ArrowRight size={12} />
+                    </span>
                   </div>
                 </Link>
               ))}

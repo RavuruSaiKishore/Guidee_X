@@ -25,6 +25,7 @@ const CreateCoursePage = () => {
     subCategory: "",
     level: "Beginner",
     language: "English",
+    isPaid: true,
     price: 0,
     compareAtPrice: 0,
     isPublished: true,
@@ -104,250 +105,187 @@ const CreateCoursePage = () => {
   };
 
   // Helper to load sample test data instantly
- const loadSampleData = () => {
-   setForm({
-     title: "Data Structures & Algorithms Masterclass (DSA)",
-     subtitle:
-       "Master arrays, strings, linked lists, trees, graphs, and dynamic programming.",
-     description:
-       "Comprehensive technical curriculum for computer science students.",
-     previewVideoUrl: "https://www.youtube.com/embed/8hly31xKli0",
-     category: "Coding Roadmaps",
-     subCategory: "Data Structures & Algorithms",
-     level: "Intermediate",
-     language: "English",
-     price: 49,
-     compareAtPrice: 199,
-     isPublished: true,
-   });
+  const loadSampleData = () => {
+    setForm({
+      title: "Civil Engineering & Structural Design Masterclass",
+      subtitle:
+        "Master AutoCAD, STAAD.Pro, Reinforced Concrete Design, and Geotechnical Engineering.",
+      description:
+        "A comprehensive civil engineering curriculum covering structural analysis, earthquake-resistant design, surveying, and modern construction project management.",
+      thumbnail: "/uploads/civil-thumb.jpg",
+      previewVideoUrl: "https://www.youtube.com/embed/nTZc1FsxvfM",
+      category: "Engineering",
+      subCategory: "Civil Engineering",
+      level: "Intermediate",
+      language: "English",
+      isPaid: true,
+      price: 89,
+      compareAtPrice: 249,
+      isPublished: true,
+    });
 
-   // Helper to generate distinct, realistic looking questions
-   const generateMCQs = (topic) => {
-     const questions = [
-       {
-         q: `Which of the following is true about ${topic} time complexity?`,
-         opts: [
-           "O(N) is always best",
-           "O(1) is constant time",
-           "O(N^2) is faster than O(N)",
-           "None of the above",
-         ],
-         ans: 1,
-       },
-       {
-         q: `In the context of ${topic}, what is the main advantage of using a pointer?`,
-         opts: [
-           "Memory reduction",
-           "Faster access",
-           "Direct memory manipulation",
-           "All of the above",
-         ],
-         ans: 3,
-       },
-       {
-         q: `What data structure best supports ${topic} operations?`,
-         opts: ["Stack", "Queue", "Hash Table", "All of the above"],
-         ans: 2,
-       },
-       {
-         q: `When is ${topic} typically utilized in industry?`,
-         opts: [
-           "Data indexing",
-           "UI Rendering",
-           "Database queries",
-           "All of the above",
-         ],
-         ans: 3,
-       },
-       {
-         q: `What is the space complexity of ${topic} recursive approach?`,
-         opts: ["O(N)", "O(1)", "O(log N)", "O(N^2)"],
-         ans: 0,
-       },
-       {
-         q: `How does ${topic} improve performance?`,
-         opts: [
-           "Cache locality",
-           "Reducing redundant calculations",
-           "Decreasing memory usage",
-           "All of the above",
-         ],
-         ans: 3,
-       },
-       {
-         q: `Which algorithm is best suited for ${topic}?`,
-         opts: ["Dijkstra", "QuickSort", "Kadane's", "Depends on use case"],
-         ans: 3,
-       },
-       {
-         q: `What is the worst-case scenario for ${topic}?`,
-         opts: [
-           "Sorted input",
-           "Empty input",
-           "Reverse sorted input",
-           "All of the above",
-         ],
-         ans: 2,
-       },
-       {
-         q: `Does ${topic} require extra space?`,
-         opts: ["Always", "Never", "Sometimes", "Only on heap"],
-         ans: 2,
-       },
-       {
-         q: `Is ${topic} stable?`,
-         opts: ["Yes", "No", "Depends on implementation", "Only in Java"],
-         ans: 2,
-       },
-     ];
+    const generateMCQs = (topic) => {
+      return Array.from({ length: 5 }).map((_, i) => ({
+        questionText: `What is a fundamental engineering parameter or safety check evaluated in ${topic}?`,
+        options: [
+          "Ultimate load capacity",
+          "Factor of safety against sliding",
+          "Deflection limits",
+          "All of the above",
+        ],
+        correctOptionIndex: 3,
+        explanation:
+          "Standard civil engineering design criteria applied across structural and geotechnical analysis.",
+      }));
+    };
 
-     return questions.map((item) => ({
-       questionText: item.q,
-       options: item.opts,
-       correctOptionIndex: item.ans,
-       explanation: `The correct answer is index ${item.ans} based on standard algorithm analysis.`,
-     }));
-   };
-
-   setModules([
-     {
-       title: "Module 1: Array & String Manipulation",
-       notesFile: null,
-       notesFileName: "dsa-arrays.pdf",
-       lessons: [
-         {
-           title: "Time Complexity Analysis",
-           description: "Big O basics.",
-           videoUrl: "https://www.youtube.com/embed/8hly31xKli0",
-           duration: 30,
-           isPreviewFree: true,
-           type: "video",
-         },
-         {
-           title: "Sliding Window Pattern",
-           description: "Optimizing subarray problems.",
-           videoUrl: "https://www.youtube.com/embed/8hly31xKli0",
-           duration: 40,
-           isPreviewFree: false,
-           type: "video",
-         },
-       ],
-       assignment: {
-         title: "Arrays Assessment",
-         description: "10 MCQs on Array logic",
-         questions: generateMCQs("Arrays"),
-       },
-       codingProblem: {
-         title: "Two Sum",
-         problemSlug: "two-sum",
-         difficulty: "Easy",
-         description: "Find two numbers that add to target.",
-       },
-     },
-     {
-       title: "Module 2: Linked Lists & Recursion",
-       notesFile: null,
-       notesFileName: "linked-lists.pdf",
-       lessons: [
-         {
-           title: "Singly Linked List",
-           description: "Node traversal.",
-           videoUrl: "https://www.youtube.com/embed/8hly31xKli0",
-           duration: 35,
-           isPreviewFree: false,
-           type: "video",
-         },
-         {
-           title: "Recursive Backtracking",
-           description: "Solving maze.",
-           videoUrl: "https://www.youtube.com/embed/8hly31xKli0",
-           duration: 45,
-           isPreviewFree: false,
-           type: "video",
-         },
-       ],
-       assignment: {
-         title: "Linked List Assessment",
-         description: "10 MCQs on Pointers",
-         questions: generateMCQs("Linked Lists"),
-       },
-       codingProblem: {
-         title: "Reverse Linked List",
-         problemSlug: "reverse-ll",
-         difficulty: "Medium",
-         description: "Reverse list in-place.",
-       },
-     },
-     {
-       title: "Module 3: Trees & Graphs",
-       notesFile: null,
-       notesFileName: "trees-graphs.pdf",
-       lessons: [
-         {
-           title: "BST Properties",
-           description: "Binary Search Tree.",
-           videoUrl: "https://www.youtube.com/embed/8hly31xKli0",
-           duration: 40,
-           isPreviewFree: false,
-           type: "video",
-         },
-         {
-           title: "BFS Traversal",
-           description: "Level-order traversal.",
-           videoUrl: "https://www.youtube.com/embed/8hly31xKli0",
-           duration: 50,
-           isPreviewFree: false,
-           type: "video",
-         },
-       ],
-       assignment: {
-         title: "Trees Assessment",
-         description: "10 MCQs on Nodes",
-         questions: generateMCQs("Trees"),
-       },
-       codingProblem: {
-         title: "Invert Binary Tree",
-         problemSlug: "invert-tree",
-         difficulty: "Medium",
-         description: "Swap left and right children.",
-       },
-     },
-     {
-       title: "Module 4: Dynamic Programming",
-       notesFile: null,
-       notesFileName: "dp-guide.pdf",
-       lessons: [
-         {
-           title: "Memoization",
-           description: "Top-down approach.",
-           videoUrl: "https://www.youtube.com/embed/8hly31xKli0",
-           duration: 45,
-           isPreviewFree: false,
-           type: "video",
-         },
-         {
-           title: "Knapsack Problem",
-           description: "Weight optimization.",
-           videoUrl: "https://www.youtube.com/embed/8hly31xKli0",
-           duration: 55,
-           isPreviewFree: false,
-           type: "video",
-         },
-       ],
-       assignment: {
-         title: "DP Assessment",
-         description: "10 MCQs on DP",
-         questions: generateMCQs("DP"),
-       },
-       codingProblem: {
-         title: "Climbing Stairs",
-         problemSlug: "climbing-stairs",
-         difficulty: "Easy",
-         description: "Count distinct ways to top.",
-       },
-     },
-   ]);
- };
+    setModules([
+      {
+        title: "Module 1: Advanced Structural Analysis & STAAD.Pro",
+        notes: [
+          {
+            title: "Structural Analysis & Matrix Methods Manual",
+            fileUrl: "/notes/civil/structural-analysis.pdf",
+          },
+        ],
+        lessons: [
+          {
+            title: "Indeterminate Structures & Moment Distribution Method",
+            description: "Analyzing continuous beams and rigid frames.",
+            videoUrl: "https://www.youtube.com/embed/nTZc1FsxvfM",
+            duration: 55,
+            type: "video",
+          },
+          {
+            title: "Finite Element Modeling in STAAD.Pro",
+            description: "Applying wind and seismic loads.",
+            videoUrl: "https://www.youtube.com/embed/VLJegURiL84",
+            duration: 60,
+            type: "video",
+          },
+        ],
+        assignment: {
+          title: "Structural Analysis Assessment",
+          questions: generateMCQs("Structural Analysis"),
+        },
+        codingProblem: {
+          title: "Bending Moment Diagram Calculator",
+          problemSlug: "bending-moment-calculator",
+          difficulty: "Easy",
+          description:
+            "Compute shear forces and bending moments at discrete points.",
+        },
+      },
+      {
+        title: "Module 2: Reinforced Concrete (RCC) & Steel Design",
+        notes: [
+          {
+            title: "Limit State Design of RCC & Steel Structures",
+            fileUrl: "/notes/civil/rcc-steel-design.pdf",
+          },
+        ],
+        lessons: [
+          {
+            title: "Limit State Design of Beams, Columns, and Slabs",
+            description: "Reinforcement and flexural strength.",
+            videoUrl: "https://www.youtube.com/embed/tobVzXof8R4",
+            duration: 65,
+            type: "video",
+          },
+          {
+            title: "Design of Steel Connections and Truss Members",
+            description: "Bolted and welded gusset plate connections.",
+            videoUrl: "https://www.youtube.com/embed/Qn7zNoAKDgQ",
+            duration: 50,
+            type: "video",
+          },
+        ],
+        assignment: {
+          title: "RCC & Steel Design Quiz",
+          questions: generateMCQs("RCC & Steel Design"),
+        },
+        codingProblem: {
+          title: "Column Load Capacity Sizing",
+          problemSlug: "column-capacity-sizing",
+          difficulty: "Medium",
+          description:
+            "Determine the required cross-sectional area and steel reinforcement ratio.",
+        },
+      },
+      {
+        title: "Module 3: Geotechnical Engineering & Foundation Design",
+        notes: [
+          {
+            title: "Soil Mechanics & Foundation Engineering Guide",
+            fileUrl: "/notes/civil/geotechnical-guide.pdf",
+          },
+        ],
+        lessons: [
+          {
+            title: "Soil Classification, Permeability, and Effective Stress",
+            description: "Darcy's law and Mohr-Coulomb criteria.",
+            videoUrl: "https://www.youtube.com/embed/HCOmWVQsWFo",
+            duration: 50,
+            type: "video",
+          },
+          {
+            title: "Shallow and Deep Foundation Load Bearing Capacity",
+            description: "Terzaghi's theory and pile friction.",
+            videoUrl: "https://www.youtube.com/embed/HCOmWVQsWFo",
+            duration: 60,
+            type: "video",
+          },
+        ],
+        assignment: {
+          title: "Geotechnical Engineering Assessment",
+          questions: generateMCQs("Geotechnical Engineering"),
+        },
+        codingProblem: {
+          title: "Bearing Capacity Factor Solver",
+          problemSlug: "bearing-capacity-solver",
+          difficulty: "Medium",
+          description:
+            "Calculate ultimate and safe bearing capacity of strip footings.",
+        },
+      },
+      {
+        title: "Module 4: Construction Project Management & Surveying",
+        notes: [
+          {
+            title: "Construction Planning, CPM/PERT & Quantity Estimation",
+            fileUrl: "/notes/civil/project-management.pdf",
+          },
+        ],
+        lessons: [
+          {
+            title: "Critical Path Method (CPM) and Project Scheduling",
+            description: "Float calculations and cost optimization.",
+            videoUrl: "https://www.youtube.com/embed/Qn7zNoAKDgQ",
+            duration: 55,
+            type: "video",
+          },
+          {
+            title: "Advanced Surveying with Total Station and GIS",
+            description: "Contour mapping and site layout.",
+            videoUrl: "https://www.youtube.com/embed/VLJegURiL84",
+            duration: 45,
+            type: "video",
+          },
+        ],
+        assignment: {
+          title: "Project Management Quiz",
+          questions: generateMCQs("Construction Management"),
+        },
+        codingProblem: {
+          title: "Critical Path Float Calculator",
+          problemSlug: "critical-path-calculator",
+          difficulty: "Hard",
+          description:
+            "Compute early/late start, finish, and total float for network activities.",
+        },
+      },
+    ]);
+  };
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -660,37 +598,92 @@ const CreateCoursePage = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">
-                Selling Price ($)
-              </label>
-              <input
-                type="number"
-                min="0"
-                value={form.price}
-                onChange={(e) =>
-                  setForm({ ...form, price: Number(e.target.value) })
-                }
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-blue-600"
-                placeholder="0"
-              />
+          {/* Paid / Free Toggle Section */}
+          <div className="p-5 bg-gray-50 rounded-2xl border border-gray-200 space-y-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div>
+                <label className="block text-sm font-black text-gray-900">
+                  Course Access Type *
+                </label>
+                <p className="text-xs text-gray-500">
+                  Choose whether students can enroll in this course completely
+                  for free or if it requires purchase.
+                </p>
+              </div>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() =>
+                    setForm({
+                      ...form,
+                      isPaid: false,
+                      price: 0,
+                      compareAtPrice: 0,
+                    })
+                  }
+                  className={`px-6 py-2.5 rounded-xl font-bold text-xs transition cursor-pointer ${
+                    !form.isPaid
+                      ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/20"
+                      : "bg-white border border-gray-300 text-gray-600 hover:bg-gray-100"
+                  }`}
+                >
+                  Free Course
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setForm({ ...form, isPaid: true })}
+                  className={`px-6 py-2.5 rounded-xl font-bold text-xs transition cursor-pointer ${
+                    form.isPaid
+                      ? "bg-blue-600 text-white shadow-md shadow-blue-600/20"
+                      : "bg-white border border-gray-300 text-gray-600 hover:bg-gray-100"
+                  }`}
+                >
+                  Paid Course
+                </button>
+              </div>
             </div>
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">
-                Original Price ($)
-              </label>
-              <input
-                type="number"
-                min="0"
-                value={form.compareAtPrice}
-                onChange={(e) =>
-                  setForm({ ...form, compareAtPrice: Number(e.target.value) })
-                }
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-blue-600"
-                placeholder="199"
-              />
-            </div>
+
+            {form.isPaid && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-gray-200">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">
+                    Selling Price ($) *
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    required={form.isPaid}
+                    value={form.price}
+                    onChange={(e) =>
+                      setForm({ ...form, price: Number(e.target.value) })
+                    }
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-blue-600 bg-white"
+                    placeholder="99"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">
+                    Original Price ($)
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={form.compareAtPrice}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        compareAtPrice: Number(e.target.value),
+                      })
+                    }
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-blue-600 bg-white"
+                    placeholder="199"
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1">
                 Promo Trailer URL
@@ -732,7 +725,7 @@ const CreateCoursePage = () => {
               <button
                 type="button"
                 onClick={addModule}
-                className="flex items-center gap-1 px-4 py-2 rounded-xl bg-blue-50 text-blue-600 text-sm font-semibold hover:bg-blue-100"
+                className="flex items-center gap-1 px-4 py-2 rounded-xl bg-blue-50 text-blue-600 text-sm font-semibold hover:bg-blue-100 cursor-pointer"
               >
                 <Plus size={16} /> Add Module
               </button>
@@ -760,7 +753,7 @@ const CreateCoursePage = () => {
                     <button
                       type="button"
                       onClick={() => removeModule(modIdx)}
-                      className="p-2.5 rounded-xl bg-red-50 text-red-600"
+                      className="p-2.5 rounded-xl bg-red-50 text-red-600 cursor-pointer"
                     >
                       <Trash2 size={18} />
                     </button>
@@ -876,7 +869,7 @@ const CreateCoursePage = () => {
                           <button
                             type="button"
                             onClick={() => removeLesson(modIdx, lesIdx)}
-                            className="text-red-500 hover:text-red-700"
+                            className="text-red-500 hover:text-red-700 cursor-pointer"
                           >
                             <Trash2 size={16} />
                           </button>
@@ -887,7 +880,7 @@ const CreateCoursePage = () => {
                   <button
                     type="button"
                     onClick={() => addLesson(modIdx)}
-                    className="text-xs font-bold text-blue-600 hover:underline"
+                    className="text-xs font-bold text-blue-600 hover:underline cursor-pointer"
                   >
                     + Add Lesson
                   </button>
@@ -923,7 +916,7 @@ const CreateCoursePage = () => {
                             ].assignment.questions.filter((_, i) => i !== qIdx);
                             setModules(up);
                           }}
-                          className="text-red-500 hover:text-red-700 font-bold"
+                          className="text-red-500 hover:text-red-700 font-bold cursor-pointer"
                         >
                           Remove
                         </button>
@@ -978,7 +971,7 @@ const CreateCoursePage = () => {
                   <button
                     type="button"
                     onClick={() => addMCQ(modIdx)}
-                    className="text-xs font-bold text-indigo-600 hover:underline inline-flex items-center gap-1"
+                    className="text-xs font-bold text-indigo-600 hover:underline inline-flex items-center gap-1 cursor-pointer"
                   >
                     + Add MCQ Question ({mod.assignment.questions.length}/10)
                   </button>
@@ -1061,7 +1054,7 @@ const CreateCoursePage = () => {
 
           <button
             type="submit"
-            className="w-full py-4 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold shadow-lg hover:shadow-xl transition"
+            className="w-full py-4 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold shadow-lg hover:shadow-xl transition cursor-pointer"
           >
             Publish Professional Course
           </button>

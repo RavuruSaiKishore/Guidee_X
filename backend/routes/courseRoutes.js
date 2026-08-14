@@ -15,6 +15,9 @@ import {
   getStudentEnrolledCourses,
   submitAssessmentScore,
   solveCodingProblem,
+  getCourseCertificate,
+  addOrUpdateReview,
+  askAI,
 } from "../controllers/courseController.js";
 import { protect } from "../middleware/authMiddleware.js"; 
 import { upload } from "../middleware/upload.js";
@@ -37,6 +40,8 @@ router.get("/:id/enroll", protect, getEnrollmentByCourseId);
 router.get("/student/enrolled", protect, getStudentEnrolledCourses);
 router.put("/:id/assessment", protect, submitAssessmentScore);
 router.put("/:id/coding-solved", protect, solveCodingProblem);
-
+router.post("/:id/review", protect, addOrUpdateReview);
+router.get("/:id/certificate", protect, getCourseCertificate);
+router.post("/doubts/ask-ai/:courseId", protect, askAI);
 
 export default router;

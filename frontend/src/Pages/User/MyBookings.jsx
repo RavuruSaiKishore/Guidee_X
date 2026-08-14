@@ -9,6 +9,9 @@ import {
   Timer,
   AlertTriangle,
   X,
+  Sparkles,
+  ChevronRight,
+  ShieldAlert,
 } from "lucide-react";
 import { ToastContainer, toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
@@ -19,7 +22,9 @@ const MyBookings = () => {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [activeTab, setActiveTab] = useState("all");
   const navigate = useNavigate();
+
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [selectedBookingId, setSelectedBookingId] = useState(null);
   const [cancelReason, setCancelReason] = useState("");
@@ -32,64 +37,43 @@ const MyBookings = () => {
     fetchBookings();
   }, []);
 
-  // Update every second for live countdown timers
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentTime(new Date());
     }, 1000);
-
     return () => clearInterval(interval);
   }, []);
 
   const fetchBookings = async () => {
     try {
       const token = localStorage.getItem("UserToken");
-
       const res = await fetch(`${API_BASE_URL}/api/booking/mybookings`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
-
       const data = await res.json();
-
       if (res.ok) {
         setBookings(data.bookings);
       }
     } catch (err) {
       console.log(err);
+      toast.error("Failed to load your bookings.");
     } finally {
       setLoading(false);
     }
   };
 
-  const statusColor = (status) => {
+  const getStatusBadge = (status) => {
     switch (status) {
       case "Confirmed":
-        return "bg-green-100 text-green-700";
+        return "bg-blue-50 text-blue-700 border border-blue-200";
       case "Completed":
-        return "bg-blue-100 text-blue-700";
+        return "bg-slate-900 text-white border border-slate-900";
       case "Cancelled":
-        return "bg-red-100 text-red-700";
+        return "bg-red-50 text-red-600 border border-red-200";
       case "Rejected":
-        return "bg-gray-200 text-gray-700";
+        return "bg-slate-100 text-slate-600 border border-slate-200";
       default:
-        return "bg-yellow-100 text-yellow-700";
-    }
-  };
-
-  const borderColor = (status) => {
-    switch (status) {
-      case "Confirmed":
-        return "border-green-500";
-      case "Completed":
-        return "border-blue-500";
-      case "Cancelled":
-        return "border-red-500";
-      case "Rejected":
-        return "border-gray-400";
-      default:
-        return "border-yellow-500";
+        return "bg-amber-50 text-amber-700 border border-amber-200";
     }
   };
 
@@ -107,23 +91,18 @@ const MyBookings = () => {
     let [time, period] = booking.startTime.split(" ");
     let [hours, minutes] = time.split(":").map(Number);
     period = period.toLowerCase();
-
     if (period === "pm" && hours !== 12) hours += 12;
     if (period === "am" && hours === 12) hours = 0;
-
     meetingStart.setHours(hours, minutes, 0, 0);
 
     let [endTime, endPeriod] = booking.endTime.split(" ");
     let [endHours, endMinutes] = endTime.split(":").map(Number);
     endPeriod = endPeriod.toLowerCase();
-
     if (endPeriod === "pm" && endHours !== 12) endHours += 12;
     if (endPeriod === "am" && endHours === 12) endHours = 0;
-
     meetingEnd.setHours(endHours, endMinutes, 0, 0);
 
     const joinTime = new Date(meetingStart.getTime() - 10 * 60 * 1000);
-
     return { meetingStart, meetingEnd, joinTime };
   };
 
@@ -131,7 +110,6 @@ const MyBookings = () => {
     const hrs = Math.floor(seconds / 3600);
     const mins = Math.floor((seconds % 3600) / 60);
     const secs = seconds % 60;
-
     return `${hrs.toString().padStart(2, "0")}:${mins
       .toString()
       .padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
@@ -142,13 +120,11 @@ const MyBookings = () => {
     const { meetingStart } = getMeetingTimes(booking);
     const now = new Date();
     const hoursLeft = (meetingStart - now) / (1000 * 60 * 60);
-
     const isEligible = hoursLeft >= 24 && booking.paymentStatus === "Paid";
     setRefundDetails({
       amount: booking.amount,
       eligible: isEligible,
     });
-
     setShowCancelModal(true);
   };
 
@@ -159,7 +135,6 @@ const MyBookings = () => {
 
     try {
       const token = localStorage.getItem("UserToken");
-
       const res = await fetch(
         `${API_BASE_URL}/api/booking/cancelbooking/${selectedBookingId}`,
         {
@@ -168,33 +143,28 @@ const MyBookings = () => {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({
-            cancellationReason: cancelReason,
-          }),
+          body: JSON.stringify({ cancellationReason: cancelReason }),
         }
       );
-
       const data = await res.json();
 
       if (res.ok) {
         toast.success(data.message);
-
         setBookings((prev) =>
-          prev.map((booking) =>
-            booking._id === selectedBookingId
+          prev.map((b) =>
+            b._id === selectedBookingId
               ? {
-                  ...booking,
+                  ...b,
                   bookingStatus: "Cancelled",
                   cancelledBy: "Student",
                   cancellationReason: cancelReason,
                   paymentStatus: refundDetails.eligible
                     ? "Refunded"
-                    : booking.paymentStatus,
+                    : b.paymentStatus,
                 }
-              : booking
+              : b
           )
         );
-
         setShowCancelModal(false);
         setSelectedBookingId(null);
         setCancelReason("");
@@ -214,7 +184,6 @@ const MyBookings = () => {
         method: "GET",
         headers: { Authorization: `Bearer ${token}` },
       });
-
       const data = await res.json();
       if (!res.ok || !data.success) {
         return toast.error(data.message || "Unable to join meeting.");
@@ -226,7 +195,6 @@ const MyBookings = () => {
       });
 
       window.open(data.googleMeetLink, "_blank");
-
       setTimeout(() => {
         navigate(`/review/${bookingId}`);
       }, 3000);
@@ -237,32 +205,22 @@ const MyBookings = () => {
   };
 
   const handleDeleteBooking = async (bookingId) => {
-    const confirmDelete = window.confirm(
-      "Are you sure you want to delete this booking?"
-    );
-
-    if (!confirmDelete) return;
+    if (!window.confirm("Are you sure you want to delete this booking record?"))
+      return;
 
     try {
       const token = localStorage.getItem("UserToken");
-
       const res = await fetch(
         `${API_BASE_URL}/api/booking/delete/${bookingId}`,
         {
           method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
-
       const data = await res.json();
-
       if (res.ok) {
         toast.success(data.message);
-        setBookings((prev) =>
-          prev.filter((booking) => booking._id !== bookingId)
-        );
+        setBookings((prev) => prev.filter((b) => b._id !== bookingId));
       } else {
         toast.error(data.message);
       }
@@ -272,47 +230,127 @@ const MyBookings = () => {
     }
   };
 
+  const filteredBookings = bookings.filter((b) => {
+    if (activeTab === "all") return true;
+    if (activeTab === "upcoming") return b.bookingStatus === "Confirmed";
+    if (activeTab === "completed") return b.bookingStatus === "Completed";
+    if (activeTab === "cancelled") return b.bookingStatus === "Cancelled";
+    return true;
+  });
+
   if (loading) {
     return (
-      <div className="fixed inset-0 bg-white flex flex-col items-center justify-center">
+      <div
+        className="fixed inset-0 bg-white flex flex-col items-center justify-center"
+        style={{ fontFamily: "'Poppins', sans-serif", fontStyle: "normal" }}
+      >
         <div className="relative">
-          <div className="w-14 h-14 rounded-full border-4 border-blue-100"></div>
+          <div className="w-14 h-14 rounded-full border-4 border-slate-100"></div>
           <div className="absolute inset-0 w-14 h-14 rounded-full border-4 border-transparent border-t-blue-600 animate-spin"></div>
         </div>
-        <p className="mt-5 text-gray-700 font-medium">
+        <p
+          className="mt-5 text-slate-900 font-semibold tracking-tight"
+          style={{ fontWeight: 600 }}
+        >
           Loading your bookings...
         </p>
-        <p className="mt-1 text-sm text-gray-400">Please wait a moment</p>
+        <p
+          className="mt-1 text-xs text-slate-500 font-medium"
+          style={{ fontWeight: 600 }}
+        >
+          Please wait a moment
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 py-10">
+    <div
+      className="min-h-screen bg-slate-50 py-10 text-slate-900"
+      style={{ fontFamily: "'Poppins', sans-serif", fontStyle: "normal" }}
+    >
       <ToastContainer position="top-right" autoClose={2000} />
-      <div className="max-w-6xl mx-auto px-6">
-        <div className="mb-10">
-          <h1 className="text-4xl font-bold">📅 My Bookings</h1>
-          <p className="text-gray-500 mt-2">
-            Manage all your mentoring sessions in one place.
-          </p>
+      <div className="max-w-6xl mx-auto px-4 sm:px-6">
+        {/* Header Section */}
+        <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <p
+              className="text-[10px] font-semibold uppercase tracking-widest text-blue-600"
+              style={{ fontWeight: 600 }}
+            >
+              Session Dashboard
+            </p>
+            <h1
+              className="mt-1 text-3xl font-semibold tracking-tight text-slate-900"
+              style={{ fontWeight: 600 }}
+            >
+              My Bookings
+            </h1>
+            <p
+              className="mt-1 text-xs sm:text-sm text-slate-600 font-medium"
+              style={{ fontWeight: 600 }}
+            >
+              Manage all your professional mentoring sessions and live connects
+              in one place.
+            </p>
+          </div>
+          <button
+            onClick={() => navigate("/mentors")}
+            className="flex items-center justify-center gap-2 rounded-2xl bg-black px-5 py-3 text-xs font-semibold text-white shadow-sm transition hover:bg-slate-800"
+            style={{ fontWeight: 600 }}
+          >
+            <Sparkles size={14} className="text-blue-400" />
+            Book New Session
+          </button>
         </div>
 
-        {bookings.length === 0 ? (
-          <div className="bg-white rounded-3xl shadow-lg p-16 text-center">
-            <img
-              src="https://cdn-icons-png.flaticon.com/512/4076/4076478.png"
-              className="w-36 mx-auto"
-              alt="No bookings"
-            />
-            <h2 className="text-3xl font-bold mt-8">No Bookings Yet</h2>
-            <p className="text-gray-500 mt-3">
-              Book your first mentoring session and start learning.
+        {/* Filter Tabs */}
+        <div className="flex gap-2 overflow-x-auto pb-4 mb-6 border-b border-slate-200">
+          {["all", "upcoming", "completed", "cancelled"].map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`px-4 py-2 rounded-xl text-xs font-semibold uppercase tracking-wider transition ${
+                activeTab === tab
+                  ? "bg-blue-600 text-white shadow-sm"
+                  : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-100"
+              }`}
+              style={{ fontWeight: 600 }}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
+
+        {/* Bookings List */}
+        {filteredBookings.length === 0 ? (
+          <div className="bg-white rounded-3xl border border-slate-200 p-16 text-center shadow-sm">
+            <div className="mx-auto w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mb-4">
+              <Calendar size={28} />
+            </div>
+            <h2
+              className="text-xl font-semibold text-slate-900"
+              style={{ fontWeight: 600 }}
+            >
+              No Bookings Found
+            </h2>
+            <p
+              className="text-slate-500 text-xs sm:text-sm mt-1 mb-6 font-medium"
+              style={{ fontWeight: 600 }}
+            >
+              You don't have any bookings matching this filter category.
             </p>
+            <button
+              onClick={() => navigate("/mentors")}
+              className="rounded-xl bg-blue-600 px-6 py-2.5 text-xs font-semibold text-white shadow-sm transition hover:bg-blue-700"
+              style={{ fontWeight: 600 }}
+            >
+              Explore Mentors
+            </button>
           </div>
         ) : (
           <div className="space-y-6">
-            {bookings.map((booking) => {
+            {filteredBookings.map((booking) => {
               const mentor = booking.mentor;
               const { meetingStart, meetingEnd, joinTime } =
                 getMeetingTimes(booking);
@@ -336,167 +374,244 @@ const MyBookings = () => {
               return (
                 <div
                   key={booking._id}
-                  className={`bg-white rounded-3xl border-l-4 ${borderColor(
-                    booking.bookingStatus
-                  )} shadow-md hover:shadow-xl transition duration-300`}
+                  className="bg-white rounded-3xl border border-slate-200 shadow-sm transition-all duration-300 hover:shadow-md overflow-hidden"
                 >
-                  <div className="p-6">
-                    {/* Header */}
-                    <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-5">
+                  <div className="p-6 sm:p-8">
+                    {/* Top Row: Mentor info & Status */}
+                    <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4 pb-6 border-b border-slate-100">
                       <div
                         onClick={() =>
                           navigate(`/mentor/profile/${mentor?._id}`)
                         }
-                        className="flex gap-4 cursor-pointer group"
+                        className="flex gap-4 cursor-pointer group items-center"
                       >
                         <img
                           src={image}
                           alt={`${mentor?.firstName} ${mentor?.lastName}`}
-                          className="w-16 h-16 rounded-full object-cover border-2 border-blue-100 group-hover:border-blue-500 transition"
+                          className="w-14 h-14 rounded-2xl object-cover border border-slate-200 group-hover:border-blue-600 transition"
                         />
                         <div>
-                          <h2 className="text-xl font-bold group-hover:text-blue-600 transition">
+                          <h2
+                            className="text-base sm:text-lg font-semibold text-slate-900 group-hover:text-blue-600 transition flex items-center gap-1.5"
+                            style={{ fontWeight: 600 }}
+                          >
                             {mentor?.firstName} {mentor?.lastName}
+                            <ChevronRight
+                              size={14}
+                              className="text-slate-400 group-hover:translate-x-0.5 transition"
+                            />
                           </h2>
-                          <p className="text-gray-500">{mentor?.profession}</p>
+                          <p
+                            className="text-xs text-slate-500 font-medium"
+                            style={{ fontWeight: 600 }}
+                          >
+                            {mentor?.profession || "Expert Mentor"}
+                          </p>
                         </div>
                       </div>
 
-                      <div className="text-right flex flex-col items-end gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
                         <span
-                          className={`px-4 py-2 rounded-full text-sm font-semibold ${statusColor(
+                          className={`px-3 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wide ${getStatusBadge(
                             booking.bookingStatus
                           )}`}
+                          style={{ fontWeight: 600 }}
                         >
                           {booking.bookingStatus}
                         </span>
 
                         <button
                           onClick={() => navigate(`/disputes`)}
-                          className="flex items-center gap-1 px-3 py-1 bg-amber-50 text-amber-700 hover:bg-amber-100 rounded-lg text-xs font-semibold transition"
+                          className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 border border-slate-200 text-slate-700 hover:bg-slate-100 rounded-full text-xs font-semibold transition"
+                          style={{ fontWeight: 600 }}
                         >
-                          <AlertTriangle size={14} />
-                          Report Issue / Dispute
+                          <ShieldAlert size={13} className="text-amber-600" />
+                          Report Issue
                         </button>
-
-                        <p className="text-xs text-gray-400 mt-1">
-                          Booked on{" "}
-                          {new Date(booking.createdAt).toLocaleDateString()}
-                        </p>
                       </div>
                     </div>
 
-                    {/* Booking Details */}
-                    <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-6 mt-8">
-                      <div className="flex items-center gap-3">
-                        <Calendar className="text-blue-600" size={20} />
+                    {/* Meta Grid */}
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-4 py-6">
+                      <div className="flex items-center gap-3 bg-slate-50 border border-slate-100 p-3.5 rounded-2xl">
+                        <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                          <Calendar size={16} />
+                        </div>
                         <div>
-                          <p className="text-gray-400 text-sm">Date</p>
-                          <p className="font-semibold">
+                          <p
+                            className="text-[10px] font-semibold text-slate-400 uppercase"
+                            style={{ fontWeight: 600 }}
+                          >
+                            Date
+                          </p>
+                          <p
+                            className="text-xs font-semibold text-slate-800"
+                            style={{ fontWeight: 600 }}
+                          >
                             {new Date(booking.sessionDate).toLocaleDateString()}
                           </p>
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-3">
-                        <Clock className="text-blue-600" size={20} />
+                      <div className="flex items-center gap-3 bg-slate-50 border border-slate-100 p-3.5 rounded-2xl">
+                        <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                          <Clock size={16} />
+                        </div>
                         <div>
-                          <p className="text-gray-400 text-sm">Time</p>
-                          <p className="font-semibold">{booking.startTime}</p>
+                          <p
+                            className="text-[10px] font-semibold text-slate-400 uppercase"
+                            style={{ fontWeight: 600 }}
+                          >
+                            Time
+                          </p>
+                          <p
+                            className="text-xs font-semibold text-slate-800"
+                            style={{ fontWeight: 600 }}
+                          >
+                            {booking.startTime}
+                          </p>
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-3">
-                        <BookOpen className="text-blue-600" size={20} />
+                      <div className="flex items-center gap-3 bg-slate-50 border border-slate-100 p-3.5 rounded-2xl">
+                        <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                          <BookOpen size={16} />
+                        </div>
                         <div>
-                          <p className="text-gray-400 text-sm">Session</p>
-                          <p className="font-semibold">{booking.sessionType}</p>
+                          <p
+                            className="text-[10px] font-semibold text-slate-400 uppercase"
+                            style={{ fontWeight: 600 }}
+                          >
+                            Session
+                          </p>
+                          <p
+                            className="text-xs font-semibold text-slate-800 truncate max-w-[100px]"
+                            style={{ fontWeight: 600 }}
+                          >
+                            {booking.sessionType}
+                          </p>
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-3">
-                        <Timer className="text-blue-600" size={20} />
+                      <div className="flex items-center gap-3 bg-slate-50 border border-slate-100 p-3.5 rounded-2xl">
+                        <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                          <Timer size={16} />
+                        </div>
                         <div>
-                          <p className="text-gray-400 text-sm">Duration</p>
-                          <p className="font-semibold">
+                          <p
+                            className="text-[10px] font-semibold text-slate-400 uppercase"
+                            style={{ fontWeight: 600 }}
+                          >
+                            Duration
+                          </p>
+                          <p
+                            className="text-xs font-semibold text-slate-800"
+                            style={{ fontWeight: 600 }}
+                          >
                             {booking.duration} min
                           </p>
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-3">
-                        <IndianRupee className="text-blue-600" size={20} />
+                      <div className="flex items-center gap-3 bg-slate-50 border border-slate-100 p-3.5 rounded-2xl col-span-2 md:col-span-1">
+                        <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                          <IndianRupee size={16} />
+                        </div>
                         <div>
-                          <p className="text-gray-400 text-sm">Amount</p>
-                          <p className="font-bold text-blue-600">
+                          <p
+                            className="text-[10px] font-semibold text-slate-400 uppercase"
+                            style={{ fontWeight: 600 }}
+                          >
+                            Amount
+                          </p>
+                          <p
+                            className="text-xs font-semibold text-blue-600"
+                            style={{ fontWeight: 600 }}
+                          >
                             ₹{booking.amount}
                           </p>
                         </div>
                       </div>
                     </div>
 
-                    {/* Payment */}
-                    <div className="mt-6 flex items-center gap-3">
-                      <CreditCard size={18} className="text-gray-500" />
-                      <span className="text-sm text-gray-600">Payment:</span>
-                      <span
-                        className={`font-semibold ${
-                          booking.paymentStatus === "Paid"
-                            ? "text-green-600"
-                            : booking.paymentStatus === "Refunded"
-                            ? "text-purple-600"
-                            : "text-yellow-600"
-                        }`}
+                    {/* Payment Status & Notes */}
+                    <div className="grid md:grid-cols-2 gap-4 mt-2">
+                      <div
+                        className="flex items-center gap-2.5 bg-slate-50 border border-slate-200 px-4 py-3 rounded-2xl text-xs font-semibold"
+                        style={{ fontWeight: 600 }}
                       >
-                        {booking.paymentStatus}
-                      </span>
+                        <CreditCard size={15} className="text-slate-500" />
+                        <span className="text-slate-500">Payment Status:</span>
+                        <span
+                          className={`font-semibold ${
+                            booking.paymentStatus === "Paid"
+                              ? "text-emerald-600"
+                              : booking.paymentStatus === "Refunded"
+                              ? "text-purple-600"
+                              : "text-amber-600"
+                          }`}
+                          style={{ fontWeight: 600 }}
+                        >
+                          {booking.paymentStatus}
+                        </span>
+                      </div>
+
+                      <div className="bg-slate-50 border border-slate-200 px-4 py-3 rounded-2xl text-xs">
+                        <span
+                          className="font-semibold text-slate-500 uppercase tracking-wide text-[10px] block mb-0.5"
+                          style={{ fontWeight: 600 }}
+                        >
+                          Session Notes
+                        </span>
+                        <p
+                          className="text-slate-700 font-medium truncate"
+                          style={{ fontWeight: 600 }}
+                        >
+                          {booking.notes ||
+                            "No custom instructions or notes added."}
+                        </p>
+                      </div>
                     </div>
 
-                    {/* Notes */}
-                    <div className="mt-6 border-l-4 border-blue-500 bg-blue-50 rounded-xl p-4">
-                      <p className="text-xs uppercase tracking-wide font-semibold text-blue-600">
-                        Session Notes
-                      </p>
-                      <p className="mt-2 text-gray-700">
-                        {booking.notes || "No notes added."}
-                      </p>
-                    </div>
-
-                    {/* Cancellation Details */}
+                    {/* Cancellation details box if cancelled */}
                     {booking.bookingStatus === "Cancelled" && (
-                      <div className="mt-6 rounded-xl border border-red-200 bg-red-50 p-4">
-                        <h3 className="text-sm font-semibold text-red-700 uppercase tracking-wide">
-                          Cancellation Details
-                        </h3>
-                        <div className="mt-3 space-y-2 text-sm">
-                          <p>
-                            <span className="font-medium text-gray-700">
-                              Cancelled By:
-                            </span>{" "}
-                            <span className="text-red-600 font-semibold">
-                              {booking.cancelledBy}
-                            </span>
-                          </p>
-                          <p>
-                            <span className="font-medium text-gray-700">
-                              Reason:
-                            </span>{" "}
-                            <span className="text-gray-600">
-                              {booking.cancellationReason ||
-                                "No reason provided."}
-                            </span>
-                          </p>
-                        </div>
+                      <div
+                        className="mt-4 rounded-2xl border border-red-200 bg-red-50/50 p-4 text-xs font-medium"
+                        style={{ fontWeight: 600 }}
+                      >
+                        <p
+                          className="font-semibold text-red-700 uppercase tracking-wide mb-1"
+                          style={{ fontWeight: 600 }}
+                        >
+                          Cancellation Summary
+                        </p>
+                        <p className="text-slate-700">
+                          <span
+                            className="font-semibold"
+                            style={{ fontWeight: 600 }}
+                          >
+                            By:
+                          </span>{" "}
+                          {booking.cancelledBy || "Student"} |{" "}
+                          <span
+                            className="font-semibold"
+                            style={{ fontWeight: 600 }}
+                          >
+                            Reason:
+                          </span>{" "}
+                          {booking.cancellationReason || "No reason specified."}
+                        </p>
                       </div>
                     )}
 
-                    {/* Footer */}
-                    <div className="flex justify-end gap-3 mt-6">
+                    {/* Action Bar */}
+                    <div className="flex flex-wrap items-center justify-end gap-3 mt-6 pt-6 border-t border-slate-100">
                       {(booking.bookingStatus === "Pending" ||
                         booking.bookingStatus === "Confirmed") && (
                         <button
                           onClick={() => openCancelModal(booking)}
-                          className="px-6 py-3 rounded-xl border border-red-500 text-red-600 hover:bg-red-50 font-semibold transition"
+                          className="px-5 py-2.5 rounded-xl border border-red-200 text-red-600 hover:bg-red-50 text-xs font-semibold transition"
+                          style={{ fontWeight: 600 }}
                         >
                           Cancel Booking
                         </button>
@@ -504,9 +619,10 @@ const MyBookings = () => {
 
                       <button
                         onClick={() => handleDeleteBooking(booking._id)}
-                        className="px-6 py-3 rounded-xl bg-red-600 text-white hover:bg-red-700 transition"
+                        className="px-5 py-2.5 rounded-xl bg-slate-100 text-slate-700 hover:bg-red-600 hover:text-white text-xs font-semibold transition"
+                        style={{ fontWeight: 600 }}
                       >
-                        Delete Booking
+                        Delete Record
                       </button>
 
                       {booking.bookingStatus === "Confirmed" && (
@@ -514,9 +630,10 @@ const MyBookings = () => {
                           {meetingExpired ? (
                             <button
                               disabled
-                              className="px-6 py-3 rounded-xl bg-gray-400 text-white cursor-not-allowed"
+                              className="px-5 py-2.5 rounded-xl bg-slate-200 text-slate-500 text-xs font-semibold cursor-not-allowed"
+                              style={{ fontWeight: 600 }}
                             >
-                              Meeting Ended
+                              Session Completed
                             </button>
                           ) : canJoin ? (
                             <button
@@ -526,15 +643,17 @@ const MyBookings = () => {
                                   booking._id
                                 )
                               }
-                              className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-xl font-semibold transition"
+                              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl text-xs font-semibold shadow-sm transition"
+                              style={{ fontWeight: 600 }}
                             >
-                              <ExternalLink size={18} />
-                              Join Google Meet
+                              <ExternalLink size={15} />
+                              Join Live Connect
                             </button>
                           ) : (
                             <button
                               disabled
-                              className="px-6 py-3 rounded-xl bg-gray-400 text-white cursor-not-allowed"
+                              className="px-5 py-2.5 rounded-xl bg-slate-900 text-white text-xs font-semibold cursor-not-allowed"
+                              style={{ fontWeight: 600 }}
                             >
                               Join in {formatCountdown(secondsUntilJoin)}
                             </button>
@@ -550,12 +669,15 @@ const MyBookings = () => {
         )}
       </div>
 
-      {/* CHECKOUT-STYLE CANCELLATION & REFUND MODAL */}
+      {/* Cancellation Modal */}
       {showCancelModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 overflow-hidden animate-in fade-in zoom-in duration-200">
-            <div className="flex justify-between items-center border-b pb-4">
-              <h2 className="text-xl font-bold text-gray-800">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
+          <div className="bg-white rounded-3xl shadow-xl w-full max-w-md p-6 sm:p-8 border border-slate-200">
+            <div className="flex justify-between items-center border-b border-slate-100 pb-4">
+              <h2
+                className="text-lg font-semibold text-slate-900"
+                style={{ fontWeight: 600 }}
+              >
                 Cancel & Refund Summary
               </h2>
               <button
@@ -564,49 +686,69 @@ const MyBookings = () => {
                   setSelectedBookingId(null);
                   setCancelReason("");
                 }}
-                className="text-gray-400 hover:text-gray-600 font-bold text-xl"
+                className="text-slate-400 hover:text-slate-600 transition"
               >
-                &times;
+                <X size={20} />
               </button>
             </div>
 
-            <div className="bg-gray-50 rounded-2xl p-4 mt-4 border border-gray-100 space-y-2 text-sm">
-              <div className="flex justify-between text-gray-600">
-                <span>Session Fee Paid:</span>
-                <span className="font-semibold text-gray-800">
+            <div
+              className="bg-slate-50 rounded-2xl p-4 mt-5 border border-slate-200 space-y-2 text-xs font-medium"
+              style={{ fontWeight: 600 }}
+            >
+              <div className="flex justify-between text-slate-600">
+                <span className="font-semibold" style={{ fontWeight: 600 }}>
+                  Session Fee Paid:
+                </span>
+                <span
+                  className="font-semibold text-slate-900"
+                  style={{ fontWeight: 600 }}
+                >
                   ₹{refundDetails.amount}
                 </span>
               </div>
-              <div className="flex justify-between text-gray-600">
-                <span>Refund Eligibility:</span>
+              <div className="flex justify-between text-slate-600">
+                <span className="font-semibold" style={{ fontWeight: 600 }}>
+                  Refund Policy Eligibility:
+                </span>
                 <span
                   className={`font-semibold ${
-                    refundDetails.eligible ? "text-green-600" : "text-amber-600"
+                    refundDetails.eligible
+                      ? "text-emerald-600"
+                      : "text-amber-600"
                   }`}
+                  style={{ fontWeight: 600 }}
                 >
                   {refundDetails.eligible
                     ? "Eligible (100% Refund)"
-                    : "Not Eligible (< 24 hrs)"}
+                    : "Non-refundable (< 24 hrs)"}
                 </span>
               </div>
-              <div className="border-t pt-2 flex justify-between font-bold text-base text-gray-900">
-                <span>Expected Refund:</span>
-                <span className="text-emerald-600">
+              <div
+                className="border-t border-slate-200 pt-2 flex justify-between font-semibold text-sm text-slate-900"
+                style={{ fontWeight: 600 }}
+              >
+                <span>Expected Refund Amount:</span>
+                <span className="text-blue-600">
                   ₹{refundDetails.eligible ? refundDetails.amount : 0}
                 </span>
               </div>
             </div>
 
-            <div className="mt-4">
-              <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">
-                Reason for Cancellation
+            <div className="mt-5">
+              <label
+                className="block text-[10px] font-semibold uppercase tracking-wider text-slate-500 mb-1.5"
+                style={{ fontWeight: 600 }}
+              >
+                Reason for Cancellation *
               </label>
               <textarea
                 rows={3}
                 value={cancelReason}
                 onChange={(e) => setCancelReason(e.target.value)}
-                placeholder="Let us know why you're cancelling..."
-                className="w-full border border-gray-200 rounded-xl p-3 outline-none focus:ring-2 focus:ring-red-300 text-sm"
+                placeholder="Briefly state why you need to reschedule or cancel..."
+                className="w-full border border-slate-200 rounded-2xl p-3.5 outline-none focus:ring-2 focus:ring-blue-600 text-xs font-medium text-slate-800"
+                style={{ fontWeight: 600 }}
               />
             </div>
 
@@ -617,13 +759,15 @@ const MyBookings = () => {
                   setSelectedBookingId(null);
                   setCancelReason("");
                 }}
-                className="w-1/2 py-3 border border-gray-300 rounded-xl hover:bg-gray-100 font-medium text-gray-700 transition"
+                className="w-1/2 py-3 border border-slate-200 rounded-2xl hover:bg-slate-50 font-semibold text-xs text-slate-700 transition"
+                style={{ fontWeight: 600 }}
               >
                 Keep Booking
               </button>
               <button
                 onClick={handleCancelBooking}
-                className="w-1/2 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-semibold shadow-md transition"
+                className="w-1/2 py-3 bg-red-600 hover:bg-red-700 text-white rounded-2xl font-semibold text-xs shadow-sm transition"
+                style={{ fontWeight: 600 }}
               >
                 Confirm Cancellation
               </button>

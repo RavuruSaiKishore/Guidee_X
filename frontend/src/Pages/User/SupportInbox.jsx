@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
 
@@ -18,13 +18,14 @@ import {
   Ticket,
   RefreshCw,
   ChevronDown,
+  X,
 } from "lucide-react";
 
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
 
 // =====================================================
-// SUPPORT INBOX
+// SUPPORT INBOX (High-End GuideX Theme with Modal Ticket Creation & Hero Button)
 // =====================================================
 
 const SupportInbox = () => {
@@ -35,6 +36,18 @@ const SupportInbox = () => {
 
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("All");
+
+  // Modal State
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    category: "General Inquiry",
+    subject: "",
+    message: "",
+  });
 
   // =====================================================
   // FETCH SUPPORT REQUESTS
@@ -74,6 +87,60 @@ const SupportInbox = () => {
   useEffect(() => {
     fetchTickets();
   }, []);
+
+  // =====================================================
+  // CREATE TICKET HANDLER
+  // =====================================================
+
+  const handleCreateTicket = async (e) => {
+    e.preventDefault();
+
+    if (
+      !formData.name ||
+      !formData.email ||
+      !formData.category ||
+      !formData.subject ||
+      !formData.message
+    ) {
+      return toast.error("Please fill all required fields.");
+    }
+
+    try {
+      setSubmitting(true);
+
+      const response = await fetch(`${API_BASE_URL}/api/contact`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to create support ticket");
+      }
+
+      toast.success(data.message || "Support request created successfully.");
+      setIsModalOpen(false);
+      setFormData({
+        name: "",
+        email: "",
+        phone: "",
+        category: "General Inquiry",
+        subject: "",
+        message: "",
+      });
+      fetchTickets();
+    } catch (error) {
+      console.error("Create ticket error:", error);
+      toast.error(error.message || "Something went wrong.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   // =====================================================
   // FILTER
@@ -130,7 +197,7 @@ const SupportInbox = () => {
         return {
           icon: Clock3,
           badge: "border-blue-200 bg-blue-50 text-blue-700",
-          dot: "bg-blue-500",
+          dot: "bg-blue-600",
           label: "Being Handled",
         };
 
@@ -138,7 +205,7 @@ const SupportInbox = () => {
         return {
           icon: CheckCircle2,
           badge: "border-emerald-200 bg-emerald-50 text-emerald-700",
-          dot: "bg-emerald-500",
+          dot: "bg-emerald-600",
           label: "Resolved",
         };
 
@@ -180,42 +247,55 @@ const SupportInbox = () => {
   // =====================================================
 
   return (
-    <div className="min-h-screen bg-[#f6f8fc]">
+    <div
+      className="min-h-screen bg-slate-50 text-slate-900"
+      style={{ fontFamily: "'Poppins', sans-serif", fontStyle: "normal" }}
+    >
       {/* ================================================= */}
       {/* TOP HEADER */}
       {/* ================================================= */}
 
-      <header className="border-b border-slate-200 bg-white">
+      <header className="border-b border-slate-200 bg-white shadow-xs">
         <div className="mx-auto max-w-7xl px-5 sm:px-6 lg:px-8">
           <div className="flex h-20 items-center justify-between">
             {/* BRAND */}
 
-            <div className="flex items-center gap-4">
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-indigo-600 text-white shadow-lg shadow-indigo-200">
-                <Inbox size={21} />
+            <div className="flex items-center gap-3.5">
+              <div
+                className="flex h-11 w-11 items-center justify-center rounded-2xl bg-black text-white shadow-md shadow-slate-200"
+                style={{ fontWeight: 600 }}
+              >
+                <Inbox size={20} className="text-blue-400" />
               </div>
 
               <div>
-                <p className="text-xs font-bold uppercase tracking-widest text-indigo-600">
+                <p
+                  className="text-[10px] font-semibold uppercase tracking-widest text-blue-600"
+                  style={{ fontWeight: 600 }}
+                >
                   GuideX Support
                 </p>
 
-                <h1 className="text-lg font-bold text-slate-900">
+                <h1
+                  className="text-lg font-semibold text-slate-900 tracking-tight"
+                  style={{ fontWeight: 600 }}
+                >
                   Support Inbox
                 </h1>
               </div>
             </div>
 
-            {/* ACTION */}
+            {/* ACTION IN HEADER */}
 
-            <Link
-              to="/contact"
-              className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-indigo-100 transition hover:bg-indigo-700"
+            {/* <button
+              onClick={() => setIsModalOpen(true)}
+              className="inline-flex items-center gap-2 rounded-2xl bg-black px-5 py-3 text-xs font-semibold text-white shadow-sm transition hover:bg-slate-800"
+              style={{ fontWeight: 600 }}
             >
-              <Plus size={17} />
+              <Plus size={15} className="text-blue-400" />
 
-              <span className="hidden sm:inline">New Ticket</span>
-            </Link>
+              <span>New Ticket</span>
+            </button> */}
           </div>
         </div>
       </header>
@@ -225,33 +305,58 @@ const SupportInbox = () => {
       {/* ================================================= */}
 
       <section className="border-b border-slate-200 bg-white">
-        <div className="mx-auto max-w-7xl px-5 py-8 sm:px-6 lg:px-8">
-          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-indigo-700 via-indigo-600 to-violet-600 px-6 py-8 sm:px-8">
+        <div className="mx-auto max-w-7xl px-5 py-6 sm:px-6 lg:px-8">
+          <div className="relative overflow-hidden rounded-3xl bg-black px-6 py-7 sm:px-8 text-white shadow-md">
             {/* DECORATION */}
 
-            <div className="absolute -right-20 -top-20 h-56 w-56 rounded-full bg-white/10 blur-3xl" />
+            <div className="absolute -right-16 -top-16 h-48 w-48 rounded-full bg-blue-600/20 blur-3xl" />
 
-            <div className="absolute -bottom-24 left-1/3 h-48 w-48 rounded-full bg-cyan-300/10 blur-3xl" />
+            <div className="absolute -bottom-20 left-1/4 h-40 w-40 rounded-full bg-blue-400/10 blur-2xl" />
 
             <div className="relative flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
               <div>
-                <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-semibold text-indigo-100 backdrop-blur">
-                  <Sparkles size={14} />
-                  Personalized Support
+                <div
+                  className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3.5 py-1.5 text-[11px] font-semibold text-blue-300 backdrop-blur"
+                  style={{ fontWeight: 600 }}
+                >
+                  <Sparkles size={13} className="text-blue-400" />
+                  Personalized Support Suite
                 </div>
 
-                <h2 className="mt-4 text-2xl font-bold text-white sm:text-3xl">
-                  How can we help you?
+                <h2
+                  className="mt-3 text-2xl font-semibold tracking-tight text-white sm:text-3xl"
+                  style={{ fontWeight: 600 }}
+                >
+                  How can we assist you today?
                 </h2>
 
-                <p className="mt-2 max-w-xl text-sm leading-6 text-indigo-100">
-                  Track your support requests, view responses, and stay updated
-                  with the GuideX support team.
+                <p
+                  className="mt-1.5 max-w-xl text-xs sm:text-sm text-slate-300 font-medium leading-relaxed"
+                  style={{ fontWeight: 600 }}
+                >
+                  Track active inquiries, communicate directly with supervisors,
+                  and manage all your technical support tickets in one
+                  streamlined place.
                 </p>
               </div>
 
-              <div className="hidden lg:flex h-20 w-20 items-center justify-center rounded-3xl border border-white/20 bg-white/10 text-white backdrop-blur">
-                <Ticket size={34} />
+              {/* REPLACED ONE LOGO BOX WITH NEW TICKET BUTTON */}
+              <div className="flex items-center gap-4">
+                <button
+                  onClick={() => setIsModalOpen(true)}
+                  className="inline-flex items-center gap-2 rounded-2xl bg-blue-600 px-6 py-3.5 text-xs font-semibold text-white shadow-md transition hover:bg-blue-700"
+                  style={{ fontWeight: 600 }}
+                >
+                  <Plus size={16} />
+                  <span>Create Ticket</span>
+                </button>
+
+                <div
+                  className="hidden lg:flex h-16 w-16 items-center justify-center rounded-2xl border border-white/15 bg-white/10 text-white backdrop-blur shadow-inner"
+                  style={{ fontWeight: 600 }}
+                >
+                  <Ticket size={28} className="text-blue-400" />
+                </div>
               </div>
             </div>
           </div>
@@ -262,94 +367,136 @@ const SupportInbox = () => {
       {/* STATS */}
       {/* ================================================= */}
 
-      <section className="mx-auto max-w-7xl px-5 pt-7 sm:px-6 lg:px-8">
+      <section className="mx-auto max-w-7xl px-5 pt-6 sm:px-6 lg:px-8">
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
           {/* TOTAL */}
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-md">
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs transition hover:shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                  Total
+                <p
+                  className="text-[10px] font-semibold uppercase tracking-wider text-slate-400"
+                  style={{ fontWeight: 600 }}
+                >
+                  Total Tickets
                 </p>
 
-                <h3 className="mt-2 text-3xl font-bold text-slate-900">
+                <h3
+                  className="mt-1.5 text-2xl font-semibold text-slate-900 tracking-tight"
+                  style={{ fontWeight: 600 }}
+                >
                   {stats.total}
                 </h3>
 
-                <p className="mt-1 text-xs text-slate-500">All requests</p>
+                <p
+                  className="mt-0.5 text-[11px] text-slate-500 font-medium"
+                  style={{ fontWeight: 600 }}
+                >
+                  All-time requests
+                </p>
               </div>
 
-              <div className="rounded-xl bg-indigo-50 p-3 text-indigo-600">
-                <Inbox size={20} />
+              <div className="rounded-xl bg-slate-100 p-3 text-slate-900">
+                <Inbox size={18} />
               </div>
             </div>
           </div>
 
           {/* PENDING */}
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-md">
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs transition hover:shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                <p
+                  className="text-[10px] font-semibold uppercase tracking-wider text-slate-400"
+                  style={{ fontWeight: 600 }}
+                >
                   Pending
                 </p>
 
-                <h3 className="mt-2 text-3xl font-bold text-amber-600">
+                <h3
+                  className="mt-1.5 text-2xl font-semibold text-amber-600 tracking-tight"
+                  style={{ fontWeight: 600 }}
+                >
                   {stats.pending}
                 </h3>
 
-                <p className="mt-1 text-xs text-slate-500">Awaiting response</p>
+                <p
+                  className="mt-0.5 text-[11px] text-slate-500 font-medium"
+                  style={{ fontWeight: 600 }}
+                >
+                  Awaiting response
+                </p>
               </div>
 
               <div className="rounded-xl bg-amber-50 p-3 text-amber-600">
-                <AlertCircle size={20} />
+                <AlertCircle size={18} />
               </div>
             </div>
           </div>
 
           {/* IN PROGRESS */}
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-md">
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs transition hover:shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                <p
+                  className="text-[10px] font-semibold uppercase tracking-wider text-slate-400"
+                  style={{ fontWeight: 600 }}
+                >
                   In Progress
                 </p>
 
-                <h3 className="mt-2 text-3xl font-bold text-blue-600">
+                <h3
+                  className="mt-1.5 text-2xl font-semibold text-blue-600 tracking-tight"
+                  style={{ fontWeight: 600 }}
+                >
                   {stats.progress}
                 </h3>
 
-                <p className="mt-1 text-xs text-slate-500">Being handled</p>
+                <p
+                  className="mt-0.5 text-[11px] text-slate-500 font-medium"
+                  style={{ fontWeight: 600 }}
+                >
+                  Being handled
+                </p>
               </div>
 
               <div className="rounded-xl bg-blue-50 p-3 text-blue-600">
-                <Clock3 size={20} />
+                <Clock3 size={18} />
               </div>
             </div>
           </div>
 
           {/* RESOLVED */}
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-md">
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs transition hover:shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                <p
+                  className="text-[10px] font-semibold uppercase tracking-wider text-slate-400"
+                  style={{ fontWeight: 600 }}
+                >
                   Resolved
                 </p>
 
-                <h3 className="mt-2 text-3xl font-bold text-emerald-600">
+                <h3
+                  className="mt-1.5 text-2xl font-semibold text-emerald-600 tracking-tight"
+                  style={{ fontWeight: 600 }}
+                >
                   {stats.resolved}
                 </h3>
 
-                <p className="mt-1 text-xs text-slate-500">
-                  Completed requests
+                <p
+                  className="mt-0.5 text-[11px] text-slate-500 font-medium"
+                  style={{ fontWeight: 600 }}
+                >
+                  Closed successfully
                 </p>
               </div>
 
               <div className="rounded-xl bg-emerald-50 p-3 text-emerald-600">
-                <CheckCircle2 size={20} />
+                <CheckCircle2 size={18} />
               </div>
             </div>
           </div>
@@ -360,14 +507,14 @@ const SupportInbox = () => {
       {/* SEARCH + FILTER */}
       {/* ================================================= */}
 
-      <section className="mx-auto max-w-7xl px-5 py-7 sm:px-6 lg:px-8">
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+      <section className="mx-auto max-w-7xl px-5 py-6 sm:px-6 lg:px-8">
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-xs">
           <div className="flex flex-col gap-3 lg:flex-row">
             {/* SEARCH */}
 
             <div className="relative flex-1">
               <Search
-                size={19}
+                size={17}
                 className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
               />
 
@@ -375,23 +522,25 @@ const SupportInbox = () => {
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search by subject, category or message..."
-                className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 pl-11 pr-4 text-sm text-slate-700 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-50"
+                placeholder="Search tickets by subject, category, or description..."
+                className="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 pl-11 pr-4 text-xs font-semibold text-slate-800 outline-none transition focus:border-blue-600 focus:bg-white focus:ring-2 focus:ring-blue-100"
+                style={{ fontWeight: 600 }}
               />
             </div>
 
             {/* FILTER */}
 
-            <div className="relative lg:w-56">
+            <div className="relative lg:w-52">
               <Filter
-                size={17}
+                size={16}
                 className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
               />
 
               <select
                 value={status}
                 onChange={(e) => setStatus(e.target.value)}
-                className="h-12 w-full appearance-none rounded-xl border border-slate-200 bg-slate-50 pl-11 pr-10 text-sm font-medium text-slate-700 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-50"
+                className="h-11 w-full appearance-none rounded-xl border border-slate-200 bg-slate-50 pl-11 pr-10 text-xs font-semibold text-slate-800 outline-none transition focus:border-blue-600 focus:bg-white focus:ring-2 focus:ring-blue-100"
+                style={{ fontWeight: 600 }}
               >
                 <option value="All">All Status</option>
 
@@ -403,7 +552,7 @@ const SupportInbox = () => {
               </select>
 
               <ChevronDown
-                size={16}
+                size={15}
                 className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-slate-400"
               />
             </div>
@@ -414,7 +563,8 @@ const SupportInbox = () => {
               <button
                 type="button"
                 onClick={clearFilters}
-                className="h-12 rounded-xl border border-slate-200 px-5 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
+                className="h-11 rounded-xl border border-slate-200 px-4 text-xs font-semibold text-slate-700 transition hover:bg-slate-100"
+                style={{ fontWeight: 600 }}
               >
                 Clear Filters
               </button>
@@ -425,10 +575,10 @@ const SupportInbox = () => {
             <button
               type="button"
               onClick={fetchTickets}
-              className="flex h-12 items-center justify-center rounded-xl border border-slate-200 px-4 text-slate-500 transition hover:bg-slate-50 hover:text-indigo-600"
-              title="Refresh"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-slate-600 transition hover:bg-slate-100 hover:text-blue-600"
+              title="Refresh Tickets"
             >
-              <RefreshCw size={18} className={loading ? "animate-spin" : ""} />
+              <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
             </button>
           </div>
         </div>
@@ -441,15 +591,21 @@ const SupportInbox = () => {
       <main className="mx-auto max-w-7xl px-5 pb-12 sm:px-6 lg:px-8">
         {/* RESULT HEADER */}
 
-        <div className="mb-5 flex items-center justify-between">
+        <div className="mb-4 flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-bold text-slate-900">
-              Support Requests
+            <h2
+              className="text-base font-semibold text-slate-900 tracking-tight"
+              style={{ fontWeight: 600 }}
+            >
+              Support Tickets
             </h2>
 
-            <p className="mt-1 text-sm text-slate-500">
-              {filteredTickets.length} request
-              {filteredTickets.length !== 1 ? "s" : ""} found
+            <p
+              className="text-xs text-slate-500 font-medium"
+              style={{ fontWeight: 600 }}
+            >
+              Showing {filteredTickets.length} matching request
+              {filteredTickets.length !== 1 ? "s" : ""}
             </p>
           </div>
         </div>
@@ -459,23 +615,21 @@ const SupportInbox = () => {
         {/* ================================================= */}
 
         {loading ? (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {[1, 2, 3].map((item) => (
               <div
                 key={item}
-                className="animate-pulse rounded-2xl border border-slate-200 bg-white p-6"
+                className="animate-pulse rounded-2xl border border-slate-200 bg-white p-5"
               >
-                <div className="flex gap-5">
-                  <div className="h-12 w-12 rounded-xl bg-slate-200" />
+                <div className="flex gap-4">
+                  <div className="h-10 w-10 rounded-xl bg-slate-100" />
 
-                  <div className="flex-1 space-y-4">
-                    <div className="h-4 w-24 rounded bg-slate-200" />
+                  <div className="flex-1 space-y-3">
+                    <div className="h-3 w-20 rounded bg-slate-100" />
 
-                    <div className="h-6 w-2/3 rounded bg-slate-200" />
+                    <div className="h-5 w-1/2 rounded bg-slate-100" />
 
-                    <div className="h-4 w-full rounded bg-slate-200" />
-
-                    <div className="h-4 w-1/2 rounded bg-slate-200" />
+                    <div className="h-3 w-full rounded bg-slate-100" />
                   </div>
                 </div>
               </div>
@@ -486,37 +640,45 @@ const SupportInbox = () => {
           /* EMPTY */
           /* ================================================= */
 
-          <div className="rounded-3xl border border-dashed border-slate-300 bg-white px-6 py-20 text-center">
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-500">
-              <Inbox size={30} />
+          <div className="rounded-3xl border border-slate-200 bg-white px-6 py-16 text-center shadow-xs">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
+              <Inbox size={26} />
             </div>
 
-            <h3 className="mt-5 text-xl font-bold text-slate-900">
+            <h3
+              className="mt-4 text-base font-semibold text-slate-900 tracking-tight"
+              style={{ fontWeight: 600 }}
+            >
               No support requests found
             </h3>
 
-            <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-500">
+            <p
+              className="mx-auto mt-1 max-w-sm text-xs text-slate-500 font-medium leading-relaxed"
+              style={{ fontWeight: 600 }}
+            >
               {search || status !== "All"
-                ? "Try changing your search or filter to find another request."
-                : "You haven't created any support requests yet."}
+                ? "Try clearing your filters or altering search keywords to see results."
+                : "You haven't submitted any support requests yet. Our support team is always ready to help."}
             </p>
 
             {search || status !== "All" ? (
               <button
                 type="button"
                 onClick={clearFilters}
-                className="mt-6 rounded-xl bg-indigo-600 px-5 py-3 text-sm font-bold text-white transition hover:bg-indigo-700"
+                className="mt-5 rounded-xl bg-black px-5 py-2.5 text-xs font-semibold text-white transition hover:bg-slate-800 shadow-xs"
+                style={{ fontWeight: 600 }}
               >
                 Clear Filters
               </button>
             ) : (
-              <Link
-                to="/contact"
-                className="mt-6 inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-3 text-sm font-bold text-white transition hover:bg-indigo-700"
+              <button
+                onClick={() => setIsModalOpen(true)}
+                className="mt-5 inline-flex items-center gap-2 rounded-xl bg-black px-5 py-2.5 text-xs font-semibold text-white transition hover:bg-slate-800 shadow-xs"
+                style={{ fontWeight: 600 }}
               >
-                <Plus size={17} />
+                <Plus size={15} className="text-blue-400" />
                 Create Support Ticket
-              </Link>
+              </button>
             )}
           </div>
         ) : (
@@ -524,7 +686,7 @@ const SupportInbox = () => {
           /* TICKET LIST */
           /* ================================================= */
 
-          <div className="space-y-4">
+          <div className="space-y-3">
             {filteredTickets.map((ticket) => {
               const statusConfig = getStatusConfig(ticket.status);
 
@@ -533,107 +695,119 @@ const SupportInbox = () => {
               return (
                 <div
                   key={ticket._id}
-                  className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white transition duration-300 hover:-translate-y-0.5 hover:border-indigo-200 hover:shadow-xl"
+                  className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white transition duration-200 hover:border-blue-300 hover:shadow-md p-5 sm:p-6"
                 >
-                  {/* STATUS BAR */}
+                  {/* TOP */}
 
-                  <div
-                    className={`absolute left-0 top-0 h-full w-1 ${statusConfig.dot}`}
-                  />
+                  <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                    {/* LEFT */}
 
-                  <div className="p-5 pl-7 sm:p-6 sm:pl-8">
-                    {/* TOP */}
+                    <div className="min-w-0 flex-1">
+                      {/* META */}
 
-                    <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-                      {/* LEFT */}
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span
+                          className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[11px] font-semibold ${statusConfig.badge}`}
+                          style={{ fontWeight: 600 }}
+                        >
+                          <StatusIcon size={12} />
 
-                      <div className="min-w-0 flex-1">
-                        {/* META */}
+                          {ticket.status}
+                        </span>
 
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span
-                            className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-bold ${statusConfig.badge}`}
-                          >
-                            <StatusIcon size={13} />
+                        <span
+                          className="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-semibold text-slate-700 border border-slate-200"
+                          style={{ fontWeight: 600 }}
+                        >
+                          {ticket.category}
+                        </span>
 
-                            {ticket.status}
-                          </span>
-
-                          <span className="rounded-full bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-600">
-                            {ticket.category}
-                          </span>
-
-                          <span className="text-xs text-slate-400">
-                            #{ticket._id.slice(-6).toUpperCase()}
-                          </span>
-                        </div>
-
-                        {/* TITLE */}
-
-                        <h3 className="mt-4 text-xl font-bold text-slate-900 transition group-hover:text-indigo-600">
-                          {ticket.subject}
-                        </h3>
-
-                        {/* MESSAGE */}
-
-                        <p className="mt-2 max-w-4xl line-clamp-2 text-sm leading-6 text-slate-500">
-                          {ticket.message}
-                        </p>
-                      </div>
-
-                      {/* DATE */}
-
-                      <div className="flex shrink-0 items-center gap-2 text-xs font-medium text-slate-400">
-                        <Calendar size={15} />
-
-                        {formatDate(ticket.createdAt)}
-                      </div>
-                    </div>
-
-                    {/* ADMIN REPLY */}
-
-                    {ticket.replied && (
-                      <div className="mt-5 rounded-xl border border-emerald-100 bg-emerald-50/60 p-4">
-                        <div className="flex items-center gap-2">
-                          <MessageCircle
-                            size={17}
-                            className="text-emerald-600"
-                          />
-
-                          <span className="text-sm font-bold text-emerald-700">
-                            GuideX Support replied
-                          </span>
-                        </div>
-
-                        <p className="mt-2 line-clamp-2 text-sm leading-6 text-slate-600">
-                          {ticket.adminReply}
-                        </p>
-                      </div>
-                    )}
-
-                    {/* FOOTER */}
-
-                    <div className="mt-5 flex flex-col gap-4 border-t border-slate-100 pt-5 sm:flex-row sm:items-center sm:justify-between">
-                      <div className="flex items-center gap-2 text-xs text-slate-400">
-                        <Clock3 size={15} />
-                        Last updated
-                        <span className="font-semibold text-slate-600">
-                          {formatDate(ticket.updatedAt || ticket.createdAt)}
+                        <span
+                          className="text-[11px] font-semibold text-slate-400"
+                          style={{ fontWeight: 600 }}
+                        >
+                          ID: #{ticket._id.slice(-6).toUpperCase()}
                         </span>
                       </div>
 
-                      <Link
-                        to={`/support/${ticket._id}`}
-                        className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-bold text-white transition hover:bg-indigo-600"
+                      {/* TITLE */}
+
+                      <h3
+                        className="mt-3 text-base font-semibold text-slate-900 group-hover:text-blue-600 transition tracking-tight"
+                        style={{ fontWeight: 600 }}
                       >
-                        <Eye size={16} />
-                        View Conversation
-                        <ArrowRight
-                          size={16}
-                          className="transition group-hover:translate-x-1"
-                        />
-                      </Link>
+                        {ticket.subject}
+                      </h3>
+
+                      {/* MESSAGE */}
+
+                      <p
+                        className="mt-1.5 max-w-4xl line-clamp-2 text-xs text-slate-600 font-medium leading-relaxed"
+                        style={{ fontWeight: 600 }}
+                      >
+                        {ticket.message}
+                      </p>
                     </div>
+
+                    {/* DATE */}
+
+                    <div
+                      className="flex shrink-0 items-center gap-1.5 text-xs font-semibold text-slate-400 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-100 self-start"
+                      style={{ fontWeight: 600 }}
+                    >
+                      <Calendar size={13} className="text-slate-400" />
+
+                      {formatDate(ticket.createdAt)}
+                    </div>
+                  </div>
+
+                  {/* ADMIN REPLY */}
+
+                  {ticket.replied && (
+                    <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50/50 p-4">
+                      <div
+                        className="flex items-center gap-2 text-xs font-semibold text-emerald-800"
+                        style={{ fontWeight: 600 }}
+                      >
+                        <MessageCircle size={15} className="text-emerald-600" />
+                        GuideX Support Responded
+                      </div>
+
+                      <p
+                        className="mt-1.5 line-clamp-2 text-xs text-slate-700 font-medium leading-relaxed"
+                        style={{ fontWeight: 600 }}
+                      >
+                        {ticket.adminReply}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* FOOTER */}
+
+                  <div className="mt-4 flex flex-col gap-3 border-t border-slate-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div
+                      className="flex items-center gap-1.5 text-xs text-slate-400 font-semibold"
+                      style={{ fontWeight: 600 }}
+                    >
+                      <Clock3 size={13} />
+                      Last updated:{" "}
+                      <span className="text-slate-700">
+                        {formatDate(ticket.updatedAt || ticket.createdAt)}
+                      </span>
+                    </div>
+
+                    <Link
+                      to={`/support/${ticket._id}`}
+                      className="inline-flex items-center justify-center gap-2 rounded-xl bg-black px-4 py-2 text-xs font-semibold text-white transition hover:bg-slate-800 shadow-xs"
+                      style={{ fontWeight: 600 }}
+                    >
+                      <Eye size={14} className="text-blue-400" />
+                      View Conversation
+                      <ArrowRight
+                        size={14}
+                        className="transition group-hover:translate-x-0.5 text-blue-400"
+                      />
+                    </Link>
                   </div>
                 </div>
               );
@@ -641,6 +815,186 @@ const SupportInbox = () => {
           </div>
         )}
       </main>
+
+      {/* ================================================= */}
+      {/* NEW TICKET MODAL */}
+      {/* ================================================= */}
+
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
+          <div className="bg-white rounded-3xl shadow-xl w-full max-w-lg p-6 sm:p-8 border border-slate-200 max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center border-b border-slate-100 pb-4">
+              <div>
+                <p
+                  className="text-[10px] font-semibold uppercase tracking-widest text-blue-600"
+                  style={{ fontWeight: 600 }}
+                >
+                  Help Center
+                </p>
+                <h2
+                  className="text-lg font-semibold text-slate-900 tracking-tight"
+                  style={{ fontWeight: 600 }}
+                >
+                  Create Support Ticket
+                </h2>
+              </div>
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="text-slate-400 hover:text-slate-600 transition"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateTicket} className="mt-5 space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label
+                    className="block text-[10px] font-semibold uppercase tracking-wider text-slate-500 mb-1"
+                    style={{ fontWeight: 600 }}
+                  >
+                    Your Name *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.name}
+                    onChange={(e) =>
+                      setFormData({ ...formData, name: e.target.value })
+                    }
+                    placeholder="Enter full name"
+                    className="w-full border border-slate-200 rounded-xl p-3 text-xs font-semibold text-slate-800 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 bg-slate-50"
+                    style={{ fontWeight: 600 }}
+                  />
+                </div>
+
+                <div>
+                  <label
+                    className="block text-[10px] font-semibold uppercase tracking-wider text-slate-500 mb-1"
+                    style={{ fontWeight: 600 }}
+                  >
+                    Email Address *
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    value={formData.email}
+                    onChange={(e) =>
+                      setFormData({ ...formData, email: e.target.value })
+                    }
+                    placeholder="Enter your email"
+                    className="w-full border border-slate-200 rounded-xl p-3 text-xs font-semibold text-slate-800 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 bg-slate-50"
+                    style={{ fontWeight: 600 }}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label
+                    className="block text-[10px] font-semibold uppercase tracking-wider text-slate-500 mb-1"
+                    style={{ fontWeight: 600 }}
+                  >
+                    Phone Number
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.phone}
+                    onChange={(e) =>
+                      setFormData({ ...formData, phone: e.target.value })
+                    }
+                    placeholder="Optional phone number"
+                    className="w-full border border-slate-200 rounded-xl p-3 text-xs font-semibold text-slate-800 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 bg-slate-50"
+                    style={{ fontWeight: 600 }}
+                  />
+                </div>
+
+                <div>
+                  <label
+                    className="block text-[10px] font-semibold uppercase tracking-wider text-slate-500 mb-1"
+                    style={{ fontWeight: 600 }}
+                  >
+                    Category *
+                  </label>
+                  <select
+                    value={formData.category}
+                    onChange={(e) =>
+                      setFormData({ ...formData, category: e.target.value })
+                    }
+                    className="w-full border border-slate-200 rounded-xl p-3 text-xs font-semibold text-slate-800 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 bg-slate-50"
+                    style={{ fontWeight: 600 }}
+                  >
+                    <option value="General Inquiry">General Inquiry</option>
+                    <option value="Technical Support">Technical Support</option>
+                    <option value="Payment & Billing">Payment & Billing</option>
+                    <option value="Mentorship Issues">Mentorship Issues</option>
+                    <option value="Course Feedback">Course Feedback</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label
+                  className="block text-[10px] font-semibold uppercase tracking-wider text-slate-500 mb-1"
+                  style={{ fontWeight: 600 }}
+                >
+                  Subject *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={formData.subject}
+                  onChange={(e) =>
+                    setFormData({ ...formData, subject: e.target.value })
+                  }
+                  placeholder="Summary of your issue"
+                  className="w-full border border-slate-200 rounded-xl p-3 text-xs font-semibold text-slate-800 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 bg-slate-50"
+                  style={{ fontWeight: 600 }}
+                />
+              </div>
+
+              <div>
+                <label
+                  className="block text-[10px] font-semibold uppercase tracking-wider text-slate-500 mb-1"
+                  style={{ fontWeight: 600 }}
+                >
+                  Message Description *
+                </label>
+                <textarea
+                  rows={4}
+                  required
+                  value={formData.message}
+                  onChange={(e) =>
+                    setFormData({ ...formData, message: e.target.value })
+                  }
+                  placeholder="Provide precise details about your request..."
+                  className="w-full border border-slate-200 rounded-xl p-3 text-xs font-semibold text-slate-800 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 bg-slate-50"
+                  style={{ fontWeight: 600 }}
+                />
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                  className="w-1/2 py-3 border border-slate-200 rounded-xl hover:bg-slate-50 font-semibold text-xs text-slate-700 transition"
+                  style={{ fontWeight: 600 }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="w-1/2 py-3 bg-black hover:bg-slate-800 text-white rounded-xl font-semibold text-xs shadow-sm transition disabled:opacity-50"
+                  style={{ fontWeight: 600 }}
+                >
+                  {submitting ? "Submitting..." : "Submit Ticket"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

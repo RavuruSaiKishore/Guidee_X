@@ -13,7 +13,8 @@ import FAQ from "../models/FAQ.js";
 import EventRegistration from "../models/EventRegistration.js";
 import Event from "../models/Event.js";
 import RescheduleRequest from "../models/RescheduleRequest.js";
-import Badge from "../models/Badges.js"
+import Badge from "../models/Badges.js";
+import { Course, Enrollment } from "../models/Course.js";
 
 export const userProfile = async (req, res) => {
   try {
@@ -885,10 +886,6 @@ export const getAllFAQs = async (req, res) => {
 
 export const getStudentDashboard = async (req, res) => {
   try {
-    // ==========================================================
-    // GET STUDENT ID FROM AUTH MIDDLEWARE
-    // ==========================================================
-
     const studentId = req.user?._id || req.user?.id;
 
     if (!studentId) {
@@ -898,15 +895,7 @@ export const getStudentDashboard = async (req, res) => {
       });
     }
 
-    // ==========================================================
-    // CURRENT DATE
-    // ==========================================================
-
     const now = new Date();
-
-    // ==========================================================
-    // FETCH STUDENT
-    // ==========================================================
 
     const student = await Student.findById(studentId)
       .select(
@@ -922,31 +911,90 @@ export const getStudentDashboard = async (req, res) => {
     }
 
     // ==========================================================
-    // FETCH ALL STUDENT BOOKINGS
+    // FETCH COURSE ENROLLMENTS & COMPUTE EXACT PERCENTAGES
     // ==========================================================
+    const rawEnrollments = await Enrollment.find({ student: studentId })
+      .populate({
+        path: "course",
+        select:
+          "title description thumbnail category duration level instructor modules",
+      })
+      .lean()
+      .catch(() => []);
 
-    const bookings = await Booking.find({
+    const enrolledCourses = rawEnrollments.map((item) => {
+      const course = item.course || {};
+
+      // Count total lessons dynamically across all modules in the course schema
+      let totalLessonsCount = 0;
+      if (course.modules && Array.isArray(course.modules)) {
+        course.modules.forEach((mod) => {
+          if (mod.lessons && Array.isArray(mod.lessons)) {
+            totalLessonsCount += mod.lessons.length;
+          }
+        });
+      }
+
+      const completedCount = item.completedLessons?.length || 0;
+
+      // Calculate percentage
+      let calculatedPercentage = Number(
+        item.progressPercentage ||
+          item.progress ||
+          item.completionPercentage ||
+          0
+      );
+
+      if (
+        totalLessonsCount > 0 &&
+        calculatedPercentage === 0 &&
+        completedCount > 0
+      ) {
+        calculatedPercentage = Math.round(
+          (completedCount / totalLessonsCount) * 100
+        );
+      }
+
+      // Ensure it stays within bounds 0-100
+      calculatedPercentage = Math.min(Math.max(calculatedPercentage, 0), 100);
+
+      return {
+        ...item,
+        // Provide all possible alias properties so frontend components match seamlessly
+        progress: calculatedPercentage,
+        completionPercentage: calculatedPercentage,
+        progressPercentage: calculatedPercentage,
+        totalLessonsCount,
+      };
+    });
+
+    const eventRegistrations = await EventRegistration.find({
       student: studentId,
+      status: "Registered",
     })
+      .populate(
+        "event",
+        "title description bannerImage startDateTime endDateTime speaker speakerImage speakerRole speakerCompany status registrationDeadline location"
+      )
+      .sort({ registeredAt: -1 })
+      .lean();
+
+    const upcomingEvents = eventRegistrations.filter((registration) => {
+      if (!registration.event || !registration.event.startDateTime) {
+        return false;
+      }
+      return new Date(registration.event.startDateTime) >= now;
+    });
+
+    const bookings = await Booking.find({ student: studentId })
       .populate(
         "mentor",
         "firstName lastName profileImage profession experience skills primarySkill averageRating totalReviews pricing"
       )
-      .sort({
-        sessionDate: -1,
-        createdAt: -1,
-      })
+      .sort({ sessionDate: -1, createdAt: -1 })
       .lean();
 
-    // ==========================================================
-    // BASIC BOOKING STATISTICS
-    // ==========================================================
-
-    // FIX:
-    // totalSessions was previously missing.
     const totalSessions = bookings.length;
-
-    // Keep totalBookings as an alias for other dashboard sections.
     const totalBookings = totalSessions;
 
     const completedSessions = bookings.filter(
@@ -969,16 +1017,11 @@ export const getStudentDashboard = async (req, res) => {
       (booking) => booking.bookingStatus === "Confirmed"
     ).length;
 
-    // ==========================================================
-    // UPCOMING BOOKINGS
-    // ==========================================================
-
     const upcomingBookings = bookings
       .filter((booking) => {
         if (booking.bookingStatus !== "Confirmed" || !booking.sessionDate) {
           return false;
         }
-
         return new Date(booking.sessionDate) >= now;
       })
       .sort(
@@ -986,11 +1029,7 @@ export const getStudentDashboard = async (req, res) => {
           new Date(a.sessionDate).getTime() - new Date(b.sessionDate).getTime()
       );
 
-    const upcomingSessions = upcomingBookings.length;
-
-    // ==========================================================
-    // RECENT BOOKINGS
-    // ==========================================================
+    const upcomingSessionsCount = upcomingBookings.length;
 
     const recentBookings = bookings
       .slice()
@@ -1001,10 +1040,6 @@ export const getStudentDashboard = async (req, res) => {
       )
       .slice(0, 5);
 
-    // ==========================================================
-    // TOTAL INVESTMENT
-    // ==========================================================
-
     const totalInvestment = bookings
       .filter(
         (booking) =>
@@ -1013,37 +1048,21 @@ export const getStudentDashboard = async (req, res) => {
       )
       .reduce((sum, booking) => sum + Number(booking.amount || 0), 0);
 
-    // ==========================================================
-    // LEARNING MINUTES
-    // ==========================================================
-
     const learningMinutes = bookings
       .filter((booking) => booking.bookingStatus === "Completed")
       .reduce((sum, booking) => sum + Number(booking.duration || 0), 0);
 
     const learningHours = Number((learningMinutes / 60).toFixed(1));
 
-    // ==========================================================
-    // COMPLETION RATE
-    // ==========================================================
-
     const completionRate =
       totalSessions === 0
         ? 0
         : Math.round((completedSessions / totalSessions) * 100);
 
-    // ==========================================================
-    // AVERAGE SESSION DURATION
-    // ==========================================================
-
     const averageSessionDuration =
       completedSessions === 0
         ? 0
         : Math.round(learningMinutes / completedSessions);
-
-    // ==========================================================
-    // UNIQUE MENTORS CONSULTED
-    // ==========================================================
 
     const consultedMentorIds = [
       ...new Set(
@@ -1054,10 +1073,6 @@ export const getStudentDashboard = async (req, res) => {
     ];
 
     const mentorsConsulted = consultedMentorIds.length;
-
-    // ==========================================================
-    // AVERAGE MENTOR RATING
-    // ==========================================================
 
     const ratings = bookings
       .filter(
@@ -1078,33 +1093,16 @@ export const getStudentDashboard = async (req, res) => {
           )
         : 0;
 
-    // ==========================================================
-    // PROGRESS
-    // ==========================================================
-
     const progress = completionRate;
-
-    // ==========================================================
-    // NEXT MILESTONE
-    // ==========================================================
-
     const nextMilestoneTarget = 10;
-
     const nextMilestone = Math.max(0, nextMilestoneTarget - completedSessions);
 
-    // ==========================================================
-    // FETCH MEETINGS
-    // ==========================================================
-
     const bookingIds = bookings.map((booking) => booking._id);
-
     let meetings = [];
 
     if (bookingIds.length > 0) {
       meetings = await Meeting.find({
-        booking: {
-          $in: bookingIds,
-        },
+        booking: { $in: bookingIds },
       })
         .select(
           "booking roomId scheduledStartTime scheduledEndTime status mentorJoined studentJoined"
@@ -1112,31 +1110,17 @@ export const getStudentDashboard = async (req, res) => {
         .lean();
     }
 
-    // ==========================================================
-    // CREATE MEETING MAP
-    // ==========================================================
-
     const meetingMap = {};
-
     meetings.forEach((meeting) => {
       if (meeting.booking) {
         meetingMap[meeting.booking.toString()] = meeting;
       }
     });
 
-    // ==========================================================
-    // ADD MEETING DETAILS TO UPCOMING SESSIONS
-    // ==========================================================
-
     const upcomingSessionsWithMeetings = upcomingBookings.map((booking) => ({
       ...booking,
-
       meeting: meetingMap[booking._id.toString()] || null,
     }));
-
-    // ==========================================================
-    // RESCHEDULE REQUESTS
-    // ==========================================================
 
     const rescheduleRequests = await RescheduleRequest.find({
       student: studentId,
@@ -1147,74 +1131,22 @@ export const getStudentDashboard = async (req, res) => {
         "booking",
         "sessionType amount duration bookingStatus sessionDate startTime endTime"
       )
-      .sort({
-        createdAt: -1,
-      })
+      .sort({ createdAt: -1 })
       .limit(5)
       .lean();
 
-    // ==========================================================
-    // EVENT REGISTRATIONS
-    // ==========================================================
-
-    const eventRegistrations = await EventRegistration.find({
-      student: studentId,
-      status: "Registered",
-    })
-      .populate(
-        "event",
-        "title description bannerImage startDateTime endDateTime speaker speakerImage speakerRole speakerCompany status registrationDeadline"
-      )
-      .sort({
-        registeredAt: -1,
-      })
-      .limit(5)
-      .lean();
-
-    // ==========================================================
-    // UPCOMING EVENTS
-    // ==========================================================
-
-    const upcomingEvents = eventRegistrations.filter((registration) => {
-      if (!registration.event || !registration.event.startDateTime) {
-        return false;
-      }
-
-      return new Date(registration.event.startDateTime) >= now;
-    });
-
-    // ==========================================================
-    // FETCH BADGES
-    // ==========================================================
-
-    const badges = await Badge.find()
-      .sort({
-        requiredSessions: 1,
-      })
-      .lean();
-
-    // ==========================================================
-    // STUDENT UNLOCKED BADGES
-    // ==========================================================
-
+    const badges = await Badge.find().sort({ requiredSessions: 1 }).lean();
     const unlockedBadges = student.achievementHistory || [];
-
-    // ==========================================================
-    // BADGE PROGRESS
-    // ==========================================================
 
     const badgeProgress = badges.map((badge) => {
       const requiredSessions = Number(badge.requiredSessions || 0);
-
       const unlocked = unlockedBadges.some(
         (item) => item.title?.toLowerCase() === badge.title?.toLowerCase()
       );
-
       const currentProgress =
         requiredSessions > 0
           ? Math.min(completedSessions, requiredSessions)
           : 0;
-
       const progressPercentage =
         requiredSessions > 0
           ? Math.min(
@@ -1225,24 +1157,13 @@ export const getStudentDashboard = async (req, res) => {
 
       return {
         ...badge,
-
         unlocked,
-
         currentProgress,
-
         progressPercentage,
       };
     });
 
-    // ==========================================================
-    // NOTIFICATIONS
-    // ==========================================================
-
     const notifications = [];
-
-    // ==========================================================
-    // UPCOMING SESSION NOTIFICATIONS
-    // ==========================================================
 
     upcomingSessionsWithMeetings.slice(0, 3).forEach((booking) => {
       const mentorName = booking.mentor
@@ -1250,371 +1171,99 @@ export const getStudentDashboard = async (req, res) => {
             booking.mentor.lastName || ""
           }`.trim()
         : "your mentor";
-
       const formattedDate = booking.sessionDate
         ? new Date(booking.sessionDate).toLocaleDateString("en-IN")
         : "an upcoming date";
 
       notifications.push({
         id: `booking-${booking._id}`,
-
         type: "session",
-
         title: "Upcoming Mentorship Session",
-
         message: `Your session with ${mentorName} is scheduled for ${formattedDate} at ${
           booking.startTime || "the scheduled time"
         }.`,
-
         time: booking.sessionDate || booking.createdAt || now,
-
         read: booking.isSeen || false,
-
         bookingId: booking._id,
       });
     });
 
-    // ==========================================================
-    // PAYMENT NOTIFICATIONS
-    // ==========================================================
-
-    bookings
-      .filter(
-        (booking) => booking.paymentStatus === "Paid" && booking.paymentId
-      )
-      .slice(0, 3)
-      .forEach((booking) => {
-        notifications.push({
-          id: `payment-${booking._id}`,
-
-          type: "payment",
-
-          title: "Payment Successful",
-
-          message: `Your payment of ₹${Number(
-            booking.amount || 0
-          ).toLocaleString("en-IN")} has been successfully received.`,
-
-          time: booking.updatedAt || booking.createdAt || now,
-
-          read: true,
-
-          bookingId: booking._id,
-        });
-      });
-
-    // ==========================================================
-    // CANCELLED SESSION NOTIFICATIONS
-    // ==========================================================
-
-    bookings
-      .filter((booking) => booking.bookingStatus === "Cancelled")
-      .slice(0, 3)
-      .forEach((booking) => {
-        notifications.push({
-          id: `cancelled-${booking._id}`,
-
-          type: "cancelled",
-
-          title: "Session Cancelled",
-
-          message:
-            booking.cancellationReason ||
-            "Your mentorship session has been cancelled.",
-
-          time:
-            booking.cancelledAt ||
-            booking.updatedAt ||
-            booking.createdAt ||
-            now,
-
-          read: booking.isSeen || false,
-
-          bookingId: booking._id,
-        });
-      });
-
-    // ==========================================================
-    // RESCHEDULE NOTIFICATIONS
-    // ==========================================================
-
-    rescheduleRequests.slice(0, 3).forEach((request) => {
-      const mentorName = request.mentor
-        ? `${request.mentor.firstName || ""} ${
-            request.mentor.lastName || ""
-          }`.trim()
-        : "Your mentor";
-
-      notifications.push({
-        id: `reschedule-${request._id}`,
-
-        type: "session",
-
-        title: "Reschedule Request",
-
-        message: `${mentorName} has requested to reschedule your mentorship session.`,
-
-        time: request.createdAt || now,
-
-        read: false,
-
-        rescheduleRequestId: request._id,
-      });
-    });
-
-    // ==========================================================
-    // MEETING NOTIFICATIONS
-    // ==========================================================
-
-    upcomingSessionsWithMeetings
-      .filter((booking) => booking.meeting)
-      .slice(0, 3)
-      .forEach((booking) => {
-        notifications.push({
-          id: `meeting-${booking._id}`,
-
-          type: "meeting",
-
-          title: "Meeting Link Available",
-
-          message:
-            "Your meeting details are available for your upcoming mentorship session.",
-
-          time: booking.updatedAt || booking.createdAt || now,
-
-          read: booking.isSeen || false,
-
-          bookingId: booking._id,
-        });
-      });
-
-    // ==========================================================
-    // EVENT NOTIFICATIONS
-    // ==========================================================
-
-    upcomingEvents.slice(0, 3).forEach((registration) => {
-      if (!registration.event) {
-        return;
-      }
-
-      notifications.push({
-        id: `event-${registration._id}`,
-
-        type: "event",
-
-        title: "Upcoming Event",
-
-        message: `You are registered for "${registration.event.title}".`,
-
-        time:
-          registration.event.startDateTime || registration.registeredAt || now,
-
-        read: true,
-
-        eventId: registration.event._id,
-      });
-    });
-
-    // ==========================================================
-    // SORT NOTIFICATIONS
-    // ==========================================================
-
-    notifications.sort(
-      (a, b) => new Date(b.time).getTime() - new Date(a.time).getTime()
-    );
-
-    // ==========================================================
-    // RECOMMENDED MENTORS
-    // ==========================================================
-
     const recommendedMentors = await Mentor.find({
-      _id: {
-        $nin: consultedMentorIds,
-      },
+      _id: { $nin: consultedMentorIds },
     })
       .select(
         "firstName lastName profileImage profession experience skills primarySkill averageRating totalReviews pricing"
       )
-      .sort({
-        averageRating: -1,
-        totalReviews: -1,
-      })
+      .sort({ averageRating: -1, totalReviews: -1 })
       .limit(4)
       .lean();
 
-    // ==========================================================
-    // LEARNING ANALYTICS
-    // ==========================================================
-
     const learningAnalytics = {
       totalSessions,
-
       completedSessions,
-
-      upcomingSessions,
-
+      upcomingSessions: upcomingSessionsCount,
       learningMinutes,
-
       learningHours,
-
       totalInvestment,
-
       mentorsConsulted,
-
       averageRating,
-
       completionRate,
-
       averageSessionDuration,
     };
-
-    // ==========================================================
-    // STATS
-    // ==========================================================
 
     const stats = {
       totalBookings,
-
       totalSessions,
-
       completedSessions,
-
       cancelledSessions,
-
       pendingSessions,
-
       rejectedSessions,
-
       confirmedSessions,
-
-      upcomingSessions,
-
+      upcomingSessions: upcomingSessionsCount,
       totalInvestment,
-
       learningMinutes,
-
       learningHours,
-
       completionRate,
-
       averageSessionDuration,
-
       mentorsConsulted,
-
       averageRating,
     };
 
-    // ==========================================================
-    // PROGRESS
-    // ==========================================================
-
     const progressData = {
       percentage: progress,
-
       completedSessions,
-
       totalSessions,
-
       nextMilestone,
-
       nextMilestoneTarget,
     };
 
-    // ==========================================================
-    // FINAL RESPONSE
-    // ==========================================================
-
     return res.status(200).json({
       success: true,
-
       message: "Student dashboard loaded successfully",
-
       dashboard: {
-        // ------------------------------------------------------
-        // STUDENT PROFILE
-        // ------------------------------------------------------
-
         student,
-
-        // ------------------------------------------------------
-        // DASHBOARD STATS
-        // ------------------------------------------------------
-
         stats,
-
-        // ------------------------------------------------------
-        // LEARNING PROGRESS
-        // ------------------------------------------------------
-
         progress: progressData,
-
-        // ------------------------------------------------------
-        // UPCOMING SESSIONS
-        // ------------------------------------------------------
-
         upcomingSessions: upcomingSessionsWithMeetings,
-
-        // ------------------------------------------------------
-        // RECENT BOOKINGS
-        // ------------------------------------------------------
-
         recentBookings,
-
-        // ------------------------------------------------------
-        // LEARNING ANALYTICS
-        // ------------------------------------------------------
-
-        learningAnalytics,
-
-        // ------------------------------------------------------
-        // RESCHEDULE REQUESTS
-        // ------------------------------------------------------
-
-        rescheduleRequests,
-
-        // ------------------------------------------------------
-        // EVENT REGISTRATIONS
-        // ------------------------------------------------------
-
+        enrolledCourses,
         eventRegistrations,
-
-        // ------------------------------------------------------
-        // UPCOMING EVENTS
-        // ------------------------------------------------------
-
         upcomingEvents,
-
-        // ------------------------------------------------------
-        // BADGES
-        // ------------------------------------------------------
-
+        learningAnalytics,
+        rescheduleRequests,
         badges: {
           unlocked: unlockedBadges,
-
           available: badgeProgress,
         },
-
-        // ------------------------------------------------------
-        // NOTIFICATIONS
-        // ------------------------------------------------------
-
         notifications,
-
-        // ------------------------------------------------------
-        // RECOMMENDED MENTORS
-        // ------------------------------------------------------
-
         recommendedMentors,
       },
     });
   } catch (error) {
     console.error("Get student dashboard error:", error);
-
     return res.status(500).json({
       success: false,
-
       message: "Failed to load student dashboard",
-
       error: error.message,
     });
   }
@@ -1626,7 +1275,7 @@ export const getStudentAnalytics = async (req, res) => {
     // AUTHENTICATED STUDENT
     // ==========================================================
 
-    const studentId = req.user?.id;
+    const studentId = req.user?.id || req.user?._id;
 
     if (!studentId) {
       return res.status(401).json({
@@ -1816,6 +1465,27 @@ export const getStudentAnalytics = async (req, res) => {
         : Math.round(learningMinutes / completedSessions);
 
     // ==========================================================
+    // COURSE ENROLMENTS & ANALYTICS
+    // ==========================================================
+
+    const enrollments = await Enrollment.find({ student: studentId })
+      .populate("course", "title category level")
+      .lean()
+      .catch(() => []);
+
+    const totalCoursesEnrolled = enrollments.length;
+
+    const completedCourses = enrollments.filter(
+      (e) => e.isCompleted || e.progressPercentage === 100
+    ).length;
+
+    const courseAnalytics = [
+      { status: "Enrolled", count: totalCoursesEnrolled },
+      { status: "Completed", count: completedCourses },
+      { status: "In Progress", count: totalCoursesEnrolled - completedCourses },
+    ];
+
+    // ==========================================================
     // UNIQUE MENTORS
     // ==========================================================
 
@@ -1872,8 +1542,6 @@ export const getStudentAnalytics = async (req, res) => {
 
     // ==========================================================
     // REVIEWS
-    // IMPORTANT:
-    // Review schema uses studentId, NOT student
     // ==========================================================
 
     const reviewDateFilter = {
@@ -2072,20 +1740,24 @@ export const getStudentAnalytics = async (req, res) => {
     // EVENTS
     // ==========================================================
 
+    // ==========================================================
+    // EVENTS
+    // ==========================================================
+
     const eventRegistrationFilter = {
       student: studentId,
       status: "Registered",
     };
 
     if (fromDate || toDate) {
-      eventRegistrationFilter.registeredAt = {};
+      eventRegistrationFilter.createdAt = {};
 
       if (fromDate) {
-        eventRegistrationFilter.registeredAt.$gte = fromDate;
+        eventRegistrationFilter.createdAt.$gte = fromDate;
       }
 
       if (toDate) {
-        eventRegistrationFilter.registeredAt.$lte = toDate;
+        eventRegistrationFilter.createdAt.$lte = toDate;
       }
     }
 
@@ -2097,6 +1769,14 @@ export const getStudentAnalytics = async (req, res) => {
 
     const eventsRegistered = eventRegistrations.length;
 
+    const upcomingEventsCount = eventRegistrations.filter(
+      (item) => item.event && new Date(item.event.startDateTime) >= now
+    ).length;
+
+    const completedEventsCount = eventRegistrations.filter(
+      (item) => item.event && new Date(item.event.startDateTime) < now
+    ).length;
+
     const eventAnalytics = [
       {
         category: "Registered",
@@ -2104,15 +1784,11 @@ export const getStudentAnalytics = async (req, res) => {
       },
       {
         category: "Upcoming",
-        count: eventRegistrations.filter(
-          (item) => item.event && new Date(item.event.startDateTime) >= now
-        ).length,
+        count: upcomingEventsCount,
       },
       {
         category: "Completed",
-        count: eventRegistrations.filter(
-          (item) => item.event && new Date(item.event.startDateTime) < now
-        ).length,
+        count: completedEventsCount,
       },
     ];
 
@@ -2181,35 +1857,21 @@ export const getStudentAnalytics = async (req, res) => {
         Math.round((currentProgress / requiredSessions) * 100)
       );
 
+      const remaining = Math.max(0, requiredSessions - currentProgress);
+
       return {
         _id: badge._id,
-
+        id: badge._id,
         title: badge.title,
-
         description: badge.description || "",
-
         requiredSessions,
-
+        required: requiredSessions,
         currentProgress,
-
         progressPercentage,
-
         unlocked,
-
-        // Badge image/logo
-        image: badge.image || badge.icon || badge.badgeImage || null,
-
-        // Optional icon name
-        icon: badge.iconName || null,
-
-        // Optional theme
-        color: badge.color || null,
+        remaining,
       };
     });
-
-    // ==========================================================
-    // BADGE SUMMARY
-    // ==========================================================
 
     const unlockedBadgeCount = badgeAnalytics.filter(
       (badge) => badge.unlocked
@@ -2222,20 +1884,20 @@ export const getStudentAnalytics = async (req, res) => {
         ? 0
         : Math.round((unlockedBadgeCount / totalBadgeCount) * 100);
 
-    // ==========================================================
-    // CURRENT BADGE
-    // ==========================================================
-
     const currentBadge =
       [...badgeAnalytics].reverse().find((badge) => badge.unlocked) ||
       badgeAnalytics[0] ||
       null;
 
-    // ==========================================================
-    // NEXT BADGE
-    // ==========================================================
-
     const nextBadge = badgeAnalytics.find((badge) => !badge.unlocked) || null;
+
+    const badgeSummary = {
+      totalBadges: totalBadgeCount,
+      unlockedBadges: unlockedBadgeCount,
+      overallProgress: badgeCompletionPercentage,
+      currentBadge,
+      nextBadge,
+    };
 
     // ==========================================================
     // GAMIFICATION
@@ -2249,10 +1911,6 @@ export const getStudentAnalytics = async (req, res) => {
       current: 0,
       longest: 0,
     };
-
-    // ==========================================================
-    // LEVEL PROGRESS
-    // ==========================================================
 
     const XP_PER_LEVEL = 500;
 
@@ -2309,6 +1967,8 @@ export const getStudentAnalytics = async (req, res) => {
           eventsRegistered,
           meetingsCompleted,
           totalMeetings: meetings.length,
+          totalCoursesEnrolled,
+          completedCourses,
         },
 
         trends,
@@ -2323,42 +1983,24 @@ export const getStudentAnalytics = async (req, res) => {
 
         eventAnalytics,
 
+        courseAnalytics,
+
         meetingAnalytics,
 
-        // ======================================================
-        // BADGE DATA
-        // ======================================================
+        badgeSummary,
 
-        badges: {
-          total: totalBadgeCount,
-
-          unlocked: unlockedBadgeCount,
-
-          locked: totalBadgeCount - unlockedBadgeCount,
-
-          completionPercentage: badgeCompletionPercentage,
-
-          current: currentBadge,
-
-          next: nextBadge,
-
-          all: badgeAnalytics,
-        },
-
-        // ======================================================
-        // GAMIFICATION
-        // ======================================================
+        badgeAnalytics,
 
         gamification: {
           xp,
 
           level,
 
-          title: levelTitle,
+          levelTitle,
 
-          currentLevelXP,
+          currentXP: currentLevelXP,
 
-          nextLevelXP: XP_PER_LEVEL,
+          nextXP: XP_PER_LEVEL,
 
           levelProgress,
 
@@ -2379,6 +2021,26 @@ export const getStudentAnalytics = async (req, res) => {
       success: false,
       message: "Failed to load student analytics",
       error: error.message,
+    });
+  }
+};
+
+export const getAllCourses = async (req, res) => {
+  try {
+    const courses = await Course.find({})
+      .select("title category duration mode institution createdAt")
+      .sort({ createdAt: -1 });
+
+    return res.status(200).json({
+      success: true,
+      count: courses.length,
+      courses,
+    });
+  } catch (error) {
+    console.error("Error fetching courses:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Internal server error",
     });
   }
 };

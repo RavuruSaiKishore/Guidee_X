@@ -8,6 +8,7 @@ import {
   Save,
   Pencil,
   ArrowLeft,
+  Sparkles,
 } from "lucide-react";
 import { toast } from "react-toastify";
 
@@ -149,35 +150,27 @@ const Availability = () => {
   if (loading) {
     return (
       <div
-        className="
-          min-h-screen
-          w-full
-          overflow-x-hidden
-          bg-gray-50
-          px-3
-          pt-20
-          pb-6
-          sm:px-5
-          sm:pt-20
-          lg:ml-64
-          lg:w-[calc(100%-16rem)]
-          lg:px-6
-          lg:py-8
-          xl:px-8
-        "
+        className="min-h-screen bg-slate-50 pt-20 lg:ml-64 lg:pt-0 text-slate-900"
+        style={{ fontFamily: "'Poppins', sans-serif" }}
       >
-        <div className="flex min-h-[70vh] flex-col items-center justify-center">
+        <div className="flex min-h-[70vh] flex-col items-center justify-center px-5">
           <div className="relative">
-            <div className="h-14 w-14 rounded-full border-4 border-emerald-100 sm:h-16 sm:w-16" />
+            <div className="h-14 w-14 rounded-full border-4 border-slate-200" />
 
-            <div className="absolute inset-0 h-14 w-14 animate-spin rounded-full border-4 border-transparent border-t-emerald-600 sm:h-16 sm:w-16" />
+            <div className="absolute inset-0 h-14 w-14 animate-spin rounded-full border-4 border-transparent border-t-blue-600" />
           </div>
 
-          <p className="mt-6 text-base font-semibold text-gray-700 sm:text-lg">
+          <p
+            className="mt-5 text-center text-xs font-semibold tracking-tight"
+            style={{ fontWeight: 600 }}
+          >
             Loading Availability...
           </p>
 
-          <p className="mt-1 max-w-xs text-center text-sm text-gray-400">
+          <p
+            className="mt-1 text-center text-[11px] text-slate-400 font-medium"
+            style={{ fontWeight: 600 }}
+          >
             Please wait while we fetch your schedule.
           </p>
         </div>
@@ -192,129 +185,63 @@ const Availability = () => {
   if (!isEditing) {
     return (
       <div
-        className="
-          min-h-screen
-          w-full
-          overflow-x-hidden
-          bg-gray-50
-          px-3
-          pt-20
-          pb-6
-          sm:px-5
-          sm:pt-20
-          sm:pb-8
-          lg:ml-64
-          lg:w-[calc(100%-16rem)]
-          lg:px-6
-          lg:py-8
-          xl:px-8
-        "
+        className="min-h-screen bg-slate-50 pt-20 lg:ml-64 lg:pt-0 text-slate-900 pb-16"
+        style={{ fontFamily: "'Poppins', sans-serif", fontStyle: "normal" }}
       >
-        <div className="mx-auto w-full max-w-[1600px]">
+        <div className="w-full max-w-[1600px] mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
           {/* ================================================= */}
           {/* HEADER */}
           {/* ================================================= */}
 
-          <div className="mb-5 sm:mb-6 lg:mb-8">
-            <div
-              className="
-                relative
-                overflow-hidden
-                rounded-2xl
-                bg-gradient-to-r
-                from-emerald-600
-                via-green-600
-                to-teal-600
-                p-4
-                text-white
-                shadow-xl
-                sm:rounded-3xl
-                sm:p-6
-                lg:p-8
-              "
-            >
-              <div className="absolute -right-16 -top-16 h-40 w-40 rounded-full bg-white/10 blur-3xl sm:h-56 sm:w-56" />
+          <div className="relative overflow-hidden rounded-3xl bg-black p-6 sm:p-8 text-white shadow-md">
+            <div className="absolute -right-16 -top-16 h-48 w-48 rounded-full bg-blue-600/20 blur-3xl" />
+            <div className="absolute -bottom-20 left-1/4 h-40 w-40 rounded-full bg-blue-400/10 blur-2xl" />
 
-              <div className="absolute -bottom-20 -left-20 h-48 w-48 rounded-full bg-white/10 blur-3xl sm:h-72 sm:w-72" />
-
-              <div
-                className="
-                  relative
-                  flex
-                  flex-col
-                  gap-5
-                  sm:gap-6
-                  lg:flex-row
-                  lg:items-center
-                  lg:justify-between
-                "
-              >
-                {/* LEFT */}
-
-                <div className="flex min-w-0 items-start gap-3 sm:items-center sm:gap-4">
-                  <div
-                    className="
-                      flex
-                      h-11
-                      w-11
-                      shrink-0
-                      items-center
-                      justify-center
-                      rounded-xl
-                      border
-                      border-white/20
-                      bg-white/15
-                      backdrop-blur-md
-                      sm:h-16
-                      sm:w-16
-                      sm:rounded-2xl
-                    "
-                  >
-                    <CalendarDays size={23} className="sm:h-8 sm:w-8" />
-                  </div>
-
-                  <div className="min-w-0">
-                    <h1 className="text-xl font-bold tracking-tight sm:text-2xl lg:text-3xl">
-                      Mentor Availability
-                    </h1>
-
-                    <p className="mt-1 max-w-2xl text-xs leading-5 text-emerald-100 sm:mt-2 sm:text-sm sm:leading-6">
-                      This is the availability students currently see while
-                      booking your mentorship sessions.
-                    </p>
-                  </div>
+            <div className="relative z-10 flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-start sm:items-center gap-4 sm:gap-5 min-w-0">
+                <div
+                  className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-white/15 bg-white/10 backdrop-blur shadow-inner text-blue-400"
+                  style={{ fontWeight: 600 }}
+                >
+                  <CalendarDays size={26} />
                 </div>
 
-                {/* RIGHT */}
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span
+                      className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[11px] font-semibold text-blue-300 backdrop-blur"
+                      style={{ fontWeight: 600 }}
+                    >
+                      <Sparkles size={13} className="text-blue-400" />
+                      Schedule Setup
+                    </span>
+                  </div>
 
-                <button
-                  onClick={() => setIsEditing(true)}
-                  className="
-                    flex
-                    w-full
-                    items-center
-                    justify-center
-                    gap-2
-                    rounded-xl
-                    bg-white
-                    px-5
-                    py-3
-                    text-sm
-                    font-semibold
-                    text-emerald-700
-                    shadow-lg
-                    transition
-                    hover:shadow-xl
-                    sm:w-auto
-                    sm:rounded-2xl
-                    sm:px-6
-                    sm:text-base
-                  "
-                >
-                  <Pencil size={17} />
-                  Edit Availability
-                </button>
+                  <h1
+                    className="mt-2 text-2xl sm:text-3xl font-semibold tracking-tight text-white"
+                    style={{ fontWeight: 600 }}
+                  >
+                    Mentor Availability
+                  </h1>
+
+                  <p
+                    className="mt-1 text-xs sm:text-sm text-slate-300 font-medium leading-relaxed"
+                    style={{ fontWeight: 600 }}
+                  >
+                    This is the availability students currently see while
+                    booking your mentorship sessions.
+                  </p>
+                </div>
               </div>
+
+              <button
+                onClick={() => setIsEditing(true)}
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-white hover:bg-slate-100 px-5 py-3 text-xs font-semibold text-black shadow-xs transition shrink-0"
+                style={{ fontWeight: 600 }}
+              >
+                <Pencil size={15} className="text-blue-600" />
+                Edit Availability
+              </button>
             </div>
           </div>
 
@@ -322,40 +249,40 @@ const Availability = () => {
           {/* OVERVIEW */}
           {/* ================================================= */}
 
-          <div className="grid min-w-0 gap-4 sm:gap-5 lg:grid-cols-2">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
             {/* WEEKLY AVAILABILITY */}
 
-            <div className="min-w-0 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:rounded-3xl sm:p-6">
-              <h2 className="text-lg font-bold text-gray-900 sm:text-xl">
+            <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-xs">
+              <h2
+                className="text-sm font-semibold text-slate-900 tracking-tight"
+                style={{ fontWeight: 600 }}
+              >
                 Weekly Availability
               </h2>
 
-              <p className="mt-1 text-sm text-gray-500">
+              <p
+                className="mt-1 text-xs text-slate-500 font-medium"
+                style={{ fontWeight: 600 }}
+              >
                 Students can schedule sessions on these days.
               </p>
 
-              <div className="mt-5 flex flex-wrap gap-2 sm:mt-6 sm:gap-2.5">
+              <div className="mt-5 flex flex-wrap gap-2">
                 {availability.availableDays.length > 0 ? (
                   availability.availableDays.map((day) => (
                     <span
                       key={day}
-                      className="
-                        rounded-full
-                        bg-emerald-100
-                        px-3
-                        py-1.5
-                        text-xs
-                        font-semibold
-                        text-emerald-700
-                        sm:px-4
-                        sm:text-sm
-                      "
+                      className="rounded-xl border border-blue-200 bg-blue-50 px-3.5 py-1.5 text-xs font-semibold text-blue-700"
+                      style={{ fontWeight: 600 }}
                     >
                       {day}
                     </span>
                   ))
                 ) : (
-                  <span className="text-sm text-gray-400">
+                  <span
+                    className="text-xs text-slate-400 font-semibold"
+                    style={{ fontWeight: 600 }}
+                  >
                     No availability selected.
                   </span>
                 )}
@@ -364,80 +291,104 @@ const Availability = () => {
 
             {/* SESSION INFORMATION */}
 
-            <div className="min-w-0 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:rounded-3xl sm:p-6">
-              <h2 className="text-lg font-bold text-gray-900 sm:text-xl">
+            <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-xs">
+              <h2
+                className="text-sm font-semibold text-slate-900 tracking-tight"
+                style={{ fontWeight: 600 }}
+              >
                 Session Information
               </h2>
 
-              <p className="mt-1 text-sm text-gray-500">
+              <p
+                className="mt-1 text-xs text-slate-500 font-medium"
+                style={{ fontWeight: 600 }}
+              >
                 Your current mentoring preferences.
               </p>
 
-              <div className="mt-5 space-y-3 sm:mt-6 sm:space-y-4">
+              <div className="mt-5 space-y-3.5 text-xs font-semibold text-slate-700">
                 {/* PREFERRED TIME */}
 
-                <div className="flex min-w-0 items-center justify-between gap-4 rounded-xl bg-gray-50 p-3 sm:rounded-2xl sm:p-4">
-                  <div className="min-w-0">
-                    <p className="text-xs text-gray-500 sm:text-sm">
+                <div className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50 border border-slate-100">
+                  <div>
+                    <span
+                      className="text-slate-400 text-[10px] uppercase tracking-wider block"
+                      style={{ fontWeight: 600 }}
+                    >
                       Preferred Time
-                    </p>
-
-                    <h3 className="mt-1 truncate text-base font-bold text-gray-800 sm:text-lg">
+                    </span>
+                    <span
+                      className="text-slate-900 font-semibold mt-0.5 block text-xs"
+                      style={{ fontWeight: 600 }}
+                    >
                       {availability.preferredTime || "-"}
-                    </h3>
+                    </span>
                   </div>
-
-                  <div className="shrink-0 text-2xl sm:text-3xl">🌇</div>
+                  <span className="text-xl">🌇</span>
                 </div>
 
                 {/* WORKING HOURS */}
 
-                <div className="flex min-w-0 items-center justify-between gap-4 rounded-xl bg-gray-50 p-3 sm:rounded-2xl sm:p-4">
-                  <div className="min-w-0">
-                    <p className="text-xs text-gray-500 sm:text-sm">
+                <div className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50 border border-slate-100">
+                  <div>
+                    <span
+                      className="text-slate-400 text-[10px] uppercase tracking-wider block"
+                      style={{ fontWeight: 600 }}
+                    >
                       Working Hours
-                    </p>
-
-                    <h3 className="mt-1 truncate text-base font-bold text-gray-800 sm:text-lg">
+                    </span>
+                    <span
+                      className="text-slate-900 font-semibold mt-0.5 block text-xs"
+                      style={{ fontWeight: 600 }}
+                    >
                       {availability.startTime && availability.endTime
                         ? `${availability.startTime} - ${availability.endTime}`
                         : "-"}
-                    </h3>
+                    </span>
                   </div>
-
-                  <div className="shrink-0 text-2xl sm:text-3xl">🕐</div>
+                  <span className="text-xl">🕐</span>
                 </div>
 
                 {/* TIMEZONE */}
 
-                <div className="flex min-w-0 items-center justify-between gap-4 rounded-xl bg-gray-50 p-3 sm:rounded-2xl sm:p-4">
-                  <div className="min-w-0">
-                    <p className="text-xs text-gray-500 sm:text-sm">Timezone</p>
-
-                    <h3 className="break-words text-sm font-bold text-gray-800 sm:text-lg">
+                <div className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50 border border-slate-100">
+                  <div>
+                    <span
+                      className="text-slate-400 text-[10px] uppercase tracking-wider block"
+                      style={{ fontWeight: 600 }}
+                    >
+                      Timezone
+                    </span>
+                    <span
+                      className="text-slate-900 font-semibold mt-0.5 block text-xs"
+                      style={{ fontWeight: 600 }}
+                    >
                       {availability.timezone || "-"}
-                    </h3>
+                    </span>
                   </div>
-
-                  <div className="shrink-0 text-2xl sm:text-3xl">🌍</div>
+                  <span className="text-xl">🌍</span>
                 </div>
 
                 {/* DURATION */}
 
-                <div className="flex min-w-0 items-center justify-between gap-4 rounded-xl bg-gray-50 p-3 sm:rounded-2xl sm:p-4">
-                  <div className="min-w-0">
-                    <p className="text-xs text-gray-500 sm:text-sm">
+                <div className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50 border border-slate-100">
+                  <div>
+                    <span
+                      className="text-slate-400 text-[10px] uppercase tracking-wider block"
+                      style={{ fontWeight: 600 }}
+                    >
                       Session Duration
-                    </p>
-
-                    <h3 className="mt-1 text-base font-bold text-gray-800 sm:text-lg">
+                    </span>
+                    <span
+                      className="text-slate-900 font-semibold mt-0.5 block text-xs"
+                      style={{ fontWeight: 600 }}
+                    >
                       {availability.sessionDuration
                         ? `${availability.sessionDuration} Minutes`
                         : "-"}
-                    </h3>
+                    </span>
                   </div>
-
-                  <div className="shrink-0 text-2xl sm:text-3xl">⏱</div>
+                  <span className="text-xl">⏱</span>
                 </div>
               </div>
             </div>
@@ -447,58 +398,83 @@ const Availability = () => {
           {/* SUMMARY */}
           {/* ================================================= */}
 
-          <div className="mt-5 rounded-2xl border border-emerald-200 bg-gradient-to-r from-emerald-50 to-green-50 p-4 sm:mt-6 sm:rounded-3xl sm:p-6">
-            <h2 className="text-lg font-bold text-gray-900 sm:text-xl">
+          <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-xs">
+            <h2
+              className="text-sm font-semibold text-slate-900 tracking-tight"
+              style={{ fontWeight: 600 }}
+            >
               Availability Summary
             </h2>
 
-            <div className="mt-4 grid gap-3 sm:mt-6 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4">
+            <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs font-semibold">
               {/* AVAILABLE DAYS */}
 
-              <div className="min-w-0 rounded-xl bg-white p-4 shadow-sm sm:rounded-2xl sm:p-5">
-                <p className="text-xs text-gray-500 sm:text-sm">
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <p
+                  className="text-[10px] uppercase tracking-wider text-slate-400"
+                  style={{ fontWeight: 600 }}
+                >
                   Available Days
                 </p>
-
-                <h2 className="mt-2 text-2xl font-bold text-emerald-600 sm:text-3xl">
+                <h3
+                  className="mt-1 text-lg font-semibold text-slate-900"
+                  style={{ fontWeight: 600 }}
+                >
                   {availability.availableDays.length}
-                </h2>
+                </h3>
               </div>
 
               {/* PREFERRED TIME */}
 
-              <div className="min-w-0 rounded-xl bg-white p-4 shadow-sm sm:rounded-2xl sm:p-5">
-                <p className="text-xs text-gray-500 sm:text-sm">
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <p
+                  className="text-[10px] uppercase tracking-wider text-slate-400"
+                  style={{ fontWeight: 600 }}
+                >
                   Preferred Time
                 </p>
-
-                <h2 className="mt-2 truncate text-lg font-bold text-blue-600 sm:text-xl">
+                <h3
+                  className="mt-1 text-lg font-semibold text-slate-900 truncate"
+                  style={{ fontWeight: 600 }}
+                >
                   {availability.preferredTime || "-"}
-                </h2>
+                </h3>
               </div>
 
               {/* TIMEZONE */}
 
-              <div className="min-w-0 rounded-xl bg-white p-4 shadow-sm sm:rounded-2xl sm:p-5">
-                <p className="text-xs text-gray-500 sm:text-sm">Timezone</p>
-
-                <h2 className="mt-2 break-words text-sm font-bold text-purple-600 sm:text-base">
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <p
+                  className="text-[10px] uppercase tracking-wider text-slate-400"
+                  style={{ fontWeight: 600 }}
+                >
+                  Timezone
+                </p>
+                <h3
+                  className="mt-1 text-sm font-semibold text-slate-900 truncate"
+                  style={{ fontWeight: 600 }}
+                >
                   {availability.timezone || "-"}
-                </h2>
+                </h3>
               </div>
 
               {/* DURATION */}
 
-              <div className="min-w-0 rounded-xl bg-white p-4 shadow-sm sm:rounded-2xl sm:p-5">
-                <p className="text-xs text-gray-500 sm:text-sm">
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <p
+                  className="text-[10px] uppercase tracking-wider text-slate-400"
+                  style={{ fontWeight: 600 }}
+                >
                   Session Duration
                 </p>
-
-                <h2 className="mt-2 text-xl font-bold text-orange-600 sm:text-2xl">
+                <h3
+                  className="mt-1 text-lg font-semibold text-emerald-600"
+                  style={{ fontWeight: 600 }}
+                >
                   {availability.sessionDuration
                     ? `${availability.sessionDuration} min`
                     : "-"}
-                </h2>
+                </h3>
               </div>
             </div>
           </div>
@@ -552,134 +528,71 @@ const Availability = () => {
 
   return (
     <div
-      className="
-        min-h-screen
-        w-full
-        overflow-x-hidden
-        bg-gray-50
-        px-3
-        pt-20
-        pb-6
-        sm:px-5
-        sm:pt-20
-        sm:pb-8
-        lg:ml-64
-        lg:w-[calc(100%-16rem)]
-        lg:px-6
-        lg:py-8
-        xl:px-8
-      "
+      className="min-h-screen bg-slate-50 pt-20 lg:ml-64 lg:pt-0 text-slate-900 pb-16"
+      style={{ fontFamily: "'Poppins', sans-serif", fontStyle: "normal" }}
     >
-      <div className="mx-auto w-full max-w-[1600px]">
+      <div className="w-full max-w-[1600px] mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
         {/* ================================================= */}
         {/* HEADER */}
         {/* ================================================= */}
 
-        <div className="mb-5 sm:mb-6 lg:mb-8">
-          <div
-            className="
-              relative
-              overflow-hidden
-              rounded-2xl
-              bg-gradient-to-r
-              from-emerald-600
-              via-green-600
-              to-teal-600
-              p-4
-              text-white
-              shadow-xl
-              sm:rounded-3xl
-              sm:p-6
-              lg:p-8
-            "
-          >
-            <div className="absolute -right-12 -top-12 h-40 w-40 rounded-full bg-white/10 blur-3xl sm:h-56 sm:w-56" />
+        <div className="relative overflow-hidden rounded-3xl bg-black p-6 sm:p-8 text-white shadow-md">
+          <div className="absolute -right-16 -top-16 h-48 w-48 rounded-full bg-blue-600/20 blur-3xl" />
+          <div className="absolute -bottom-20 left-1/4 h-40 w-40 rounded-full bg-blue-400/10 blur-2xl" />
 
-            <div className="absolute -bottom-16 -left-16 h-48 w-48 rounded-full bg-white/10 blur-3xl sm:h-56 sm:w-56" />
-
-            <div
-              className="
-                relative
-                flex
-                flex-col
-                gap-5
-                lg:flex-row
-                lg:items-center
-                lg:justify-between
-                lg:gap-8
-              "
-            >
-              {/* LEFT */}
-
-              <div className="flex min-w-0 items-start gap-3 sm:items-center sm:gap-5">
-                <div
-                  className="
-                    flex
-                    h-12
-                    w-12
-                    shrink-0
-                    items-center
-                    justify-center
-                    rounded-xl
-                    border
-                    border-white/20
-                    bg-white/15
-                    backdrop-blur-md
-                    sm:h-20
-                    sm:w-20
-                    sm:rounded-3xl
-                  "
-                >
-                  <CalendarDays size={26} className="sm:h-9 sm:w-9" />
-                </div>
-
-                <div className="min-w-0">
-                  <h1 className="text-xl font-bold tracking-tight sm:text-3xl lg:text-4xl">
-                    Mentor Availability
-                  </h1>
-
-                  <p className="mt-1 max-w-3xl text-xs leading-5 text-emerald-100 sm:mt-2 sm:text-sm sm:leading-6 lg:text-base">
-                    Manage your weekly schedule, preferred timings, session
-                    duration and timezone so students can book sessions only
-                    when you're available.
-                  </p>
-                </div>
+          <div className="relative z-10 flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-start sm:items-center gap-4 sm:gap-5 min-w-0">
+              <div
+                className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-white/15 bg-white/10 backdrop-blur shadow-inner text-blue-400"
+                style={{ fontWeight: 600 }}
+              >
+                <CalendarDays size={26} />
               </div>
 
-              {/* STATS */}
-
-              <div className="grid w-full grid-cols-2 gap-2 sm:gap-4 lg:w-auto lg:min-w-[300px]">
-                <div className="rounded-xl border border-white/20 bg-white/15 p-3 backdrop-blur-md sm:rounded-2xl sm:p-5">
-                  <div className="flex items-center gap-2 sm:gap-3">
-                    <Clock3 size={20} className="shrink-0 sm:h-7 sm:w-7" />
-
-                    <div className="min-w-0">
-                      <p className="text-[10px] text-emerald-100 sm:text-sm">
-                        Available Days
-                      </p>
-
-                      <h2 className="text-xl font-bold sm:text-3xl">
-                        {availability.availableDays.length}
-                      </h2>
-                    </div>
-                  </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <span
+                    className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[11px] font-semibold text-blue-300 backdrop-blur"
+                    style={{ fontWeight: 600 }}
+                  >
+                    <Sparkles size={13} className="text-blue-400" />
+                    Configuration Suite
+                  </span>
                 </div>
 
-                <div className="rounded-xl border border-white/20 bg-white/15 p-3 backdrop-blur-md sm:rounded-2xl sm:p-5">
-                  <div className="flex items-center gap-2 sm:gap-3">
-                    <TimerReset size={20} className="shrink-0 sm:h-7 sm:w-7" />
+                <h1
+                  className="mt-2 text-2xl sm:text-3xl font-semibold tracking-tight text-white"
+                  style={{ fontWeight: 600 }}
+                >
+                  Mentor Availability
+                </h1>
 
-                    <div className="min-w-0">
-                      <p className="text-[10px] text-emerald-100 sm:text-sm">
-                        Session
-                      </p>
+                <p
+                  className="mt-1 text-xs sm:text-sm text-slate-300 font-medium leading-relaxed"
+                  style={{ fontWeight: 600 }}
+                >
+                  Manage your weekly schedule, preferred timings, session
+                  duration and timezone.
+                </p>
+              </div>
+            </div>
 
-                      <h2 className="text-xl font-bold sm:text-3xl">
-                        {availability.sessionDuration}m
-                      </h2>
-                    </div>
-                  </div>
-                </div>
+            {/* STATS */}
+
+            <div
+              className="flex items-center gap-4 rounded-2xl border border-white/15 bg-white/10 px-5 py-4 backdrop-blur shadow-inner shrink-0"
+              style={{ fontWeight: 600 }}
+            >
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white text-base font-semibold text-black shadow-xs">
+                {availability.availableDays.length}
+              </div>
+              <div>
+                <p className="text-[10px] uppercase tracking-wider text-slate-400">
+                  Active
+                </p>
+                <h3 className="text-sm font-semibold text-white">
+                  Days Selected
+                </h3>
               </div>
             </div>
           </div>
@@ -689,18 +602,23 @@ const Availability = () => {
         {/* CONTENT */}
         {/* ================================================= */}
 
-        <div className="min-w-0 rounded-2xl border border-gray-100 bg-white p-4 shadow-lg sm:rounded-3xl sm:p-6 lg:p-8">
+        <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-xs space-y-8">
           {/* CONTENT HEADER */}
 
-          <div className="mb-7 sm:mb-8">
-            <h2 className="text-xl font-bold text-gray-900 sm:text-2xl">
+          <div className="border-b border-slate-100 pb-5">
+            <h2
+              className="text-base font-semibold text-slate-900 tracking-tight"
+              style={{ fontWeight: 600 }}
+            >
               Configure Your Availability
             </h2>
 
-            <p className="mt-2 max-w-4xl text-sm leading-6 text-gray-500">
+            <p
+              className="mt-1 text-xs text-slate-500 font-medium leading-relaxed"
+              style={{ fontWeight: 600 }}
+            >
               Select your available days, preferred time, session duration and
-              timezone. Students will only be able to book during these
-              available slots.
+              timezone.
             </p>
           </div>
 
@@ -708,18 +626,24 @@ const Availability = () => {
           {/* AVAILABLE DAYS */}
           {/* ================================================= */}
 
-          <div className="mb-8 sm:mb-10">
-            <div className="mb-4 sm:mb-5">
-              <h3 className="text-lg font-bold text-gray-800 sm:text-xl">
+          <div className="space-y-4">
+            <div>
+              <h3
+                className="text-xs font-semibold uppercase tracking-wider text-slate-400"
+                style={{ fontWeight: 600 }}
+              >
                 Available Days
               </h3>
 
-              <p className="mt-1 text-sm text-gray-500">
+              <p
+                className="mt-1 text-xs text-slate-700 font-medium"
+                style={{ fontWeight: 600 }}
+              >
                 Choose the days when students can book sessions with you.
               </p>
             </div>
 
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 lg:grid-cols-4 xl:grid-cols-7">
+            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
               {weekDays.map((day) => {
                 const selected = availability.availableDays.includes(day.key);
 
@@ -743,72 +667,25 @@ const Availability = () => {
                       }
                     }}
                     className={`
-                      group
-                      min-w-0
-                      rounded-xl
-                      border
-                      p-3
-                      transition-all
-                      duration-300
-                      sm:rounded-2xl
-                      sm:p-4
-                      lg:p-5
+                      w-full rounded-2xl border p-4 text-center transition-all duration-200 flex flex-col items-center justify-center gap-2
                       ${
                         selected
-                          ? "border-emerald-500 bg-emerald-50 shadow-lg"
-                          : "border-gray-200 bg-white hover:border-emerald-300 hover:shadow-md"
+                          ? "border-black bg-black text-white shadow-sm"
+                          : "border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100"
                       }
                     `}
+                    style={{ fontWeight: 600 }}
                   >
-                    <div className="flex flex-col items-center">
-                      <div
-                        className={`
-                          flex
-                          h-10
-                          w-10
-                          items-center
-                          justify-center
-                          rounded-full
-                          text-xs
-                          font-bold
-                          sm:h-14
-                          sm:w-14
-                          sm:text-lg
-                          ${
-                            selected
-                              ? "bg-emerald-600 text-white"
-                              : "bg-gray-100 text-gray-700 group-hover:bg-emerald-100"
-                          }
-                        `}
-                      >
-                        {day.short}
-                      </div>
-
-                      <p
-                        className={`
-                          mt-2
-                          text-xs
-                          font-semibold
-                          sm:mt-4
-                          sm:text-sm
-                          ${selected ? "text-emerald-700" : "text-gray-700"}
-                        `}
-                      >
-                        {day.key}
-                      </p>
-
-                      <div className="mt-2 sm:mt-3">
-                        {selected ? (
-                          <span className="rounded-full bg-emerald-600 px-2 py-1 text-[10px] font-semibold text-white sm:px-3 sm:text-xs">
-                            Selected
-                          </span>
-                        ) : (
-                          <span className="rounded-full bg-gray-100 px-2 py-1 text-[10px] text-gray-500 sm:px-3 sm:text-xs">
-                            Available
-                          </span>
-                        )}
-                      </div>
-                    </div>
+                    <span className="text-xs">{day.key}</span>
+                    <span
+                      className={`text-[10px] px-2.5 py-0.5 rounded-full ${
+                        selected
+                          ? "bg-white/20 text-blue-300"
+                          : "bg-slate-200 text-slate-600"
+                      }`}
+                    >
+                      {selected ? "Selected" : "Off"}
+                    </span>
                   </button>
                 );
               })}
@@ -819,18 +696,24 @@ const Availability = () => {
           {/* PREFERRED TIME */}
           {/* ================================================= */}
 
-          <div className="mb-8 sm:mb-10">
-            <div className="mb-4 sm:mb-5">
-              <h3 className="text-lg font-bold text-gray-800 sm:text-xl">
+          <div className="space-y-4 pt-4 border-t border-slate-100">
+            <div>
+              <h3
+                className="text-xs font-semibold uppercase tracking-wider text-slate-400"
+                style={{ fontWeight: 600 }}
+              >
                 Preferred Time
               </h3>
 
-              <p className="mt-1 text-sm text-gray-500">
+              <p
+                className="mt-1 text-xs text-slate-700 font-medium"
+                style={{ fontWeight: 600 }}
+              >
                 Select the time of day you usually conduct mentoring sessions.
               </p>
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {timeOptions.map((item) => {
                 const active = availability.preferredTime === item.value;
 
@@ -845,46 +728,39 @@ const Availability = () => {
                       }))
                     }
                     className={`
-                      min-w-0
-                      rounded-xl
-                      border
-                      p-4
-                      text-left
-                      transition-all
-                      duration-300
-                      sm:rounded-2xl
-                      sm:p-6
+                      rounded-2xl border p-5 text-left transition-all duration-200 flex flex-col justify-between
                       ${
                         active
-                          ? "border-emerald-500 bg-emerald-50 shadow-lg"
-                          : "border-gray-200 bg-white hover:border-emerald-300 hover:shadow-md"
+                          ? "border-black bg-black text-white shadow-sm"
+                          : "border-slate-200 bg-slate-50 text-slate-800 hover:bg-slate-100"
                       }
                     `}
+                    style={{ fontWeight: 600 }}
                   >
-                    <div className="text-3xl sm:text-4xl">{item.emoji}</div>
-
-                    <h4
-                      className={`
-                        mt-3
-                        text-base
-                        font-bold
-                        sm:mt-5
-                        sm:text-lg
-                        ${active ? "text-emerald-700" : "text-gray-800"}
-                      `}
-                    >
-                      {item.value}
-                    </h4>
-
-                    <p className="mt-1 text-xs text-gray-500 sm:mt-2 sm:text-sm">
-                      {item.desc}
-                    </p>
-
-                    {active && (
-                      <div className="mt-3 inline-flex rounded-full bg-emerald-600 px-3 py-1 text-[10px] font-semibold text-white sm:mt-5 sm:px-4 sm:text-xs">
-                        Selected
-                      </div>
-                    )}
+                    <div className="flex items-center justify-between mb-4">
+                      <span className="text-2xl">{item.emoji}</span>
+                      <span
+                        className={`text-[10px] px-2.5 py-0.5 rounded-full ${
+                          active
+                            ? "bg-white/20 text-blue-300"
+                            : "bg-slate-200 text-slate-600"
+                        }`}
+                      >
+                        {active ? "Active" : "Select"}
+                      </span>
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-semibold tracking-tight">
+                        {item.value}
+                      </h4>
+                      <p
+                        className={`text-[11px] mt-1 font-medium ${
+                          active ? "text-slate-300" : "text-slate-500"
+                        }`}
+                      >
+                        {item.desc}
+                      </p>
+                    </div>
                   </button>
                 );
               })}
@@ -895,34 +771,36 @@ const Availability = () => {
           {/* SESSION TIMINGS */}
           {/* ================================================= */}
 
-          <div className="mb-8 sm:mb-10">
-            <div className="mb-4 sm:mb-5">
-              <h3 className="text-lg font-bold text-gray-800 sm:text-xl">
+          <div className="space-y-4 pt-4 border-t border-slate-100">
+            <div>
+              <h3
+                className="text-xs font-semibold uppercase tracking-wider text-slate-400"
+                style={{ fontWeight: 600 }}
+              >
                 Session Timings
               </h3>
 
-              <p className="mt-1 text-sm text-gray-500">
+              <p
+                className="mt-1 text-xs text-slate-700 font-medium"
+                style={{ fontWeight: 600 }}
+              >
                 Set the daily time window during which students can book
                 sessions.
               </p>
             </div>
 
-            <div className="grid gap-4 lg:grid-cols-2 lg:gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               {/* START */}
 
-              <div className="min-w-0 rounded-xl border border-gray-200 bg-gray-50 p-4 transition-all hover:shadow-md sm:rounded-2xl sm:p-6">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-100 sm:h-12 sm:w-12">
-                    <Clock3 className="text-emerald-600" size={20} />
-                  </div>
-
-                  <div className="min-w-0">
-                    <h4 className="font-bold text-gray-800">Start Time</h4>
-
-                    <p className="text-xs text-gray-500 sm:text-sm">
-                      Beginning of your availability.
-                    </p>
-                  </div>
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5 space-y-3">
+                <div className="flex items-center gap-2.5">
+                  <Clock3 size={16} className="text-blue-600" />
+                  <h4
+                    className="text-xs font-semibold text-slate-900"
+                    style={{ fontWeight: 600 }}
+                  >
+                    Start Time
+                  </h4>
                 </div>
 
                 <input
@@ -934,42 +812,22 @@ const Availability = () => {
                       startTime: e.target.value,
                     }))
                   }
-                  className="
-                    mt-5
-                    h-12
-                    w-full
-                    rounded-xl
-                    border
-                    border-gray-300
-                    bg-white
-                    px-4
-                    text-gray-700
-                    outline-none
-                    transition
-                    focus:border-emerald-500
-                    focus:ring-4
-                    focus:ring-emerald-100
-                    sm:mt-6
-                    sm:h-14
-                  "
+                  className="w-full h-11 px-4 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-800 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                  style={{ fontWeight: 600 }}
                 />
               </div>
 
               {/* END */}
 
-              <div className="min-w-0 rounded-xl border border-gray-200 bg-gray-50 p-4 transition-all hover:shadow-md sm:rounded-2xl sm:p-6">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-100 sm:h-12 sm:w-12">
-                    <Clock3 className="text-red-600" size={20} />
-                  </div>
-
-                  <div className="min-w-0">
-                    <h4 className="font-bold text-gray-800">End Time</h4>
-
-                    <p className="text-xs text-gray-500 sm:text-sm">
-                      Last booking time for students.
-                    </p>
-                  </div>
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5 space-y-3">
+                <div className="flex items-center gap-2.5">
+                  <Clock3 size={16} className="text-blue-600" />
+                  <h4
+                    className="text-xs font-semibold text-slate-900"
+                    style={{ fontWeight: 600 }}
+                  >
+                    End Time
+                  </h4>
                 </div>
 
                 <input
@@ -981,24 +839,8 @@ const Availability = () => {
                       endTime: e.target.value,
                     }))
                   }
-                  className="
-                    mt-5
-                    h-12
-                    w-full
-                    rounded-xl
-                    border
-                    border-gray-300
-                    bg-white
-                    px-4
-                    text-gray-700
-                    outline-none
-                    transition
-                    focus:border-red-500
-                    focus:ring-4
-                    focus:ring-red-100
-                    sm:mt-6
-                    sm:h-14
-                  "
+                  className="w-full h-11 px-4 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-800 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                  style={{ fontWeight: 600 }}
                 />
               </div>
             </div>
@@ -1008,32 +850,33 @@ const Availability = () => {
           {/* TIMEZONE */}
           {/* ================================================= */}
 
-          <div className="mb-8 sm:mb-10">
-            <div className="mb-4 sm:mb-5">
-              <h3 className="text-lg font-bold text-gray-800 sm:text-xl">
+          <div className="space-y-4 pt-4 border-t border-slate-100">
+            <div>
+              <h3
+                className="text-xs font-semibold uppercase tracking-wider text-slate-400"
+                style={{ fontWeight: 600 }}
+              >
                 Timezone
               </h3>
 
-              <p className="mt-1 text-sm leading-6 text-gray-500">
+              <p
+                className="mt-1 text-xs text-slate-700 font-medium"
+                style={{ fontWeight: 600 }}
+              >
                 Students from different countries will see your schedule in this
                 timezone.
               </p>
             </div>
 
-            <div className="min-w-0 rounded-xl border border-gray-200 bg-gray-50 p-4 sm:rounded-2xl sm:p-6">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-100 sm:h-12 sm:w-12">
-                  <Globe2 className="text-blue-600" size={20} />
-                </div>
-
-                <div className="min-w-0">
-                  <h4 className="font-bold text-gray-800">Select Timezone</h4>
-
-                  <p className="text-xs text-gray-500 sm:text-sm">
-                    Your availability will be converted automatically for
-                    students.
-                  </p>
-                </div>
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5 space-y-3">
+              <div className="flex items-center gap-2.5">
+                <Globe2 size={16} className="text-blue-600" />
+                <h4
+                  className="text-xs font-semibold text-slate-900"
+                  style={{ fontWeight: 600 }}
+                >
+                  Select Timezone
+                </h4>
               </div>
 
               <select
@@ -1044,39 +887,16 @@ const Availability = () => {
                     timezone: e.target.value,
                   }))
                 }
-                className="
-                  mt-5
-                  h-12
-                  w-full
-                  min-w-0
-                  rounded-xl
-                  border
-                  border-gray-300
-                  bg-white
-                  px-3
-                  text-sm
-                  outline-none
-                  transition
-                  focus:border-blue-500
-                  focus:ring-4
-                  focus:ring-blue-100
-                  sm:mt-6
-                  sm:h-14
-                  sm:px-4
-                "
+                className="w-full h-11 px-4 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-800 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                style={{ fontWeight: 600 }}
               >
                 <option value="Asia/Kolkata">Asia/Kolkata (IST)</option>
-
                 <option value="Asia/Dubai">Asia/Dubai (GST)</option>
-
                 <option value="Europe/London">Europe/London (GMT)</option>
-
                 <option value="America/New_York">America/New_York (EST)</option>
-
                 <option value="America/Los_Angeles">
                   America/Los_Angeles (PST)
                 </option>
-
                 <option value="Australia/Sydney">
                   Australia/Sydney (AEST)
                 </option>
@@ -1088,18 +908,24 @@ const Availability = () => {
           {/* SESSION DURATION */}
           {/* ================================================= */}
 
-          <div className="mb-8 sm:mb-10">
-            <div className="mb-4 sm:mb-5">
-              <h3 className="text-lg font-bold text-gray-800 sm:text-xl">
+          <div className="space-y-4 pt-4 border-t border-slate-100">
+            <div>
+              <h3
+                className="text-xs font-semibold uppercase tracking-wider text-slate-400"
+                style={{ fontWeight: 600 }}
+              >
                 Session Duration
               </h3>
 
-              <p className="mt-1 text-sm text-gray-500">
+              <p
+                className="mt-1 text-xs text-slate-700 font-medium"
+                style={{ fontWeight: 600 }}
+              >
                 Choose how long each mentoring session should last.
               </p>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-5">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
               {durations.map((duration) => {
                 const selected = availability.sessionDuration === duration;
 
@@ -1114,71 +940,27 @@ const Availability = () => {
                       }))
                     }
                     className={`
-                      min-w-0
-                      rounded-xl
-                      border
-                      p-4
-                      transition-all
-                      duration-300
-                      sm:rounded-2xl
-                      sm:p-6
+                      rounded-2xl border p-4 text-center transition-all duration-200 flex flex-col items-center justify-center gap-2
                       ${
                         selected
-                          ? "border-emerald-500 bg-emerald-50 shadow-lg"
-                          : "border-gray-200 bg-white hover:border-emerald-300 hover:shadow-md"
+                          ? "border-black bg-black text-white shadow-sm"
+                          : "border-slate-200 bg-slate-50 text-slate-800 hover:bg-slate-100"
                       }
                     `}
+                    style={{ fontWeight: 600 }}
                   >
-                    <div className="flex justify-center">
-                      <div
-                        className={`
-                          flex
-                          h-11
-                          w-11
-                          items-center
-                          justify-center
-                          rounded-full
-                          text-sm
-                          font-bold
-                          sm:h-16
-                          sm:w-16
-                          sm:text-xl
-                          ${
-                            selected
-                              ? "bg-emerald-600 text-white"
-                              : "bg-gray-100 text-gray-700"
-                          }
-                        `}
-                      >
-                        {duration}
-                      </div>
-                    </div>
-
-                    <h4
-                      className={`
-                        mt-3
-                        text-center
-                        text-sm
-                        font-bold
-                        sm:mt-5
-                        sm:text-lg
-                        ${selected ? "text-emerald-700" : "text-gray-800"}
-                      `}
+                    <span className="text-sm font-semibold">
+                      {duration} Mins
+                    </span>
+                    <span
+                      className={`text-[10px] px-2.5 py-0.5 rounded-full ${
+                        selected
+                          ? "bg-white/20 text-blue-300"
+                          : "bg-slate-200 text-slate-600"
+                      }`}
                     >
-                      {duration} Minutes
-                    </h4>
-
-                    <p className="mt-1 text-center text-xs text-gray-500 sm:mt-2 sm:text-sm">
-                      Session length
-                    </p>
-
-                    {selected && (
-                      <div className="mt-3 flex justify-center sm:mt-5">
-                        <span className="rounded-full bg-emerald-600 px-3 py-1 text-[10px] font-semibold text-white sm:px-4 sm:text-xs">
-                          Selected
-                        </span>
-                      </div>
-                    )}
+                      {selected ? "Selected" : "Option"}
+                    </span>
                   </button>
                 );
               })}
@@ -1189,89 +971,60 @@ const Availability = () => {
           {/* SUMMARY */}
           {/* ================================================= */}
 
-          <div className="rounded-2xl border border-emerald-100 bg-gradient-to-r from-emerald-50 via-green-50 to-teal-50 p-4 sm:rounded-3xl sm:p-6 lg:p-8">
-            <div className="flex items-start gap-3 sm:gap-4">
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-600 text-white sm:h-14 sm:w-14 sm:rounded-2xl">
-                <CheckCircle2 size={23} />
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-6 space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-black text-white">
+                <CheckCircle2 size={18} className="text-blue-400" />
               </div>
-
-              <div className="min-w-0">
-                <h2 className="text-lg font-bold text-gray-900 sm:text-2xl">
+              <div>
+                <h2
+                  className="text-xs font-semibold uppercase tracking-wider text-slate-900"
+                  style={{ fontWeight: 600 }}
+                >
                   Availability Summary
                 </h2>
-
-                <p className="mt-1 text-xs text-gray-600 sm:text-sm">
+                <p
+                  className="text-[11px] text-slate-500 font-medium"
+                  style={{ fontWeight: 600 }}
+                >
                   Review your availability before saving the changes.
                 </p>
               </div>
             </div>
 
-            <div className="mt-5 grid gap-3 sm:mt-8 sm:grid-cols-2 sm:gap-4 xl:grid-cols-4">
-              {/* DAYS */}
-
-              <div className="min-w-0 rounded-xl bg-white p-4 shadow-sm sm:rounded-2xl sm:p-5">
-                <p className="text-[10px] uppercase tracking-wider text-gray-500 sm:text-xs">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs font-semibold">
+              <div className="rounded-xl bg-white border border-slate-200 p-4">
+                <p className="text-[10px] uppercase tracking-wider text-slate-400">
                   Available Days
                 </p>
-
-                <h3 className="mt-2 text-2xl font-bold text-emerald-600 sm:text-3xl">
-                  {availability.availableDays.length}
+                <h3 className="mt-1 text-base font-semibold text-slate-900">
+                  {availability.availableDays.length} Days
                 </h3>
-
-                <p className="mt-2 break-words text-xs leading-5 text-gray-500 sm:text-sm">
-                  {availability.availableDays.length > 0
-                    ? availability.availableDays.join(", ")
-                    : "No days selected"}
-                </p>
               </div>
-
-              {/* PREFERRED TIME */}
-
-              <div className="min-w-0 rounded-xl bg-white p-4 shadow-sm sm:rounded-2xl sm:p-5">
-                <p className="text-[10px] uppercase tracking-wider text-gray-500 sm:text-xs">
+              <div className="rounded-xl bg-white border border-slate-200 p-4">
+                <p className="text-[10px] uppercase tracking-wider text-slate-400">
                   Preferred Time
                 </p>
-
-                <h3 className="mt-2 text-xl font-bold text-blue-600 sm:text-2xl">
+                <h3 className="mt-1 text-base font-semibold text-slate-900 truncate">
                   {availability.preferredTime || "--"}
                 </h3>
-
-                <p className="mt-2 text-xs text-gray-500 sm:text-sm">
-                  Preferred mentoring period
-                </p>
               </div>
-
-              {/* HOURS */}
-
-              <div className="min-w-0 rounded-xl bg-white p-4 shadow-sm sm:rounded-2xl sm:p-5">
-                <p className="text-[10px] uppercase tracking-wider text-gray-500 sm:text-xs">
+              <div className="rounded-xl bg-white border border-slate-200 p-4">
+                <p className="text-[10px] uppercase tracking-wider text-slate-400">
                   Working Hours
                 </p>
-
-                <h3 className="mt-2 break-words text-lg font-bold text-purple-600 sm:text-xl">
-                  {availability.startTime || "--:--"} -{" "}
-                  {availability.endTime || "--:--"}
+                <h3 className="mt-1 text-xs font-semibold text-slate-900 truncate">
+                  {availability.startTime || "--"} -{" "}
+                  {availability.endTime || "--"}
                 </h3>
-
-                <p className="mt-2 text-xs text-gray-500 sm:text-sm">
-                  Daily availability
-                </p>
               </div>
-
-              {/* DURATION */}
-
-              <div className="min-w-0 rounded-xl bg-white p-4 shadow-sm sm:rounded-2xl sm:p-5">
-                <p className="text-[10px] uppercase tracking-wider text-gray-500 sm:text-xs">
+              <div className="rounded-xl bg-white border border-slate-200 p-4">
+                <p className="text-[10px] uppercase tracking-wider text-slate-400">
                   Session Duration
                 </p>
-
-                <h3 className="mt-2 text-2xl font-bold text-orange-600 sm:text-3xl">
-                  {availability.sessionDuration}
+                <h3 className="mt-1 text-base font-semibold text-emerald-600">
+                  {availability.sessionDuration} mins
                 </h3>
-
-                <p className="mt-2 text-xs text-gray-500 sm:text-sm">
-                  Minutes per session
-                </p>
               </div>
             </div>
           </div>
@@ -1280,88 +1033,42 @@ const Availability = () => {
           {/* SAVE SECTION */}
           {/* ================================================= */}
 
-          <div className="mt-6 sm:mt-8">
-            <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-xl sm:rounded-3xl sm:p-6">
-              <div className="flex flex-col gap-4 sm:gap-6 lg:flex-row lg:items-center lg:justify-between">
-                <div className="min-w-0">
-                  <h3 className="text-lg font-bold text-gray-900 sm:text-xl">
-                    Ready to Save?
-                  </h3>
+          <div className="pt-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p
+              className="text-xs text-slate-500 font-medium"
+              style={{ fontWeight: 600 }}
+            >
+              Changes will apply instantly to your calendar booking links.
+            </p>
 
-                  <p className="mt-1 text-xs leading-5 text-gray-500 sm:mt-2 sm:text-sm">
-                    Your updated schedule will immediately be used for future
-                    student bookings.
-                  </p>
-                </div>
+            <div className="flex items-center gap-3 w-full sm:w-auto">
+              <button
+                onClick={() => setIsEditing(false)}
+                disabled={saving}
+                className="w-full sm:w-auto px-5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50 transition"
+                style={{ fontWeight: 600 }}
+              >
+                Cancel
+              </button>
 
-                <div className="flex w-full flex-col gap-2 sm:flex-row lg:w-auto">
-                  <button
-                    onClick={() => setIsEditing(false)}
-                    disabled={saving}
-                    className="
-                      flex
-                      w-full
-                      items-center
-                      justify-center
-                      gap-2
-                      rounded-xl
-                      border
-                      border-gray-300
-                      bg-white
-                      px-5
-                      py-3
-                      text-sm
-                      font-semibold
-                      text-gray-700
-                      transition
-                      hover:bg-gray-50
-                      disabled:cursor-not-allowed
-                      disabled:opacity-50
-                      sm:w-auto
-                      sm:px-6
-                      sm:py-4
-                    "
-                  >
-                    <ArrowLeft size={18} />
-                    Cancel
-                  </button>
-
-                  <button
-                    onClick={saveAvailability}
-                    disabled={saving}
-                    className="
-                      flex
-                      w-full
-                      items-center
-                      justify-center
-                      gap-2
-                      rounded-xl
-                      bg-gradient-to-r
-                      from-emerald-600
-                      to-green-600
-                      px-6
-                      py-3
-                      text-sm
-                      font-semibold
-                      text-white
-                      shadow-lg
-                      transition-all
-                      duration-300
-                      hover:shadow-xl
-                      disabled:cursor-not-allowed
-                      disabled:opacity-70
-                      sm:w-auto
-                      sm:px-8
-                      sm:py-4
-                      sm:text-base
-                    "
-                  >
-                    <Save size={20} />
-
-                    {saving ? "Saving..." : "Save Availability"}
-                  </button>
-                </div>
-              </div>
+              <button
+                onClick={saveAvailability}
+                disabled={saving}
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-black hover:bg-slate-800 text-xs font-semibold text-white shadow-xs transition disabled:opacity-50"
+                style={{ fontWeight: 600 }}
+              >
+                {saving ? (
+                  <>
+                    <span className="h-3 w-3 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save size={14} className="text-blue-400" />
+                    Save Availability
+                  </>
+                )}
+              </button>
             </div>
           </div>
         </div>

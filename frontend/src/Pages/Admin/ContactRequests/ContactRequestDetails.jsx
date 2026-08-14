@@ -16,6 +16,9 @@ import {
   MessageSquare,
   ShieldCheck,
   Ticket,
+  CheckCircle2,
+  AlertCircle,
+  HelpCircle,
 } from "lucide-react";
 
 const API_BASE_URL =
@@ -167,43 +170,51 @@ const AdminContactDetails = () => {
   // LOADING
   // ==========================
 
-   if (loading) {
-     return (
-       <div className="fixed inset-0 flex min-h-screen flex-col items-center justify-center bg-white px-4">
-         <div className="relative">
-           <div className="h-16 w-16 rounded-full border-4 border-blue-100" />
+  if (loading) {
+    return (
+      <div
+        className="fixed inset-0 flex min-h-screen flex-col items-center justify-center bg-slate-50 px-4"
+        style={{ fontFamily: "'Poppins', sans-serif" }}
+      >
+        <div className="relative">
+          <div className="h-16 w-16 rounded-full border-4 border-slate-200" />
+          <div className="absolute inset-0 h-16 w-16 animate-spin rounded-full border-4 border-transparent border-t-blue-600" />
+        </div>
+        <p
+          className="mt-6 text-center text-xs font-semibold text-slate-900 tracking-tight"
+          style={{ fontWeight: 600 }}
+        >
+          Loading Support Request Details...
+        </p>
+      </div>
+    );
+  }
 
-           <div className="absolute inset-0 h-16 w-16 animate-spin rounded-full border-4 border-transparent border-t-blue-600" />
-         </div>
-
-         <p className="mt-6 text-center text-lg font-semibold text-gray-700">
-           Loading your Contact Request Details...
-         </p>
-
-         <p className="mt-1 text-center text-sm text-gray-400">
-           Please wait while we fetch the Contact Request Details.
-         </p>
-       </div>
-     );
-   }
   // ==========================
   // NOT FOUND
   // ==========================
 
   if (!contact) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-100 px-6 text-center">
-        <Ticket size={50} className="text-slate-300 mb-4" />
-
-        <h2 className="text-2xl font-bold text-slate-700">
+      <div
+        className="min-h-screen flex flex-col items-center justify-center bg-slate-50 px-6 text-center text-slate-900"
+        style={{ fontFamily: "'Poppins', sans-serif" }}
+      >
+        <div className="w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mb-4">
+          <Ticket size={28} />
+        </div>
+        <h2
+          className="text-base font-semibold text-slate-900 tracking-tight"
+          style={{ fontWeight: 600 }}
+        >
           Contact request not found
         </h2>
-
         <Link
           to="/admin/contact-requests"
-          className="mt-5 flex items-center gap-2 px-5 py-3 rounded-xl bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition"
+          className="mt-4 flex items-center gap-2 px-5 py-2.5 rounded-xl bg-black text-white text-xs font-semibold hover:bg-slate-800 transition shadow-xs"
+          style={{ fontWeight: 600 }}
         >
-          <ArrowLeft size={18} />
+          <ArrowLeft size={14} className="text-blue-400" />
           Back to Requests
         </Link>
       </div>
@@ -211,282 +222,135 @@ const AdminContactDetails = () => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-100">
+    <div
+      className="min-h-screen bg-slate-50 text-slate-900 pb-12"
+      style={{ fontFamily: "'Poppins', sans-serif", fontStyle: "normal" }}
+    >
       {/* =====================================================
-          HERO HEADER
+          PROFESSIONAL SPLIT HEADER BAR
       ====================================================== */}
-
-      <section className="rounded-2xl sm:rounded-3xl overflow-hidden bg-gradient-to-r from-slate-800 via-slate-700 to-indigo-700 shadow-xl">
-        <div className="px-4 sm:px-6 lg:px-8 py-6 sm:py-8 mt-12">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 lg:gap-8">
-            {/* LEFT */}
-
-            <div className="flex items-start sm:items-center gap-4 sm:gap-5 min-w-0">
-              <div className="flex-shrink-0 w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-white/15 backdrop-blur-md border border-white/20 flex items-center justify-center">
-                <Ticket className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
-              </div>
-
-              <div className="min-w-0">
-                <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-                  <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white">
-                    Contact Request
-                  </h1>
-
-                  <span className="px-2.5 sm:px-3 py-1 rounded-full bg-white/20 text-white text-[10px] sm:text-xs font-semibold backdrop-blur-md">
-                    #{contact._id.slice(-6)}
-                  </span>
-                </div>
-
-                <p className="mt-2 text-sm sm:text-base text-slate-200 max-w-2xl leading-6 sm:leading-7">
-                  Review student queries, manage support requests, reply to
-                  messages, and track resolution progress from one centralized
-                  workspace.
-                </p>
-              </div>
-            </div>
-
-            {/* RIGHT */}
-
-            <div className="flex flex-col sm:flex-row lg:flex-col items-start sm:items-center lg:items-end gap-3 sm:gap-4">
-              {/* STATUS */}
-
-              <span
-                className={`
-                  px-4 sm:px-5
-                  py-2
-                  rounded-xl
-                  font-semibold
-                  backdrop-blur-md
-                  border border-white/20
-                  text-xs sm:text-sm
-                  ${
-                    contact.status === "Pending"
-                      ? "bg-yellow-400/20 text-yellow-200"
-                      : contact.status === "In Progress"
-                      ? "bg-blue-400/20 text-blue-200"
-                      : "bg-green-400/20 text-green-200"
-                  }
-                `}
-              >
-                {contact.status}
-              </span>
-
-              {/* DATE */}
-
-              <div className="flex items-center gap-2 text-slate-200 text-xs sm:text-sm">
-                <Calendar size={16} />
-
-                <span>
-                  {new Date(contact.createdAt).toLocaleDateString("en-GB", {
-                    day: "2-digit",
-                    month: "short",
-                    year: "numeric",
-                  })}
-                </span>
-              </div>
-
-              {/* BACK BUTTON */}
-
+      <header className="border-b border-slate-200 bg-white sticky top-0 z-30 shadow-2xs">
+        <div className="mx-auto max-w-7xl px-5 sm:px-6 lg:px-8">
+          <div className="flex h-18 items-center justify-between gap-4">
+            <div className="flex items-center gap-4 min-w-0">
               <Link
                 to="/admin/contact-requests"
-                className="flex items-center justify-center gap-2 w-full sm:w-auto px-4 sm:px-5 py-2.5 rounded-xl bg-white text-indigo-700 font-semibold hover:bg-indigo-50 transition shadow-lg text-sm sm:text-base"
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-slate-700 transition hover:bg-slate-100 hover:text-blue-600"
+                title="Back to Requests"
               >
-                <ArrowLeft size={18} />
-                Back to Requests
+                <ArrowLeft size={17} />
               </Link>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <h1
+                    className="text-sm font-semibold text-slate-900 tracking-tight truncate"
+                    style={{ fontWeight: 600 }}
+                  >
+                    Ticket #{contact._id.slice(-8).toUpperCase()}
+                  </h1>
+                  <span
+                    className={`px-2.5 py-0.5 rounded-full text-[10px] font-semibold border shrink-0 ${
+                      status === "Pending"
+                        ? "bg-amber-50 text-amber-700 border-amber-200"
+                        : status === "In Progress"
+                        ? "bg-blue-50 text-blue-700 border-blue-200"
+                        : "bg-emerald-50 text-emerald-700 border-emerald-200"
+                    }`}
+                    style={{ fontWeight: 600 }}
+                  >
+                    {status}
+                  </span>
+                </div>
+                <p
+                  className="text-[11px] text-slate-500 font-medium truncate mt-0.5"
+                  style={{ fontWeight: 600 }}
+                >
+                  {contact.subject || contact.category}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                onClick={handleDelete}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-red-200 bg-red-50 px-3.5 py-2 text-xs font-semibold text-red-600 transition hover:bg-red-100 shadow-2xs"
+                style={{ fontWeight: 600 }}
+              >
+                <Trash2 size={14} />
+                <span className="hidden sm:inline">Delete Ticket</span>
+              </button>
             </div>
           </div>
         </div>
-
-        {/* TICKET INFO */}
-
-        <div className="px-4 sm:px-6 lg:px-8 py-4 bg-black/10 border-t border-white/10">
-          <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3 sm:gap-x-6 sm:gap-y-3 text-xs sm:text-sm text-slate-200">
-            <div className="flex items-start gap-2 min-w-0">
-              <Ticket size={16} className="flex-shrink-0 mt-0.5" />
-
-              <span>Ticket ID:</span>
-
-              <span className="font-semibold text-white break-all">
-                {contact._id}
-              </span>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <Tag size={16} />
-
-              <span>Category:</span>
-
-              <span className="font-semibold text-white">
-                {contact.category}
-              </span>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <User size={16} />
-
-              <span>Student:</span>
-
-              <span className="font-semibold text-white">
-                {contact.studentId?.firstName || contact.name}{" "}
-                {contact.studentId?.lastName || ""}
-              </span>
-            </div>
-          </div>
-        </div>
-      </section>
+      </header>
 
       {/* =====================================================
-          MAIN CONTENT
+          MAIN LAYOUT: SPLIT WORKSPACE
       ====================================================== */}
-
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-10">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
+      <main className="mx-auto max-w-7xl px-5 sm:px-6 lg:px-8 pt-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           {/* =================================================
-              STUDENT PROFILE
+              LEFT COLUMN: TICKET & STUDENT METADATA (4 Cols)
           ================================================== */}
-
-          <div className="bg-white rounded-2xl sm:rounded-3xl shadow-lg border border-slate-200 p-5 sm:p-6 h-fit">
-            <div className="flex items-center gap-4 pb-5 sm:pb-6 border-b border-slate-200">
-              <div className="flex-shrink-0 w-14 h-14 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl overflow-hidden bg-indigo-600 text-white flex items-center justify-center text-xl sm:text-2xl font-bold shadow-md">
-                {contact.studentId?.profileImage ? (
-                  <img
-                    src={`${API_BASE_URL}${contact.studentId.profileImage}`}
-                    alt={`${contact.studentId.firstName} ${contact.studentId.lastName}`}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <>
-                    {contact.studentId?.firstName?.charAt(0) || ""}
-                    {contact.studentId?.lastName?.charAt(0) || ""}
-                  </>
-                )}
-              </div>
-
-              <div className="min-w-0">
-                <h2 className="font-bold text-lg sm:text-xl text-slate-800 truncate">
-                  {contact.studentId?.firstName} {contact.studentId?.lastName}
-                </h2>
-
-                <p className="text-sm text-slate-500">Student</p>
-              </div>
-            </div>
-
-            <div className="space-y-5 mt-5 sm:mt-6">
-              <div className="flex gap-3 items-start text-slate-700">
-                <Mail
-                  size={18}
-                  className="text-indigo-600 flex-shrink-0 mt-0.5"
-                />
-
-                <span className="text-sm break-all">
-                  {contact.studentId?.email || contact.email}
-                </span>
-              </div>
-
-              <div className="flex gap-3 items-center text-slate-700">
-                <Phone size={18} className="text-indigo-600 flex-shrink-0" />
-
-                <span className="text-sm sm:text-base">
-                  {contact.phone || "Not provided"}
-                </span>
-              </div>
-
-              <div className="flex gap-3 items-start text-slate-700">
-                <User
-                  size={18}
-                  className="text-indigo-600 flex-shrink-0 mt-0.5"
-                />
-
-                <span className="text-sm sm:text-base">
-                  Contact Person: {contact.name}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* =================================================
-              RIGHT CONTENT
-          ================================================== */}
-
-          <div className="lg:col-span-2 space-y-6 sm:space-y-8">
-            {/* =================================================
-                REQUEST INFORMATION
-            ================================================== */}
-
-            <div className="bg-white rounded-2xl sm:rounded-3xl shadow-lg border border-slate-200 p-5 sm:p-6 lg:p-8">
-              <div className="flex items-center gap-3 mb-5 sm:mb-6">
-                <div className="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-indigo-100 flex items-center justify-center">
-                  <Tag className="text-indigo-600" size={22} />
+          <div className="lg:col-span-4 space-y-6">
+            {/* Student Profile Card */}
+            <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-2xs">
+              <div className="flex items-center gap-3.5 pb-5 border-b border-slate-100">
+                <div
+                  className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-black text-white text-sm font-semibold shadow-xs"
+                  style={{ fontWeight: 600 }}
+                >
+                  {contact.studentId?.profileImage ? (
+                    <img
+                      src={`${API_BASE_URL}${contact.studentId.profileImage}`}
+                      alt=""
+                      className="h-full w-full object-cover rounded-2xl"
+                    />
+                  ) : (
+                    <span>
+                      {contact.studentId?.firstName?.charAt(0) ||
+                        contact.name?.charAt(0) ||
+                        "U"}
+                    </span>
+                  )}
                 </div>
-
-                <div>
-                  <h2 className="text-lg sm:text-xl font-bold text-slate-800">
-                    Request Information
+                <div className="min-w-0">
+                  <h2
+                    className="text-xs font-semibold text-slate-900 truncate tracking-tight"
+                    style={{ fontWeight: 600 }}
+                  >
+                    {contact.studentId?.firstName || contact.name}{" "}
+                    {contact.studentId?.lastName || ""}
                   </h2>
-
-                  <p className="text-slate-500 text-xs sm:text-sm">
-                    Ticket details
+                  <p
+                    className="text-[11px] text-blue-600 font-medium"
+                    style={{ fontWeight: 600 }}
+                  >
+                    Student Inquirer
                   </p>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6">
-                <div>
-                  <p className="text-sm text-slate-500">Category</p>
-
-                  <p className="mt-1 font-semibold text-slate-800">
-                    {contact.category}
-                  </p>
+              <div
+                className="mt-5 space-y-3.5 text-xs font-semibold text-slate-700"
+                style={{ fontWeight: 600 }}
+              >
+                <div className="flex items-center gap-3 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                  <Mail size={15} className="text-blue-600 shrink-0" />
+                  <span className="truncate">
+                    {contact.studentId?.email || contact.email}
+                  </span>
                 </div>
 
-                <div>
-                  <p className="text-sm text-slate-500">Created At</p>
-
-                  <p className="mt-1 font-semibold flex items-center gap-2 text-slate-800">
-                    <Calendar size={16} />
-
-                    {new Date(contact.createdAt).toLocaleDateString("en-GB", {
-                      day: "2-digit",
-                      month: "short",
-                      year: "numeric",
-                    })}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* =================================================
-                STUDENT MESSAGE
-            ================================================== */}
-
-            <div className="bg-white rounded-2xl sm:rounded-3xl shadow-lg border border-slate-200 p-5 sm:p-6 lg:p-8">
-              <div className="flex items-center gap-3 mb-5 sm:mb-6">
-                <div className="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-blue-100 flex items-center justify-center">
-                  <MessageSquare size={22} className="text-blue-600" />
+                <div className="flex items-center gap-3 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                  <Phone size={15} className="text-blue-600 shrink-0" />
+                  <span>{contact.phone || "No phone provided"}</span>
                 </div>
 
-                <div>
-                  <h2 className="text-lg sm:text-xl font-bold text-slate-800">
-                    Student Message
-                  </h2>
-
-                  <p className="text-xs sm:text-sm text-slate-500">
-                    Original request submitted by student
-                  </p>
-                </div>
-              </div>
-
-              <div className="bg-slate-50 rounded-xl sm:rounded-2xl border border-slate-200 p-4 sm:p-6">
-                <p className="text-slate-700 leading-7 whitespace-pre-line text-sm sm:text-base">
-                  {contact.message}
-                </p>
-
-                <div className="mt-5 flex items-start sm:items-center gap-2 text-xs sm:text-sm text-slate-500">
-                  <Clock size={16} className="flex-shrink-0" />
-
+                <div className="flex items-center gap-3 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                  <Calendar size={15} className="text-blue-600 shrink-0" />
                   <span>
-                    Submitted on{" "}
+                    Opened:{" "}
                     {new Date(contact.createdAt).toLocaleDateString("en-GB", {
                       day: "2-digit",
                       month: "short",
@@ -497,63 +361,97 @@ const AdminContactDetails = () => {
               </div>
             </div>
 
-            {/* =================================================
-                CONVERSATION
-            ================================================== */}
+            {/* Ticket Metadata Card */}
+            <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-2xs">
+              <h3
+                className="text-xs font-semibold uppercase tracking-widest text-slate-400 mb-4"
+                style={{ fontWeight: 600 }}
+              >
+                Ticket Information
+              </h3>
 
-            <div className="bg-white rounded-2xl sm:rounded-3xl shadow-lg border border-slate-200 overflow-hidden">
-              {/* SUPPORT HEADER */}
+              <div
+                className="space-y-3 text-xs font-semibold text-slate-700"
+                style={{ fontWeight: 600 }}
+              >
+                <div className="flex justify-between items-center py-2 border-b border-slate-100">
+                  <span className="text-slate-400">Category</span>
+                  <span className="text-slate-900 bg-slate-100 px-2.5 py-1 rounded-lg">
+                    {contact.category}
+                  </span>
+                </div>
 
-              <div className="flex items-center justify-between gap-4 border-b border-slate-200 bg-white px-5 sm:px-6 py-5">
-                <div className="flex items-center gap-3 sm:gap-4 min-w-0">
-                  <div className="relative flex-shrink-0">
-                    <div className="flex h-11 w-11 sm:h-14 sm:w-14 items-center justify-center rounded-full bg-gradient-to-br from-indigo-600 to-violet-600 shadow-lg">
-                      <ShieldCheck size={22} className="text-white sm:hidden" />
+                <div className="flex justify-between items-center py-2 border-b border-slate-100">
+                  <span className="text-slate-400">Database ID</span>
+                  <span className="text-slate-900 font-mono text-[10px]">
+                    #{contact._id.slice(-6).toUpperCase()}
+                  </span>
+                </div>
 
-                      <ShieldCheck
-                        size={26}
-                        className="text-white hidden sm:block"
-                      />
-                    </div>
+                <div className="flex justify-between items-center py-2">
+                  <span className="text-slate-400">Last Updated</span>
+                  <span className="text-slate-900">
+                    {new Date(
+                      contact.updatedAt || contact.createdAt
+                    ).toLocaleDateString()}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
 
-                    <span className="absolute bottom-0.5 right-0.5 sm:bottom-1 sm:right-1 h-3 w-3 sm:h-3.5 sm:w-3.5 rounded-full border-2 border-white bg-green-500"></span>
+          {/* =================================================
+              RIGHT COLUMN: CONVERSATION & REPLY HUB (8 Cols)
+          ================================================== */}
+          <div className="lg:col-span-8 space-y-6">
+            {/* Original Problem Statement Banner */}
+            <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-7 shadow-2xs">
+              <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-widest text-blue-600 mb-2">
+                <HelpCircle size={14} />
+                Initial Subject: {contact.subject}
+              </div>
+              <p
+                className="text-xs text-slate-700 font-medium leading-relaxed whitespace-pre-line bg-slate-50 p-4 rounded-2xl border border-slate-100 mt-2"
+                style={{ fontWeight: 600 }}
+              >
+                {contact.message}
+              </p>
+            </div>
+
+            {/* Interactive Chat Stream */}
+            <div className="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-2xs">
+              <div className="bg-slate-50/70 border-b border-slate-100 px-6 py-4 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="h-9 w-9 rounded-xl bg-black text-white flex items-center justify-center shadow-xs">
+                    <MessageSquare size={17} className="text-blue-400" />
                   </div>
-
-                  <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h2 className="text-base sm:text-xl font-bold text-slate-900">
-                        GuideX Support
-                      </h2>
-
-                      <span className="rounded-full bg-green-100 px-2 py-0.5 sm:px-2.5 sm:py-1 text-[9px] sm:text-[10px] font-bold uppercase tracking-wide text-green-700">
-                        Verified
-                      </span>
-                    </div>
-
-                    <p className="mt-1 flex items-center gap-2 text-xs sm:text-sm text-slate-500">
-                      <span className="h-2 w-2 flex-shrink-0 rounded-full bg-green-500"></span>
-
-                      <span className="truncate">
-                        Usually replies within a few minutes
-                      </span>
+                  <div>
+                    <h3
+                      className="text-xs font-semibold text-slate-900 tracking-tight"
+                      style={{ fontWeight: 600 }}
+                    >
+                      Conversation Stream
+                    </h3>
+                    <p
+                      className="text-[11px] text-slate-500 font-medium"
+                      style={{ fontWeight: 600 }}
+                    >
+                      Official logs between admin and student
                     </p>
                   </div>
                 </div>
 
-                <div className="hidden md:flex flex-col items-end flex-shrink-0">
-                  <span className="text-sm font-semibold text-slate-700">
-                    Support Ticket
-                  </span>
-
-                  <span className="text-xs text-slate-500">
-                    Conversation History
-                  </span>
+                <div
+                  className="hidden sm:flex items-center gap-1.5 bg-blue-50 border border-blue-200 px-3 py-1 rounded-full text-[11px] font-semibold text-blue-700"
+                  style={{ fontWeight: 600 }}
+                >
+                  <span className="h-2 w-2 rounded-full bg-blue-600 animate-pulse" />
+                  Active Channel
                 </div>
               </div>
 
-              {/* CONVERSATION MESSAGES */}
-
-              <div className="p-4 sm:p-6 space-y-5 sm:space-y-6">
+              {/* Chat Messages Display */}
+              <div className="p-6 space-y-4 max-h-[450px] overflow-y-auto bg-slate-50/30">
                 {contact.conversation?.length > 0 ? (
                   contact.conversation.map((chat) => (
                     <div
@@ -568,147 +466,148 @@ const AdminContactDetails = () => {
                         className={`
                           w-full
                           sm:max-w-xl
-                          p-4 sm:p-5
+                          p-4
                           rounded-2xl
+                          shadow-xs
                           ${
                             chat.sender === "Admin"
-                              ? "bg-indigo-600 text-white rounded-tr-none"
-                              : "bg-slate-100 text-slate-700 rounded-tl-none"
+                              ? "bg-black text-white rounded-br-xs"
+                              : "bg-white text-slate-800 border border-slate-200 rounded-bl-xs"
                           }
                         `}
                       >
-                        <div className="flex items-center gap-3 mb-3">
-                          <div
-                            className={`
-                              w-8 h-8 sm:w-9 sm:h-9
-                              rounded-full
-                              flex
-                              items-center
-                              justify-center
-                              font-bold
-                              flex-shrink-0
-                              ${
-                                chat.sender === "Admin"
-                                  ? "bg-white text-indigo-600"
-                                  : "bg-indigo-600 text-white"
-                              }
-                            `}
-                          >
-                            {chat.sender === "Admin"
-                              ? "G"
-                              : contact.name?.charAt(0)}
-                          </div>
-
-                          <div className="min-w-0">
-                            <p className="font-semibold text-sm sm:text-base truncate">
-                              {chat.sender === "Admin"
-                                ? "GuideX Support"
-                                : contact.name}
-                            </p>
-
-                            <p className="text-xs opacity-70">
-                              {new Date(chat.sentAt).toLocaleDateString(
-                                "en-GB",
-                                {
-                                  day: "2-digit",
-                                  month: "short",
-                                  year: "numeric",
+                        <div
+                          className="flex items-center justify-between gap-3 mb-2"
+                          style={{ fontWeight: 600 }}
+                        >
+                          <div className="flex items-center gap-2">
+                            <div
+                              className={`
+                                w-6 h-6 rounded-lg flex items-center justify-center text-[10px] font-semibold
+                                ${
+                                  chat.sender === "Admin"
+                                    ? "bg-blue-600 text-white"
+                                    : "bg-slate-100 text-slate-700 border border-slate-200"
                                 }
-                              )}
-                            </p>
+                              `}
+                            >
+                              {chat.sender === "Admin" ? "A" : "S"}
+                            </div>
+                            <span className="text-xs">
+                              {chat.sender === "Admin"
+                                ? "GuideX Support (You)"
+                                : contact.name}
+                            </span>
                           </div>
+
+                          <span className="text-[10px] opacity-60">
+                            {new Date(chat.sentAt).toLocaleDateString("en-GB", {
+                              day: "2-digit",
+                              month: "short",
+                              year: "numeric",
+                            })}
+                          </span>
                         </div>
 
-                        <p className="leading-7 whitespace-pre-line text-sm sm:text-base">
+                        <p
+                          className="text-xs leading-relaxed whitespace-pre-line font-medium"
+                          style={{ fontWeight: 600 }}
+                        >
                           {chat.message}
                         </p>
                       </div>
                     </div>
                   ))
                 ) : (
-                  <div className="text-center py-8 text-slate-500 text-sm">
-                    No conversation history yet.
+                  <div
+                    className="text-center py-8 text-xs text-slate-400 font-semibold"
+                    style={{ fontWeight: 600 }}
+                  >
+                    No message exchanges logged yet.
                   </div>
                 )}
               </div>
             </div>
 
-            {/* =================================================
-                ADMIN RESPONSE
-            ================================================== */}
-
-            <div className="bg-white rounded-2xl sm:rounded-3xl shadow-lg border border-slate-200 p-5 sm:p-6 lg:p-8">
-              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-5 mb-6 sm:mb-8">
+            {/* Admin Response & Control Box */}
+            <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-2xs">
+              <div className="flex items-center gap-3 mb-5 pb-3 border-b border-slate-100">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-black text-white">
+                  <ShieldCheck size={18} className="text-blue-400" />
+                </div>
                 <div>
-                  <h2 className="text-xl sm:text-2xl font-bold text-slate-800">
-                    Admin Response
-                  </h2>
-
-                  <p className="text-slate-500 mt-1 text-sm sm:text-base">
-                    Reply to student's request and update ticket status
+                  <h3
+                    className="text-sm font-semibold text-slate-900 tracking-tight"
+                    style={{ fontWeight: 600 }}
+                  >
+                    Send Reply & Update Status
+                  </h3>
+                  <p
+                    className="text-[11px] text-slate-500 font-medium"
+                    style={{ fontWeight: 600 }}
+                  >
+                    Dispatch a response directly to the student dashboard
                   </p>
                 </div>
-
-                <button
-                  onClick={handleDelete}
-                  className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-red-500 text-white font-semibold hover:bg-red-600 transition text-sm sm:text-base"
-                >
-                  <Trash2 size={18} />
-                  Delete Request
-                </button>
               </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-4 gap-5 sm:gap-6">
-                {/* STATUS */}
-
+              <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    Ticket Status
+                  <label
+                    className="block text-[10px] font-semibold uppercase tracking-wider text-slate-500 mb-1.5"
+                    style={{ fontWeight: 600 }}
+                  >
+                    Target Status *
                   </label>
-
                   <select
                     value={status}
                     onChange={(e) => setStatus(e.target.value)}
-                    className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-500 bg-white text-sm sm:text-base"
+                    className="w-full sm:w-56 rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs font-semibold text-slate-800 outline-none focus:border-blue-600 focus:bg-white focus:ring-2 focus:ring-blue-100"
+                    style={{ fontWeight: 600 }}
                   >
-                    <option>Pending</option>
-                    <option>In Progress</option>
-                    <option>Resolved</option>
+                    <option value="Pending">Pending</option>
+                    <option value="In Progress">In Progress</option>
+                    <option value="Resolved">Resolved</option>
                   </select>
                 </div>
 
-                {/* REPLY */}
-
-                <div className="lg:col-span-3">
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    Your Message
+                <div>
+                  <label
+                    className="block text-[10px] font-semibold uppercase tracking-wider text-slate-500 mb-1.5"
+                    style={{ fontWeight: 600 }}
+                  >
+                    Message Reply *
                   </label>
-
                   <textarea
-                    rows={6}
+                    rows={4}
                     value={reply}
                     onChange={(e) => setReply(e.target.value)}
-                    placeholder="Write your response to the student..."
-                    className="w-full rounded-xl border border-slate-300 p-4 sm:p-5 resize-none outline-none focus:ring-2 focus:ring-indigo-500 text-sm sm:text-base"
+                    placeholder="Type your official reply here..."
+                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 p-4 text-xs font-semibold text-slate-800 outline-none focus:border-blue-600 focus:bg-white focus:ring-2 focus:ring-blue-100 resize-none"
+                    style={{ fontWeight: 600 }}
                   />
                 </div>
               </div>
 
-              <div className="flex justify-stretch sm:justify-end mt-6 sm:mt-8">
+              <div className="mt-5 flex justify-end pt-4 border-t border-slate-100">
                 <button
                   onClick={handleReply}
                   disabled={saving}
-                  className="w-full sm:w-auto flex items-center justify-center gap-3 px-6 sm:px-8 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-blue-600 text-white font-semibold hover:shadow-lg transition disabled:opacity-50 text-sm sm:text-base"
+                  className="inline-flex items-center gap-2 rounded-xl bg-black hover:bg-slate-800 px-6 py-3 text-xs font-semibold text-white shadow-sm transition disabled:opacity-50"
+                  style={{ fontWeight: 600 }}
                 >
                   {saving ? (
                     <>
-                      <Loader2 size={20} className="animate-spin" />
-                      Sending...
+                      <Loader2
+                        size={15}
+                        className="animate-spin text-blue-400"
+                      />
+                      Dispatching...
                     </>
                   ) : (
                     <>
-                      <Send size={20} />
-                      Send Reply
+                      <Send size={15} className="text-blue-400" />
+                      Send Reply & Save
                     </>
                   )}
                 </button>
@@ -716,7 +615,7 @@ const AdminContactDetails = () => {
             </div>
           </div>
         </div>
-      </section>
+      </main>
     </div>
   );
 };

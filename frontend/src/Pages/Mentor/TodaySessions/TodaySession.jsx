@@ -5,6 +5,7 @@ import {
   Search,
   Clock3,
   UserRound,
+  Sparkles,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -67,14 +68,11 @@ const TodaySession = () => {
 
   // =========================================================
   // CURRENT TIME UPDATE
-  // TIMER RUNS BACKWARDS EVERY SECOND
   // =========================================================
 
   useEffect(() => {
-    // Update immediately
     setCurrentTime(new Date());
 
-    // Update every second
     const interval = setInterval(() => {
       setCurrentTime(new Date());
     }, 1000);
@@ -186,10 +184,7 @@ const TodaySession = () => {
         meetingEnd.getMinutes() + Number(session.duration || 0)
       );
 
-      // Mentor can join 10 minutes before session
-      const joinTime = new Date(
-        meetingStart.getTime() - 10 * 60 * 1000
-      );
+      const joinTime = new Date(meetingStart.getTime() - 10 * 60 * 1000);
 
       return {
         meetingStart,
@@ -234,17 +229,11 @@ const TodaySession = () => {
       return null;
     }
 
-    if (
-      image.startsWith("http://") ||
-      image.startsWith("https://")
-    ) {
+    if (image.startsWith("http://") || image.startsWith("https://")) {
       return image;
     }
 
-    return `${API_BASE_URL}/${image}`.replace(
-      /([^:]\/)\/+/g,
-      "$1"
-    );
+    return `${API_BASE_URL}/${image}`.replace(/([^:]\/)\/+/g, "$1");
   };
 
   // =========================================================
@@ -253,19 +242,28 @@ const TodaySession = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 pt-20 lg:ml-64 lg:pt-8">
-        <div className="flex min-h-[70vh] flex-col items-center justify-center px-5">
+      <div
+        className="min-h-screen bg-slate-50 pt-16 sm:pt-20 lg:ml-64 lg:pt-0 text-slate-900"
+        style={{ fontFamily: "'Poppins', sans-serif" }}
+      >
+        <div className="flex min-h-[70vh] flex-col items-center justify-center px-4 sm:px-5">
           <div className="relative">
-            <div className="h-14 w-14 rounded-full border-4 border-blue-100" />
+            <div className="h-14 w-14 rounded-full border-4 border-slate-200" />
 
             <div className="absolute inset-0 h-14 w-14 animate-spin rounded-full border-4 border-transparent border-t-blue-600" />
           </div>
 
-          <p className="mt-5 text-center font-medium text-gray-700">
+          <p
+            className="mt-5 text-center text-xs font-semibold tracking-tight"
+            style={{ fontWeight: 600 }}
+          >
             Loading today's sessions...
           </p>
 
-          <p className="mt-1 text-center text-sm text-gray-400">
+          <p
+            className="mt-1 text-center text-[11px] text-slate-400 font-medium"
+            style={{ fontWeight: 600 }}
+          >
             Please wait a moment
           </p>
         </div>
@@ -278,47 +276,73 @@ const TodaySession = () => {
   // =========================================================
 
   return (
-    <div className="min-h-screen bg-slate-50 pt-20 lg:ml-64 lg:pt-0">
-      <main className="w-full p-3 sm:p-5 lg:p-6 xl:p-8">
-
+    <div
+      className="min-h-screen bg-slate-50 pt-16 sm:pt-20 lg:ml-64 lg:pt-0 text-slate-900 pb-16"
+      style={{ fontFamily: "'Poppins', sans-serif", fontStyle: "normal" }}
+    >
+      <main className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 space-y-5 sm:space-y-6">
         {/* =====================================================
             HEADER
         ====================================================== */}
+        <section className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-black p-5 sm:p-8 text-white shadow-md">
+          {/* Background Accents */}
+          <div className="absolute -right-16 -top-16 h-48 w-48 rounded-full bg-blue-600/20 blur-3xl" />
+          <div className="absolute -bottom-20 left-1/4 h-40 w-40 rounded-full bg-blue-400/10 blur-2xl" />
 
-        <section className="mb-6 overflow-hidden rounded-2xl bg-gradient-to-r from-stone-800 via-amber-700 to-yellow-600 p-5 text-white shadow-xl sm:mb-8 sm:rounded-3xl sm:p-7 lg:p-8">
-          <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
-
+          <div className="relative z-10 flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
             {/* Title */}
-
-            <div className="flex min-w-0 items-center gap-3 sm:gap-4">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/15 sm:h-14 sm:w-14 sm:rounded-2xl">
-                <CalendarDays
-                  size={24}
-                  className="sm:h-7 sm:w-7"
-                />
+            <div className="flex items-start sm:items-center gap-3.5 sm:gap-5 min-w-0">
+              <div
+                className="flex h-12 w-12 sm:h-14 sm:w-14 shrink-0 items-center justify-center rounded-2xl border border-white/15 bg-white/10 backdrop-blur shadow-inner text-blue-400"
+                style={{ fontWeight: 600 }}
+              >
+                <CalendarDays size={24} className="sm:w-[26px] sm:h-[26px]" />
               </div>
 
               <div className="min-w-0">
-                <h1 className="text-xl font-bold sm:text-2xl lg:text-3xl">
+                <div className="flex items-center gap-2">
+                  <span
+                    className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[10px] sm:text-[11px] font-semibold text-blue-300 backdrop-blur"
+                    style={{ fontWeight: 600 }}
+                  >
+                    <Sparkles size={12} className="text-blue-400" />
+                    Mentor Schedule
+                  </span>
+                </div>
+
+                <h1
+                  className="mt-1.5 sm:mt-2 text-xl sm:text-3xl font-semibold tracking-tight text-white"
+                  style={{ fontWeight: 600 }}
+                >
                   Today's Sessions
                 </h1>
 
-                <p className="mt-1 text-xs text-white/75 sm:text-sm lg:text-base">
-                  Manage all your scheduled mentorship sessions.
+                <p
+                  className="mt-0.5 sm:mt-1 text-[11px] sm:text-sm text-slate-300 font-medium leading-relaxed"
+                  style={{ fontWeight: 600 }}
+                >
+                  Manage all your scheduled mentorship sessions, track
+                  countdowns, and join live rooms instantly.
                 </p>
               </div>
             </div>
 
             {/* Session Count */}
-
-            <div className="flex h-16 w-full items-center justify-center gap-3 rounded-2xl border border-white/20 bg-white/10 px-5 sm:h-20 sm:w-24 sm:flex-col sm:gap-0 sm:px-0">
-              <span className="text-2xl font-bold sm:text-3xl">
+            <div
+              className="flex items-center gap-4 rounded-2xl border border-white/15 bg-white/10 px-4 sm:px-5 py-3.5 sm:py-4 backdrop-blur shadow-inner shrink-0"
+              style={{ fontWeight: 600 }}
+            >
+              <div className="flex h-10 w-10 sm:h-11 sm:w-11 shrink-0 items-center justify-center rounded-xl bg-white text-sm sm:text-base font-semibold text-black shadow-xs">
                 {sessions.length}
-              </span>
-
-              <span className="text-xs text-white/75 sm:text-sm">
-                Sessions
-              </span>
+              </div>
+              <div>
+                <p className="text-[10px] uppercase tracking-wider text-slate-400">
+                  Total Active
+                </p>
+                <h3 className="text-xs sm:text-sm font-semibold text-white">
+                  Scheduled Sessions
+                </h3>
+              </div>
             </div>
           </div>
         </section>
@@ -326,58 +350,36 @@ const TodaySession = () => {
         {/* =====================================================
             SEARCH
         ====================================================== */}
-
-        <section className="mb-6 sm:mb-8">
-
-          <div className="mb-3">
-            <h3 className="text-sm font-semibold text-gray-700 sm:text-base">
-              Search Today's Sessions
-            </h3>
-
-            <p className="mt-1 text-xs text-gray-500 sm:text-sm">
-              Search by student name, email or session type.
-            </p>
-          </div>
-
-          <div className="flex flex-col gap-3 lg:flex-row">
-
+        <section className="space-y-3">
+          <div className="flex flex-col lg:flex-row items-center gap-3 bg-white p-4 sm:p-4 rounded-2xl border border-slate-200 shadow-xs">
             {/* Search Input */}
-
-            <div className="relative h-14 flex-1 sm:h-16">
-
+            <div className="relative min-w-0 flex-1 w-full">
               <Search
-                size={20}
-                className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
+                size={16}
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
               />
 
               <input
                 type="text"
-                placeholder="Search by name, email or session type..."
+                placeholder="Search by student name, email or session type..."
                 value={searchTerm}
-                onChange={(e) =>
-                  setSearchTerm(e.target.value)
-                }
-                className="h-full w-full rounded-xl border border-gray-200 bg-white pl-12 pr-4 text-sm text-gray-700 shadow-sm outline-none transition-all duration-300 placeholder:text-gray-400 focus:border-orange-500 focus:ring-4 focus:ring-orange-100 sm:rounded-2xl sm:text-base"
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full h-11 pl-11 pr-4 rounded-xl border border-slate-200 bg-slate-50 text-xs font-semibold text-slate-800 outline-none transition-all placeholder:text-slate-400 focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                style={{ fontWeight: 600 }}
               />
             </div>
 
             {/* Search Result */}
-
-            <div className="flex h-14 w-full items-center justify-between rounded-xl border border-orange-200 bg-orange-50 px-4 shadow-sm sm:h-16 sm:rounded-2xl sm:px-6 lg:w-64">
-
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-orange-600">
-                  Search Results
-                </p>
-
-                <p className="text-xs text-gray-600 sm:text-sm">
-                  matching sessions
-                </p>
-              </div>
-
-              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-orange-500 text-sm font-bold text-white sm:h-10 sm:w-10 sm:text-lg">
+            <div
+              className="flex h-11 w-full lg:w-64 items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-4 text-xs font-semibold text-slate-700 shrink-0"
+              style={{ fontWeight: 600 }}
+            >
+              <span className="text-slate-500 uppercase tracking-wide text-[10px]">
+                Matching Sessions
+              </span>
+              <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-black text-white text-xs">
                 {filteredSessions.length}
-              </div>
+              </span>
             </div>
           </div>
         </section>
@@ -387,145 +389,161 @@ const TodaySession = () => {
         ====================================================== */}
 
         {filteredSessions.length === 0 ? (
-
-          <section className="flex min-h-[400px] flex-col items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-16 text-center shadow-sm sm:rounded-3xl sm:py-24">
-
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-blue-100 text-blue-600 sm:h-20 sm:w-20">
-              <CalendarDays size={32} />
+          <section className="flex min-h-[400px] flex-col items-center justify-center rounded-3xl border border-slate-200 bg-white px-5 py-16 text-center shadow-xs">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 mb-4">
+              <CalendarDays size={26} />
             </div>
 
-            <h2 className="mt-5 text-xl font-bold text-slate-800 sm:mt-6 sm:text-2xl">
-              {searchTerm
-                ? "No Matching Sessions"
-                : "No Sessions Today"}
+            <h2
+              className="text-base font-semibold text-slate-900 tracking-tight"
+              style={{ fontWeight: 600 }}
+            >
+              {searchTerm ? "No Matching Sessions" : "No Sessions Today"}
             </h2>
 
-            <p className="mt-2 max-w-md text-center text-sm text-slate-500 sm:text-base">
+            <p
+              className="mt-1 max-w-sm text-center text-xs text-slate-500 font-medium leading-relaxed"
+              style={{ fontWeight: 600 }}
+            >
               {searchTerm
                 ? "Try searching with another student name, email, or session type."
                 : "You don't have any confirmed sessions scheduled for today."}
             </p>
           </section>
-
         ) : (
-
           /* =====================================================
              SESSION LIST
           ====================================================== */
 
-          <div className="space-y-4 sm:space-y-5">
-
+          <div className="space-y-4">
             {filteredSessions.map((session, index) => {
-
-              const {
-                meetingEnd,
-                joinTime,
-              } = getMeetingTimes(session);
-
-              // ================================================
-              // LIVE TIMER CALCULATION
-              // This recalculates every second because
-              // currentTime changes every second.
-              // ================================================
+              const { meetingEnd, joinTime } = getMeetingTimes(session);
 
               const canJoin =
-                currentTime >= joinTime &&
-                currentTime < meetingEnd;
+                currentTime >= joinTime && currentTime < meetingEnd;
 
-              const meetingExpired =
-                currentTime >= meetingEnd;
+              const meetingExpired = currentTime >= meetingEnd;
 
               const secondsUntilJoin = Math.max(
                 0,
-                Math.floor(
-                  (joinTime.getTime() -
-                    currentTime.getTime()) /
-                    1000
-                )
+                Math.floor((joinTime.getTime() - currentTime.getTime()) / 1000)
               );
 
-              const profileImage =
-                getProfileImageUrl(
-                  session.student?.profileImage
-                );
+              const profileImage = getProfileImageUrl(
+                session.student?.profileImage
+              );
 
               return (
                 <article
                   key={session._id}
-                  className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-all duration-300 hover:border-blue-200 hover:shadow-lg sm:rounded-3xl"
+                  className="overflow-hidden rounded-2xl sm:rounded-3xl border border-slate-200 bg-white shadow-xs transition duration-200 hover:border-blue-300 hover:shadow-md p-4 sm:p-6"
                 >
-                  {/* Top Accent */}
+                  <div className="flex flex-col gap-4 sm:gap-5">
+                    {/* TOP: STUDENT DETAILS */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3.5 pb-3.5 sm:pb-4 border-b border-slate-100">
+                      <div className="flex items-center gap-3.5 min-w-0">
+                        <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 shadow-2xs">
+                          {profileImage ? (
+                            <img
+                              src={profileImage}
+                              alt={`${session.student?.firstName || ""} ${
+                                session.student?.lastName || ""
+                              }`}
+                              className="h-full w-full object-cover"
+                              onError={(e) => {
+                                e.currentTarget.style.display = "none";
+                              }}
+                            />
+                          ) : (
+                            <div className="flex h-full w-full items-center justify-center bg-black text-white text-xs font-semibold">
+                              <UserRound size={18} className="text-blue-400" />
+                            </div>
+                          )}
+                        </div>
 
-                  <div className="h-1 bg-green-500" />
+                        <div className="min-w-0">
+                          <h2
+                            className="text-xs sm:text-sm font-semibold text-slate-900 truncate tracking-tight"
+                            style={{ fontWeight: 600 }}
+                          >
+                            {session.student?.firstName}{" "}
+                            {session.student?.lastName}
+                          </h2>
 
-                  <div className="p-4 sm:p-6 lg:p-7">
-                    {/* =================================================
-                        STUDENT
-                    ================================================== */}
-                    <div className="flex min-w-0 items-center gap-3 sm:gap-5">
-                      <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-blue-100 bg-slate-100 shadow-sm sm:h-16 sm:w-16">
-                        {profileImage ? (
-                          <img
-                            src={profileImage}
-                            alt={`${session.student?.firstName || ""} ${
-                              session.student?.lastName || ""
-                            }`}
-                            className="h-full w-full object-cover"
-                            onError={(e) => {
-                              e.currentTarget.style.display = "none";
-                            }}
-                          />
-                        ) : (
-                          <div className="flex h-full w-full items-center justify-center">
-                            <UserRound size={25} className="text-blue-500" />
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="min-w-0 flex-1">
-                        <h2 className="truncate text-base font-bold text-slate-800 sm:text-xl">
-                          {session.student?.firstName}{" "}
-                          {session.student?.lastName}
-                        </h2>
-
-                        <p className="truncate text-xs text-slate-500 sm:text-sm">
-                          {session.student?.email}
-                        </p>
-
-                        <div className="mt-2 inline-flex max-w-full items-center rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
-                          #{index + 1} Today's Session
+                          <p
+                            className="text-[11px] text-slate-500 font-medium truncate"
+                            style={{ fontWeight: 600 }}
+                          >
+                            {session.student?.email}
+                          </p>
                         </div>
                       </div>
+
+                      <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                        <span
+                          className="rounded-full bg-slate-100 px-3 py-1 text-[10px] sm:text-[11px] font-semibold text-slate-700 border border-slate-200"
+                          style={{ fontWeight: 600 }}
+                        >
+                          #{index + 1} Session
+                        </span>
+
+                        <span
+                          className={`rounded-full px-3 py-1 text-[10px] sm:text-[11px] font-semibold border ${
+                            session.bookingStatus === "Confirmed"
+                              ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                              : session.bookingStatus === "Completed"
+                              ? "border-blue-200 bg-blue-50 text-blue-700"
+                              : "border-amber-200 bg-amber-50 text-amber-700"
+                          }`}
+                          style={{ fontWeight: 600 }}
+                        >
+                          {session.bookingStatus}
+                        </span>
+
+                        {session.paymentStatus && (
+                          <span
+                            className={`rounded-full px-3 py-1 text-[10px] sm:text-[11px] font-semibold border ${
+                              session.paymentStatus === "Paid"
+                                ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                                : "border-red-200 bg-red-50 text-red-700"
+                            }`}
+                            style={{ fontWeight: 600 }}
+                          >
+                            {session.paymentStatus}
+                          </span>
+                        )}
+                      </div>
                     </div>
-                    {/* =================================================
-                        SESSION DETAILS
-                    ================================================== */}
-                    <div className="mt-6 grid grid-cols-2 gap-4 border-y border-slate-100 py-5 sm:gap-5 md:grid-cols-4 md:border-y-0 md:py-0">
-                      {/* Session */}
 
-                      <div className="min-w-0">
-                        <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400 sm:text-xs">
-                          Session
+                    {/* MIDDLE: METRICS GRID */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 bg-slate-50 p-3.5 sm:p-4 rounded-2xl border border-slate-100 text-xs font-semibold">
+                      <div>
+                        <p
+                          className="text-[10px] uppercase tracking-wide text-slate-400"
+                          style={{ fontWeight: 600 }}
+                        >
+                          Session Type
                         </p>
-
-                        <p className="mt-1 truncate text-sm font-semibold text-slate-800 sm:text-base">
+                        <p
+                          className="mt-1 text-xs sm:text-sm text-slate-900 truncate"
+                          style={{ fontWeight: 600 }}
+                        >
                           {session.sessionType || "--"}
                         </p>
                       </div>
 
-                      {/* Time */}
-
-                      <div className="min-w-0">
-                        <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400 sm:text-xs">
-                          Time
+                      <div>
+                        <p
+                          className="text-[10px] uppercase tracking-wide text-slate-400"
+                          style={{ fontWeight: 600 }}
+                        >
+                          Scheduled Time
                         </p>
-
-                        <p className="mt-1 text-sm font-semibold text-slate-800 sm:text-base">
-                          {session.startTime || "--"}
-                        </p>
-
-                        <p className="text-xs text-slate-500 sm:text-sm">
-                          to{" "}
+                        <p
+                          className="mt-1 text-xs sm:text-sm text-slate-900 truncate"
+                          style={{ fontWeight: 600 }}
+                        >
+                          {session.startTime || "--"} -{" "}
                           {session.endTime ||
                             calculateEndTime(
                               session.startTime,
@@ -534,90 +552,69 @@ const TodaySession = () => {
                         </p>
                       </div>
 
-                      {/* Duration */}
-
                       <div>
-                        <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400 sm:text-xs">
+                        <p
+                          className="text-[10px] uppercase tracking-wide text-slate-400"
+                          style={{ fontWeight: 600 }}
+                        >
                           Duration
                         </p>
-
-                        <p className="mt-1 text-sm font-semibold text-slate-800 sm:text-base">
+                        <p
+                          className="mt-1 text-xs sm:text-sm text-slate-900"
+                          style={{ fontWeight: 600 }}
+                        >
                           {session.duration || 0} mins
                         </p>
                       </div>
 
-                      {/* Earnings */}
-
                       <div>
-                        <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400 sm:text-xs">
+                        <p
+                          className="text-[10px] uppercase tracking-wide text-slate-400"
+                          style={{ fontWeight: 600 }}
+                        >
                           Earnings
                         </p>
-
-                        <p className="mt-1 text-lg font-bold text-emerald-600 sm:text-xl">
+                        <p
+                          className="mt-1 text-xs sm:text-base font-bold text-emerald-600"
+                          style={{ fontWeight: 600 }}
+                        >
                           ₹{session.amount || 0}
                         </p>
                       </div>
                     </div>
-                    {/* =================================================
-                        BOTTOM ACTION
-                    ================================================== */}
-                    <div className="mt-6 flex flex-col gap-4 border-t border-slate-100 pt-5 sm:flex-row sm:items-center sm:justify-between">
-                      {/* STATUS */}
 
-                      <div className="flex flex-wrap items-center gap-3">
-                        <span
-                          className={`w-fit rounded-full px-4 py-2 text-xs font-semibold sm:text-sm ${
-                            session.bookingStatus === "Confirmed"
-                              ? "bg-green-100 text-green-700"
-                              : session.bookingStatus === "Completed"
-                              ? "bg-blue-100 text-blue-700"
-                              : "bg-orange-100 text-orange-700"
-                          }`}
-                        >
-                          {session.bookingStatus}
+                    {/* BOTTOM: ACTIONS */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
+                      <div
+                        className="flex items-center gap-1.5 text-xs text-slate-400 font-semibold"
+                        style={{ fontWeight: 600 }}
+                      >
+                        <Clock3 size={14} className="text-blue-600 shrink-0" />
+                        <span className="truncate">
+                          Room access opens 10 minutes prior to session start
                         </span>
-
-                        {/* PAYMENT STATUS */}
-
-                        {session.paymentStatus && (
-                          <span
-                            className={`w-fit rounded-full px-4 py-2 text-xs font-semibold ${
-                              session.paymentStatus === "Paid"
-                                ? "bg-emerald-100 text-emerald-700"
-                                : "bg-red-100 text-red-700"
-                            }`}
-                          >
-                            {session.paymentStatus}
-                          </span>
-                        )}
                       </div>
 
-                      {/* ACTION */}
-
-                      <div className="w-full sm:w-auto sm:min-w-[240px]">
-                        {/* SESSION IS COMPLETED */}
-
+                      <div className="w-full sm:w-auto sm:min-w-[200px]">
                         {session.bookingStatus === "Completed" ? (
                           <button
                             disabled
-                            className="flex w-full cursor-not-allowed items-center justify-center gap-2 rounded-xl bg-blue-100 px-5 py-3 text-sm font-semibold text-blue-700 sm:text-base"
+                            className="flex w-full cursor-not-allowed items-center justify-center gap-2 rounded-xl bg-slate-100 border border-slate-200 px-4 py-2.5 text-xs font-semibold text-slate-500"
+                            style={{ fontWeight: 600 }}
                           >
-                            <Clock3 size={18} />
+                            <Clock3 size={15} />
                             Session Completed
                           </button>
                         ) : meetingExpired ? (
-                          /* MEETING ENDED */
-
                           <button
                             disabled
-                            className="flex w-full cursor-not-allowed items-center justify-center gap-2 rounded-xl bg-gray-400 px-5 py-3 text-sm font-semibold text-white sm:text-base"
+                            className="flex w-full cursor-not-allowed items-center justify-center gap-2 rounded-xl bg-slate-200 px-4 py-2.5 text-xs font-semibold text-slate-600"
+                            style={{ fontWeight: 600 }}
                           >
-                            <Clock3 size={18} />
+                            <Clock3 size={15} />
                             Meeting Ended
                           </button>
                         ) : canJoin ? (
-                          /* JOIN WINDOW OPEN */
-
                           <button
                             onClick={() => {
                               if (session.roomId) {
@@ -625,30 +622,30 @@ const TodaySession = () => {
                               }
                             }}
                             disabled={!session.roomId}
-                            className={`flex w-full items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold text-white transition active:scale-[0.98] sm:text-base ${
+                            className={`flex w-full items-center justify-center gap-2 rounded-xl px-5 py-2.5 text-xs font-semibold text-white shadow-sm transition ${
                               session.roomId
-                                ? "bg-green-600 hover:bg-green-700"
+                                ? "bg-black hover:bg-slate-800"
                                 : "cursor-not-allowed bg-slate-400"
                             }`}
+                            style={{ fontWeight: 600 }}
                           >
-                            <ExternalLink size={18} />
-
+                            <ExternalLink size={15} className="text-blue-400" />
                             {session.roomId
-                              ? "Join Meeting"
+                              ? "Join Live Room"
                               : "Meeting Preparing"}
                           </button>
                         ) : (
-                          /* COUNTDOWN */
-
                           <button
                             disabled
-                            className="flex w-full cursor-not-allowed items-center justify-center gap-2 rounded-xl bg-orange-500 px-5 py-3 text-sm font-semibold text-white shadow-sm sm:text-base"
+                            className="flex w-full cursor-not-allowed items-center justify-center gap-2 rounded-xl bg-black px-5 py-2.5 text-xs font-semibold text-white shadow-sm"
+                            style={{ fontWeight: 600 }}
                           >
-                            <Clock3 size={18} className="animate-pulse" />
-
+                            <Clock3
+                              size={15}
+                              className="animate-pulse text-blue-400"
+                            />
                             <span>Join in</span>
-
-                            <span className="font-mono font-bold tracking-wider">
+                            <span className="font-mono font-bold tracking-wider text-blue-300">
                               {formatCountdown(secondsUntilJoin)}
                             </span>
                           </button>

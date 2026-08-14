@@ -8,6 +8,7 @@ import {
   CreditCard,
   IndianRupee,
   RefreshCw,
+  Sparkles,
 } from "lucide-react";
 import { toast } from "react-toastify";
 
@@ -132,7 +133,7 @@ const CompletedBookings = () => {
     if (!student?.profileImage) {
       return `https://ui-avatars.com/api/?name=${encodeURIComponent(
         `${student?.firstName || "Student"} ${student?.lastName || ""}`
-      )}&background=d1fae5&color=047857&size=200`;
+      )}`;
     }
 
     if (
@@ -161,28 +162,27 @@ const CompletedBookings = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 pt-20 lg:ml-64 lg:pt-0">
-        <div className="px-3 py-4 sm:px-5 sm:py-6 lg:px-6 lg:py-8">
-          <div className="mx-auto w-full max-w-7xl">
-            {/* Header Skeleton */}
-
-            <div className="h-56 animate-pulse rounded-2xl bg-gray-200 sm:h-64 sm:rounded-3xl" />
-
-            {/* Search Skeleton */}
-
-            <div className="mt-6 h-14 animate-pulse rounded-xl bg-gray-200 sm:mt-8 sm:h-16 sm:rounded-2xl" />
-
-            {/* Cards Skeleton */}
-
-            <div className="mt-6 space-y-5 sm:mt-8">
-              {[1, 2, 3].map((item) => (
-                <div
-                  key={item}
-                  className="h-[420px] animate-pulse rounded-2xl bg-white shadow-sm sm:h-80 sm:rounded-3xl"
-                />
-              ))}
-            </div>
+      <div
+        className="min-h-screen bg-slate-50 pt-20 lg:ml-64 lg:pt-0 text-slate-900"
+        style={{ fontFamily: "'Poppins', sans-serif" }}
+      >
+        <div className="flex min-h-[70vh] flex-col items-center justify-center px-5">
+          <div className="relative">
+            <div className="h-14 w-14 rounded-full border-4 border-slate-200" />
+            <div className="absolute inset-0 h-14 w-14 animate-spin rounded-full border-4 border-transparent border-t-blue-600" />
           </div>
+          <p
+            className="mt-5 text-center text-xs font-semibold tracking-tight"
+            style={{ fontWeight: 600 }}
+          >
+            Loading Completed Bookings...
+          </p>
+          <p
+            className="mt-1 text-center text-[11px] text-slate-400 font-medium"
+            style={{ fontWeight: 600 }}
+          >
+            Please wait a moment
+          </p>
         </div>
       </div>
     );
@@ -193,428 +193,375 @@ const CompletedBookings = () => {
   // =========================================================
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-20 lg:ml-64 lg:pt-0">
-      <div className="px-3 py-4 sm:px-5 sm:py-6 lg:px-6 lg:py-8">
-        <div className="mx-auto w-full max-w-7xl">
-          {/* =================================================
-              HEADER
-          ================================================== */}
+    <div
+      className="min-h-screen bg-slate-50 pt-20 lg:ml-64 lg:pt-0 text-slate-900"
+      style={{ fontFamily: "'Poppins', sans-serif", fontStyle: "normal" }}
+    >
+      <main className="w-full max-w-[1600px] mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
+        {/* =================================================
+            HEADER
+        ================================================== */}
+        <section className="relative overflow-hidden rounded-3xl bg-black p-6 sm:p-8 text-white shadow-md">
+          <div className="absolute -right-16 -top-16 h-48 w-48 rounded-full bg-blue-600/20 blur-3xl" />
+          <div className="absolute -bottom-20 left-1/4 h-40 w-40 rounded-full bg-blue-400/10 blur-2xl" />
 
-          <div className="mb-6 sm:mb-8">
-            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-cyan-700 via-teal-600 to-blue-700 p-5 text-white shadow-xl sm:rounded-3xl sm:p-7 lg:p-8">
-              {/* Background Decorations */}
+          <div className="relative z-10 flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-start sm:items-center gap-4 sm:gap-5 min-w-0">
+              <div
+                className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-white/15 bg-white/10 backdrop-blur shadow-inner text-blue-400"
+                style={{ fontWeight: 600 }}
+              >
+                <CalendarCheck2 size={26} />
+              </div>
 
-              <div className="absolute -right-10 -top-10 h-36 w-36 rounded-full bg-white/10 blur-3xl sm:h-44 sm:w-44" />
-
-              <div className="absolute -bottom-16 -left-10 h-48 w-48 rounded-full bg-white/10 blur-3xl sm:h-56 sm:w-56" />
-
-              {/* Header Content */}
-
-              <div className="relative flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between lg:gap-8">
-                {/* Left Section */}
-
-                <div className="flex min-w-0 items-start gap-3 sm:gap-5">
-                  {/* Icon */}
-
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-white/20 bg-white/20 backdrop-blur-md sm:h-16 sm:w-16 sm:rounded-2xl">
-                    <CalendarCheck2
-                      size={26}
-                      className="text-white sm:h-[34px] sm:w-[34px]"
-                    />
-                  </div>
-
-                  {/* Title */}
-
-                  <div className="min-w-0">
-                    <h1 className="text-2xl font-bold leading-tight sm:text-3xl lg:text-4xl">
-                      Completed Booking Sessions
-                    </h1>
-
-                    <p className="mt-2 max-w-2xl text-sm leading-6 text-cyan-100 sm:text-base">
-                      View and manage all completed mentorship sessions.
-                    </p>
-                  </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <span
+                    className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[11px] font-semibold text-blue-300 backdrop-blur"
+                    style={{ fontWeight: 600 }}
+                  >
+                    <Sparkles size={13} className="text-blue-400" />
+                    History Suite
+                  </span>
                 </div>
 
-                {/* Total Count */}
+                <h1
+                  className="mt-2 text-2xl sm:text-3xl font-semibold tracking-tight text-white"
+                  style={{ fontWeight: 600 }}
+                >
+                  Completed Booking Sessions
+                </h1>
 
-                <div className="w-full rounded-2xl border border-white/20 bg-white/15 px-4 py-4 backdrop-blur-md sm:px-6 sm:py-5 lg:w-auto lg:min-w-[210px]">
-                  <div className="flex items-center justify-between gap-4 sm:justify-start">
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white text-xl font-bold text-cyan-700 sm:h-14 sm:w-14 sm:text-2xl">
-                      {filteredSessions.length}
+                <p
+                  className="mt-1 text-xs sm:text-sm text-slate-300 font-medium leading-relaxed"
+                  style={{ fontWeight: 600 }}
+                >
+                  View and manage all completed mentorship sessions and student
+                  reviews.
+                </p>
+              </div>
+            </div>
+
+            <div
+              className="flex items-center gap-4 rounded-2xl border border-white/15 bg-white/10 px-5 py-4 backdrop-blur shadow-inner shrink-0"
+              style={{ fontWeight: 600 }}
+            >
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white text-base font-semibold text-black shadow-xs">
+                {filteredSessions.length}
+              </div>
+              <div>
+                <p className="text-[10px] uppercase tracking-wider text-slate-400">
+                  Total
+                </p>
+                <h3 className="text-sm font-semibold text-white">Completed</h3>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* =================================================
+            SEARCH
+        ================================================== */}
+        <section className="space-y-3">
+          <div className="flex flex-col lg:flex-row items-center gap-3 bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
+            <div className="relative min-w-0 flex-1 w-full">
+              <Search
+                size={17}
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+              />
+              <input
+                type="text"
+                placeholder="Search by student, email, session type..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full h-11 pl-11 pr-4 rounded-xl border border-slate-200 bg-slate-50 text-xs font-semibold text-slate-800 outline-none transition-all placeholder:text-slate-400 focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                style={{ fontWeight: 600 }}
+              />
+            </div>
+
+            <div
+              className="flex h-11 w-full lg:w-64 items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-4 text-xs font-semibold text-slate-700 shrink-0"
+              style={{ fontWeight: 600 }}
+            >
+              <span className="text-slate-500 uppercase tracking-wide text-[10px]">
+                Matching Sessions
+              </span>
+              <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-black text-white text-xs">
+                {filteredSessions.length}
+              </span>
+            </div>
+          </div>
+        </section>
+
+        {/* =================================================
+            EMPTY STATE
+        ================================================== */}
+        {filteredSessions.length === 0 ? (
+          <section className="flex min-h-[400px] w-full flex-col items-center justify-center rounded-3xl border border-slate-200 bg-white px-5 py-16 text-center shadow-xs">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 mb-4">
+              <CalendarCheck2 size={26} />
+            </div>
+
+            <h2
+              className="text-base font-semibold text-slate-900 tracking-tight"
+              style={{ fontWeight: 600 }}
+            >
+              {searchTerm
+                ? "No Matching Completed Sessions"
+                : "No Completed Sessions"}
+            </h2>
+
+            <p
+              className="mt-1 max-w-sm text-center text-xs text-slate-500 font-medium leading-relaxed"
+              style={{ fontWeight: 600 }}
+            >
+              {searchTerm
+                ? "No completed sessions match your current search. Try using a different search term."
+                : "There are currently no completed mentorship sessions. Completed sessions will appear here."}
+            </p>
+
+            {searchTerm && (
+              <button
+                onClick={clearSearch}
+                className="mt-5 inline-flex items-center gap-2 rounded-xl bg-black px-5 py-2.5 text-xs font-semibold text-white transition hover:bg-slate-800 shadow-xs"
+                style={{ fontWeight: 600 }}
+              >
+                <RefreshCw size={14} className="text-blue-400" />
+                Clear Search
+              </button>
+            )}
+          </section>
+        ) : (
+          /* =================================================
+             SESSION LIST
+          ================================================== */
+          <section className="w-full space-y-4">
+            {filteredSessions.map((session) => (
+              <article
+                key={session._id}
+                className="w-full overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xs transition duration-200 hover:border-blue-300 hover:shadow-md p-5 sm:p-6"
+              >
+                <div className="w-full space-y-5">
+                  {/* TOP SECTION */}
+                  <div className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between pb-4 border-b border-slate-100">
+                    <div className="flex min-w-0 items-start gap-3.5 sm:gap-4">
+                      <img
+                        src={getProfileImage(session.student)}
+                        alt={`${session.student?.firstName || "Student"} ${
+                          session.student?.lastName || ""
+                        }`}
+                        className="h-12 w-12 shrink-0 rounded-2xl border border-slate-200 object-cover shadow-2xs"
+                        onError={(e) => {
+                          e.currentTarget.src =
+                            "https://ui-avatars.com/api/?name=Student";
+                        }}
+                      />
+
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <h2
+                            className="break-words text-xs sm:text-sm font-semibold text-slate-900 tracking-tight"
+                            style={{ fontWeight: 600 }}
+                          >
+                            {session.student?.firstName || "Student"}{" "}
+                            {session.student?.lastName || ""}
+                          </h2>
+
+                          <span
+                            className="rounded-full px-3 py-1 text-[11px] font-semibold border border-blue-200 bg-blue-50 text-blue-700"
+                            style={{ fontWeight: 600 }}
+                          >
+                            {session.bookingStatus || "Completed"}
+                          </span>
+
+                          <span
+                            className={`rounded-full px-3 py-1 text-[11px] font-semibold border ${
+                              session.paymentStatus === "Paid"
+                                ? "border-blue-200 bg-blue-50 text-blue-700"
+                                : "border-red-200 bg-red-50 text-red-700"
+                            }`}
+                            style={{ fontWeight: 600 }}
+                          >
+                            {session.paymentStatus || "N/A"}
+                          </span>
+                        </div>
+
+                        <p
+                          className="mt-1 break-all text-[11px] text-slate-500 font-medium"
+                          style={{ fontWeight: 600 }}
+                        >
+                          {session.student?.email || "No email available"}
+                        </p>
+
+                        <div
+                          className="mt-2 inline-flex max-w-full rounded-xl bg-slate-100 border border-slate-200 px-3 py-1 text-[11px] font-semibold text-slate-700"
+                          style={{ fontWeight: 600 }}
+                        >
+                          <span className="truncate">
+                            {session.sessionType || "Mentorship Session"}
+                          </span>
+                        </div>
+                      </div>
                     </div>
 
-                    <div>
-                      <p className="text-xs uppercase tracking-wider text-cyan-100 sm:text-sm">
-                        Total
+                    <div className="rounded-2xl bg-slate-50 border border-slate-100 px-4 py-3 xl:min-w-[150px] xl:bg-transparent xl:px-0 xl:py-0 xl:text-right">
+                      <p
+                        className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold"
+                        style={{ fontWeight: 600 }}
+                      >
+                        Session Fee
                       </p>
+                      <h2
+                        className="text-base sm:text-lg font-semibold text-emerald-600 mt-0.5"
+                        style={{ fontWeight: 600 }}
+                      >
+                        ₹{session.amount ?? 0}
+                      </h2>
+                    </div>
+                  </div>
 
-                      <h3 className="text-lg font-semibold sm:text-xl">
-                        Completed
+                  {/* DETAILS */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 text-xs font-semibold">
+                    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3.5">
+                      <p
+                        className="text-[10px] uppercase tracking-wide text-slate-400"
+                        style={{ fontWeight: 600 }}
+                      >
+                        Session Date
+                      </p>
+                      <h3
+                        className="mt-1 text-slate-900"
+                        style={{ fontWeight: 600 }}
+                      >
+                        {formatDate(session.sessionDate)}
                       </h3>
                     </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
 
-          {/* =================================================
-              SEARCH
-          ================================================== */}
-
-          <div className="mb-6 sm:mb-8">
-            <div className="mb-3">
-              <h3 className="text-sm font-semibold text-gray-700">
-                Search Sessions
-              </h3>
-
-              <p className="mt-1 text-xs leading-5 text-gray-500 sm:text-sm">
-                Search by student name, email, session type, or payment status.
-              </p>
-            </div>
-
-            <div className="flex flex-col gap-3 lg:flex-row lg:gap-4">
-              {/* Search Input */}
-
-              <div className="relative min-w-0 flex-1">
-                <Search
-                  size={19}
-                  className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
-                />
-
-                <input
-                  type="text"
-                  placeholder="Search by student, email, session type..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="h-14 w-full rounded-xl border border-gray-200 bg-white pl-11 pr-4 text-sm text-gray-700 shadow-sm outline-none transition-all duration-300 placeholder:text-gray-400 focus:border-teal-500 focus:ring-4 focus:ring-teal-100 sm:h-16 sm:rounded-2xl sm:text-base"
-                />
-              </div>
-
-              {/* Search Result */}
-
-              <div className="flex min-h-14 w-full items-center justify-between rounded-xl border border-green-200 bg-green-50 px-4 shadow-sm sm:min-h-16 sm:px-6 lg:w-auto lg:min-w-[230px] lg:rounded-2xl">
-                <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-green-600 sm:text-xs">
-                    Search Results
-                  </p>
-
-                  <p className="mt-0.5 text-xs text-gray-600 sm:text-sm">
-                    Matching sessions
-                  </p>
-                </div>
-
-                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-green-600 text-sm font-bold text-white sm:h-10 sm:w-10 sm:text-base">
-                  {filteredSessions.length}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* =================================================
-              EMPTY STATE
-          ================================================== */}
-
-          {filteredSessions.length === 0 ? (
-            <div className="rounded-2xl border border-gray-200 bg-white px-5 py-12 shadow-sm sm:rounded-3xl sm:p-14">
-              <div className="flex flex-col items-center justify-center text-center">
-                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-green-100 sm:h-20 sm:w-20">
-                  <CalendarCheck2
-                    size={32}
-                    className="text-green-400 sm:h-[38px] sm:w-[38px]"
-                  />
-                </div>
-
-                <h2 className="mt-5 text-xl font-bold text-gray-800 sm:mt-6 sm:text-2xl">
-                  {searchTerm
-                    ? "No Matching Completed Sessions"
-                    : "No Completed Sessions"}
-                </h2>
-
-                <p className="mt-2 max-w-md text-sm leading-6 text-gray-500 sm:text-base">
-                  {searchTerm
-                    ? "No completed sessions match your current search. Try using a different search term."
-                    : "There are currently no completed mentorship sessions. Completed sessions will appear here."}
-                </p>
-
-                {searchTerm && (
-                  <button
-                    onClick={clearSearch}
-                    className="mt-5 inline-flex items-center gap-2 rounded-xl bg-green-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-green-700 active:scale-95"
-                  >
-                    <RefreshCw size={16} />
-                    Clear Search
-                  </button>
-                )}
-              </div>
-            </div>
-          ) : (
-            /* =================================================
-               SESSION LIST
-            ================================================== */
-
-            <div className="space-y-4 sm:space-y-5">
-              {filteredSessions.map((session) => (
-                <div
-                  key={session._id}
-                  className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:shadow-lg sm:rounded-3xl"
-                >
-                  {/* Top Border */}
-
-                  <div className="h-1 bg-gradient-to-r from-cyan-700 via-teal-600 to-blue-700" />
-
-                  <div className="p-4 sm:p-5 lg:p-6">
-                    {/* =================================================
-                        TOP SECTION
-                    ================================================== */}
-
-                    <div className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
-                      {/* Student Information */}
-
-                      <div className="flex min-w-0 items-start gap-3 sm:gap-4">
-                        {/* Profile Image */}
-
-                        <img
-                          src={getProfileImage(session.student)}
-                          alt={`${session.student?.firstName || "Student"} ${
-                            session.student?.lastName || ""
-                          }`}
-                          className="h-14 w-14 shrink-0 rounded-full border-4 border-green-50 object-cover sm:h-16 sm:w-16"
-                          onError={(e) => {
-                            e.currentTarget.src =
-                              "https://ui-avatars.com/api/?name=Student";
-                          }}
-                        />
-
-                        {/* Student Details */}
-
-                        <div className="min-w-0 flex-1">
-                          {/* Name + Status */}
-
-                          <div className="flex flex-wrap items-center gap-2">
-                            <h2 className="break-words text-base font-bold text-gray-800 sm:text-lg">
-                              {session.student?.firstName || "Student"}{" "}
-                              {session.student?.lastName || ""}
-                            </h2>
-
-                            <span className="rounded-full bg-green-100 px-2.5 py-1 text-[10px] font-semibold text-green-700 sm:text-xs">
-                              {session.bookingStatus || "Completed"}
-                            </span>
-
-                            <span
-                              className={`rounded-full px-2.5 py-1 text-[10px] font-semibold sm:text-xs ${
-                                session.paymentStatus === "Paid"
-                                  ? "bg-blue-100 text-blue-700"
-                                  : "bg-red-100 text-red-700"
-                              }`}
-                            >
-                              {session.paymentStatus || "N/A"}
-                            </span>
-                          </div>
-
-                          {/* Email */}
-
-                          <p className="mt-1 break-all text-xs text-gray-500 sm:text-sm">
-                            {session.student?.email || "No email available"}
-                          </p>
-
-                          {/* Session Type */}
-
-                          <div className="mt-2 inline-flex max-w-full items-center gap-1.5 rounded-lg bg-green-50 px-3 py-1.5 text-xs font-medium text-green-700 sm:text-sm">
-                            <BookOpenCheck size={15} className="shrink-0" />
-
-                            <span className="truncate">
-                              {session.sessionType || "Mentorship Session"}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Session Fee */}
-
-                      <div className="flex items-center justify-between rounded-xl border border-gray-100 bg-gray-50 px-4 py-3 xl:block xl:border-0 xl:bg-transparent xl:p-0 xl:text-right">
-                        <div className="flex items-center gap-2 xl:justify-end">
-                          <IndianRupee
-                            size={18}
-                            className="text-green-600 xl:hidden"
-                          />
-
-                          <p className="text-xs text-gray-500">Session Fee</p>
-                        </div>
-
-                        <h2 className="text-xl font-bold text-green-600 sm:text-2xl">
-                          ₹{session.amount ?? 0}
-                        </h2>
-                      </div>
-                    </div>
-
-                    {/* =================================================
-                        SESSION DETAILS
-                    ================================================== */}
-
-                    <div className="mt-5 grid grid-cols-1 gap-3 min-[420px]:grid-cols-2 lg:grid-cols-4">
-                      {/* Date */}
-
-                      <div className="rounded-xl border border-gray-100 bg-gray-50 p-3 sm:p-4">
-                        <div className="flex items-center gap-2">
-                          <CalendarCheck2 size={17} className="text-blue-600" />
-
-                          <p className="text-[10px] font-medium uppercase tracking-wide text-gray-500 sm:text-[11px]">
-                            Session Date
-                          </p>
-                        </div>
-
-                        <h3 className="mt-2 text-sm font-semibold text-gray-800 sm:text-base">
-                          {formatDate(session.sessionDate)}
-                        </h3>
-                      </div>
-
-                      {/* Time */}
-
-                      <div className="rounded-xl border border-gray-100 bg-gray-50 p-3 sm:p-4">
-                        <div className="flex items-center gap-2">
-                          <Clock3 size={17} className="text-green-600" />
-
-                          <p className="text-[10px] font-medium uppercase tracking-wide text-gray-500 sm:text-[11px]">
-                            Time
-                          </p>
-                        </div>
-
-                        <h3 className="mt-2 text-sm font-semibold text-gray-800 sm:text-base">
-                          {session.startTime || "N/A"}
-                        </h3>
-
-                        {session.endTime && (
-                          <p className="mt-0.5 text-xs text-gray-500 sm:text-sm">
-                            {session.endTime}
-                          </p>
-                        )}
-                      </div>
-
-                      {/* Duration */}
-
-                      <div className="rounded-xl border border-gray-100 bg-gray-50 p-3 sm:p-4">
-                        <div className="flex items-center gap-2">
-                          <Clock3 size={17} className="text-purple-600" />
-
-                          <p className="text-[10px] font-medium uppercase tracking-wide text-gray-500 sm:text-[11px]">
-                            Duration
-                          </p>
-                        </div>
-
-                        <h3 className="mt-2 text-sm font-semibold text-gray-800 sm:text-base">
-                          {session.duration
-                            ? `${session.duration} mins`
-                            : "N/A"}
-                        </h3>
-                      </div>
-
-                      {/* Booked On */}
-
-                      <div className="rounded-xl border border-gray-100 bg-gray-50 p-3 sm:p-4">
-                        <div className="flex items-center gap-2">
-                          <CalendarCheck2
-                            size={17}
-                            className="text-orange-600"
-                          />
-
-                          <p className="text-[10px] font-medium uppercase tracking-wide text-gray-500 sm:text-[11px]">
-                            Booked On
-                          </p>
-                        </div>
-
-                        <h3 className="mt-2 text-sm font-semibold text-gray-800 sm:text-base">
-                          {formatDate(session.createdAt)}
-                        </h3>
-                      </div>
-                    </div>
-
-                    {/* =================================================
-                        STUDENT REVIEW
-                    ================================================== */}
-
-                    <div className="mt-5 border-t border-gray-100 pt-5">
-                      {session.review ? (
-                        <div className="rounded-xl border border-amber-100 bg-amber-50 p-4 sm:p-5">
-                          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                            <span className="text-xs font-semibold uppercase tracking-wide text-amber-700">
-                              Student Review
-                            </span>
-
-                            {/* Rating */}
-
-                            <div className="flex items-center gap-1">
-                              {[1, 2, 3, 4, 5].map((star) => (
-                                <Star
-                                  key={star}
-                                  size={15}
-                                  className={
-                                    star <= session.review.rating
-                                      ? "fill-yellow-400 text-yellow-400"
-                                      : "text-gray-300"
-                                  }
-                                />
-                              ))}
-
-                              <span className="ml-1 text-sm font-semibold text-gray-700">
-                                {session.review.rating}/5
-                              </span>
-                            </div>
-                          </div>
-
-                          {/* Review Text */}
-
-                          {session.review.review && (
-                            <p className="mt-3 break-words text-sm italic leading-6 text-gray-700">
-                              "{session.review.review}"
-                            </p>
-                          )}
-
-                          {/* Review Date */}
-
-                          <p className="mt-2 text-xs text-gray-400">
-                            Reviewed on {formatDate(session.review.createdAt)}
-                          </p>
-                        </div>
-                      ) : (
-                        <div className="rounded-xl border border-gray-100 bg-gray-50 p-4 text-center sm:p-5">
-                          <p className="text-sm text-gray-500">
-                            No review submitted for this session yet.
-                          </p>
-                        </div>
+                    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3.5">
+                      <p
+                        className="text-[10px] uppercase tracking-wide text-slate-400"
+                        style={{ fontWeight: 600 }}
+                      >
+                        Time
+                      </p>
+                      <h3
+                        className="mt-1 text-slate-900"
+                        style={{ fontWeight: 600 }}
+                      >
+                        {session.startTime || "N/A"}
+                      </h3>
+                      {session.endTime && (
+                        <p
+                          className="text-[11px] text-slate-500 font-medium"
+                          style={{ fontWeight: 600 }}
+                        >
+                          {session.endTime}
+                        </p>
                       )}
                     </div>
 
-                    {/* =================================================
-                        FOOTER INFORMATION
-                    ================================================== */}
+                    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3.5">
+                      <p
+                        className="text-[10px] uppercase tracking-wide text-slate-400"
+                        style={{ fontWeight: 600 }}
+                      >
+                        Duration
+                      </p>
+                      <h3
+                        className="mt-1 text-slate-900"
+                        style={{ fontWeight: 600 }}
+                      >
+                        {session.duration ? `${session.duration} mins` : "N/A"}
+                      </h3>
+                    </div>
 
-                    <div className="mt-5 flex flex-col gap-2 border-t border-gray-100 pt-4 text-xs text-gray-500 sm:flex-row sm:items-center sm:justify-between sm:text-sm">
-                      <div className="flex items-center gap-2">
-                        <CreditCard size={16} />
+                    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3.5">
+                      <p
+                        className="text-[10px] uppercase tracking-wide text-slate-400"
+                        style={{ fontWeight: 600 }}
+                      >
+                        Booked On
+                      </p>
+                      <h3
+                        className="mt-1 text-slate-900"
+                        style={{ fontWeight: 600 }}
+                      >
+                        {formatDate(session.createdAt)}
+                      </h3>
+                    </div>
+                  </div>
 
-                        <span>
-                          Payment Status:{" "}
-                          <span className="font-semibold text-gray-700">
-                            {session.paymentStatus || "N/A"}
+                  {/* STUDENT REVIEW */}
+                  {session.review ? (
+                    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-xs font-semibold space-y-2">
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                        <p
+                          className="text-[10px] uppercase tracking-wider text-slate-400"
+                          style={{ fontWeight: 600 }}
+                        >
+                          Student Review
+                        </p>
+
+                        <div className="flex items-center gap-1">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <Star
+                              key={star}
+                              size={14}
+                              className={
+                                star <= session.review.rating
+                                  ? "fill-amber-400 text-amber-400"
+                                  : "text-slate-200"
+                              }
+                            />
+                          ))}
+                          <span className="ml-1 text-xs text-slate-700 font-semibold">
+                            {session.review.rating}/5
                           </span>
+                        </div>
+                      </div>
+
+                      {session.review.review && (
+                        <p
+                          className="break-words leading-relaxed text-slate-700 font-medium italic"
+                          style={{ fontWeight: 600 }}
+                        >
+                          "{session.review.review}"
+                        </p>
+                      )}
+
+                      <p className="text-[10px] text-slate-400 font-medium">
+                        Reviewed on {formatDate(session.review.createdAt)}
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-center text-xs text-slate-500 font-semibold">
+                      No review submitted for this session yet.
+                    </div>
+                  )}
+
+                  {/* FOOTER INFORMATION */}
+                  <div className="pt-2 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between text-xs font-semibold text-slate-500">
+                    <div className="flex items-center gap-2">
+                      <CreditCard size={15} className="text-blue-600" />
+                      <span>
+                        Payment Status:{" "}
+                        <span className="text-slate-900 font-semibold">
+                          {session.paymentStatus || "N/A"}
                         </span>
-                      </div>
+                      </span>
+                    </div>
 
-                      <div className="flex items-center gap-2">
-                        <CalendarCheck2 size={16} />
-
-                        <span>Completed Session</span>
-                      </div>
+                    <div className="flex items-center gap-2">
+                      <CalendarCheck2 size={15} className="text-emerald-600" />
+                      <span>Completed Session</span>
                     </div>
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
+              </article>
+            ))}
+          </section>
+        )}
+      </main>
     </div>
   );
 };

@@ -18,6 +18,8 @@ import EventRegistration from "../models/EventRegistration.js";
 import Badge from "../models/Badges.js";
 const FRONTEND_URL = process.env.FRONTEND_URL;
 import axios from "axios";
+import { Course, Enrollment } from "../models/Course.js";
+
 
 
 
@@ -3416,10 +3418,6 @@ export const getStudentFullDetails = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // =====================================================
-    // FIND STUDENT
-    // =====================================================
-
     const student = await Student.findById(id).select("-password").lean();
 
     if (!student) {
@@ -3429,429 +3427,237 @@ export const getStudentFullDetails = async (req, res) => {
       });
     }
 
-    // =====================================================
-    // FETCH ALL STUDENT DATA IN PARALLEL
-    // =====================================================
-
+    // Fetch all student data in parallel including Course Enrollments
     const [
       bookings,
       meetings,
       reviews,
       rescheduleRequests,
       eventRegistrations,
+      courseEnrollments,
     ] = await Promise.all([
-      // =================================================
-      // BOOKINGS
-      // =================================================
-
-      Booking.find({
-        student: id,
-      })
+      Booking.find({ student: id })
         .populate(
           "mentor",
           "firstName lastName profileImage skills averageRating"
         )
-        .sort({
-          sessionDate: -1,
-          createdAt: -1,
-        })
+        .sort({ sessionDate: -1, createdAt: -1 })
         .lean(),
 
-      // =================================================
-      // MEETINGS
-      // =================================================
-
-      Meeting.find({
-        student: id,
-      })
+      Meeting.find({ student: id })
         .populate(
           "booking",
           "sessionType sessionDate startTime endTime duration amount bookingStatus"
         )
         .populate("mentor", "firstName lastName profileImage")
-        .sort({
-          createdAt: -1,
-        })
+        .sort({ createdAt: -1 })
         .lean(),
 
-      // =================================================
-      // REVIEWS
-      // =================================================
-
-      Review.find({
-        studentId: id,
-      })
+      Review.find({ studentId: id })
         .populate("mentorId", "firstName lastName profileImage")
         .populate("bookingId", "sessionType sessionDate startTime")
-        .sort({
-          createdAt: -1,
-        })
+        .sort({ createdAt: -1 })
         .lean(),
 
-      // =================================================
-      // RESCHEDULE REQUESTS
-      // =================================================
-
-      RescheduleRequest.find({
-        student: id,
-      })
+      RescheduleRequest.find({ student: id })
         .populate("mentor", "firstName lastName profileImage")
         .populate("booking", "sessionType bookingStatus")
-        .sort({
-          createdAt: -1,
-        })
+        .sort({ createdAt: -1 })
         .lean(),
 
-      // =================================================
-      // EVENT REGISTRATIONS
-      // =================================================
-
-      EventRegistration.find({
-        student: id,
-      })
+      EventRegistration.find({ student: id })
         .populate(
           "event",
-          "title description dateTime speaker meetingLink status registrationDeadline"
+          "title description dateTime speaker meetingLink status registrationDeadline ticketPrice isPaid"
         )
-        .sort({
-          registeredAt: -1,
-        })
+        .sort({ registeredAt: -1 })
+        .lean(),
+
+      // Fetch course enrollments/purchases (Adjust model name if your project uses CourseEnrollment or Enrollment)
+      Enrollment.find({ student: id })
+        .populate("course", "title category price thumbnail level")
+        .sort({ enrolledAt: -1 })
         .lean(),
     ]);
 
-    // =====================================================
-    // BOOKING STATISTICS
-    // =====================================================
-
-    const totalBookings = bookings.length;
-
-    const completedBookings = bookings.filter(
-      (booking) => booking.bookingStatus === "Completed"
-    ).length;
-
-    const confirmedBookings = bookings.filter(
-      (booking) => booking.bookingStatus === "Confirmed"
-    ).length;
-
-    const pendingBookings = bookings.filter(
-      (booking) => booking.bookingStatus === "Pending"
-    ).length;
-
-    const cancelledBookings = bookings.filter(
-      (booking) => booking.bookingStatus === "Cancelled"
-    ).length;
-
-    const rejectedBookings = bookings.filter(
-      (booking) => booking.bookingStatus === "Rejected"
-    ).length;
-
-    // =====================================================
-    // PAYMENT STATISTICS
-    // =====================================================
-
-    const paidBookings = bookings.filter(
-      (booking) => booking.paymentStatus === "Paid"
-    );
-
-    const totalAmountPaid = paidBookings.reduce(
-      (total, booking) => total + (booking.amount || 0),
+    // Financial Breakdown By Category
+    const paidBookings = bookings.filter((b) => b.paymentStatus === "Paid");
+    const bookingAmountPaid = paidBookings.reduce(
+      (sum, b) => sum + (b.amount || 0),
       0
     );
 
-    // =====================================================
-    // MEETING STATISTICS
-    // =====================================================
+    const paidEvents = eventRegistrations.filter(
+      (e) => e.status === "Registered" && e.event?.isPaid
+    );
+    const eventAmountPaid = paidEvents.reduce(
+      (sum, e) => sum + (e.event?.ticketPrice || 0),
+      0
+    );
 
-    const completedMeetings = meetings.filter(
-      (meeting) => meeting.status === "Completed"
+    const paidCourses = courseEnrollments.filter(
+      (c) =>
+        c.paymentStatus === "paid" ||
+        c.paymentStatus === "Paid" ||
+        c.paymentStatus === "Completed"
+    );
+    const courseAmountPaid = paidCourses.reduce(
+      (sum, c) => sum + (c.amountPaid || c.course?.price || 0),
+      0
+    );
+
+    const totalRevenueGenerated =
+      bookingAmountPaid + eventAmountPaid + courseAmountPaid;
+
+    // Gamification & Badges logic...
+    const completedSessions = bookings.filter(
+      (b) => b.bookingStatus === "Completed"
     ).length;
-
-    const attendedMeetings = meetings.filter(
-      (meeting) => meeting.studentJoined === true
-    ).length;
-
-    // =====================================================
-    // EVENT STATISTICS
-    // =====================================================
-
-    const registeredEvents = eventRegistrations.filter(
-      (registration) => registration.status === "Registered"
-    ).length;
-
-    const attendedEvents = eventRegistrations.filter(
-      (registration) => registration.attended === true
-    ).length;
-
-    // =====================================================
-    // REVIEW STATISTICS
-    // =====================================================
-
-    const totalReviews = reviews.length;
-
-    const averageRating =
-      totalReviews > 0
-        ? (
-            reviews.reduce((total, review) => total + review.rating, 0) /
-            totalReviews
-          ).toFixed(1)
-        : 0;
-
-    // =====================================================
-    // RESCHEDULE STATISTICS
-    // =====================================================
-
-    const pendingReschedules = rescheduleRequests.filter(
-      (request) => request.status === "Pending"
-    ).length;
-
-    const acceptedReschedules = rescheduleRequests.filter(
-      (request) => request.status === "Accepted"
-    ).length;
-
-    const rejectedReschedules = rescheduleRequests.filter(
-      (request) => request.status === "Rejected"
-    ).length;
-
-    // =====================================================
-    // BADGE SYSTEM
-    // Same logic as getStudentBadges
-    // =====================================================
-
-    const completedSessions = completedBookings;
-
     const achievementHistory = student.achievementHistory || [];
 
     const badges = [
       {
         id: 1,
-
         title: "First Step",
-
         description: "Complete your first mentorship session.",
-
         required: 1,
-
         unlocked: completedSessions >= 1,
-
         progress: Math.min(completedSessions, 1),
-
         progressPercentage: Math.min((completedSessions / 1) * 100, 100),
-
         unlockedAt:
-          achievementHistory.find((achievement) => achievement.badgeId === 1)
-            ?.unlockedAt || null,
+          achievementHistory.find((a) => a.badgeId === 1)?.unlockedAt || null,
       },
-
       {
         id: 2,
-
         title: "Consistent Learner",
-
         description: "Complete 5 mentorship sessions.",
-
         required: 5,
-
         unlocked: completedSessions >= 5,
-
         progress: Math.min(completedSessions, 5),
-
         progressPercentage: Math.min((completedSessions / 5) * 100, 100),
-
         unlockedAt:
-          achievementHistory.find((achievement) => achievement.badgeId === 2)
-            ?.unlockedAt || null,
+          achievementHistory.find((a) => a.badgeId === 2)?.unlockedAt || null,
       },
-
       {
         id: 3,
-
         title: "Dedicated Learner",
-
         description: "Complete 10 mentorship sessions.",
-
         required: 10,
-
         unlocked: completedSessions >= 10,
-
         progress: Math.min(completedSessions, 10),
-
         progressPercentage: Math.min((completedSessions / 10) * 100, 100),
-
         unlockedAt:
-          achievementHistory.find((achievement) => achievement.badgeId === 3)
-            ?.unlockedAt || null,
+          achievementHistory.find((a) => a.badgeId === 3)?.unlockedAt || null,
       },
-
       {
         id: 4,
-
         title: "Knowledge Explorer",
-
         description: "Complete 20 mentorship sessions.",
-
         required: 20,
-
         unlocked: completedSessions >= 20,
-
         progress: Math.min(completedSessions, 20),
-
         progressPercentage: Math.min((completedSessions / 20) * 100, 100),
-
         unlockedAt:
-          achievementHistory.find((achievement) => achievement.badgeId === 4)
-            ?.unlockedAt || null,
+          achievementHistory.find((a) => a.badgeId === 4)?.unlockedAt || null,
       },
-
       {
         id: 5,
-
         title: "Mentorship Champion",
-
         description: "Complete 50 mentorship sessions.",
-
         required: 50,
-
         unlocked: completedSessions >= 50,
-
         progress: Math.min(completedSessions, 50),
-
         progressPercentage: Math.min((completedSessions / 50) * 100, 100),
-
         unlockedAt:
-          achievementHistory.find((achievement) => achievement.badgeId === 5)
-            ?.unlockedAt || null,
+          achievementHistory.find((a) => a.badgeId === 5)?.unlockedAt || null,
       },
     ];
 
-    // =====================================================
-    // BADGE STATISTICS
-    // =====================================================
-
-    const unlockedBadges = badges.filter((badge) => badge.unlocked).length;
-
-    const lockedBadges = badges.length - unlockedBadges;
-
-    // =====================================================
-    // RESPONSE
-    // =====================================================
+    const unlockedBadges = badges.filter((b) => b.unlocked).length;
 
     return res.status(200).json({
       success: true,
-
       student,
-
-      // ================================================
-      // GAMIFICATION
-      // ================================================
-
       gamification: {
         completedSessions,
-
         xp: student.learningStats?.xp || 0,
-
         level: student.learningStats?.level || 1,
-
         streak: student.learningStats?.streak || {
           current: 0,
           longest: 0,
           lastActivity: null,
         },
-
         badges,
-
         badgeStats: {
           total: badges.length,
-
           unlocked: unlockedBadges,
-
-          locked: lockedBadges,
+          locked: badges.length - unlockedBadges,
         },
-
         achievementHistory,
-
         xpHistory: (student.xpHistory || []).slice(-10).reverse(),
       },
-
-      // ================================================
-      // RELATED DATA
-      // ================================================
-
       bookings,
-
       meetings,
-
       reviews,
-
       rescheduleRequests,
-
       eventRegistrations,
-
-      // ================================================
-      // STATISTICS
-      // ================================================
-
+      courseEnrollments, // Sent to frontend
       statistics: {
         bookings: {
-          total: totalBookings,
-
-          completed: completedBookings,
-
-          confirmed: confirmedBookings,
-
-          pending: pendingBookings,
-
-          cancelled: cancelledBookings,
-
-          rejected: rejectedBookings,
+          total: bookings.length,
+          completed: completedSessions,
+          confirmed: bookings.filter((b) => b.bookingStatus === "Confirmed")
+            .length,
+          pending: bookings.filter((b) => b.bookingStatus === "Pending").length,
+          cancelled: bookings.filter((b) => b.bookingStatus === "Cancelled")
+            .length,
         },
-
+        courses: {
+          totalEnrolled: courseEnrollments.length,
+          completed: courseEnrollments.filter(
+            (c) => c.isCompleted || c.progressPercentage === 100
+          ).length,
+        },
         payments: {
-          paidBookings: paidBookings.length,
-
-          totalAmountPaid,
+          bookingAmountPaid,
+          eventAmountPaid,
+          courseAmountPaid,
+          totalRevenueGenerated,
         },
-
         meetings: {
           total: meetings.length,
-
-          completed: completedMeetings,
-
-          attended: attendedMeetings,
+          completed: meetings.filter((m) => m.status === "Completed").length,
+          attended: meetings.filter((m) => m.studentJoined).length,
         },
-
         events: {
-          registered: registeredEvents,
-
-          attended: attendedEvents,
+          registered: eventRegistrations.length,
+          attended: eventRegistrations.filter((e) => e.attended).length,
         },
-
         reviews: {
-          total: totalReviews,
-
-          averageRating,
+          total: reviews.length,
+          averageRating:
+            reviews.length > 0
+              ? (
+                  reviews.reduce((s, r) => s + r.rating, 0) / reviews.length
+                ).toFixed(1)
+              : 0,
         },
-
         reschedules: {
           total: rescheduleRequests.length,
-
-          pending: pendingReschedules,
-
-          accepted: acceptedReschedules,
-
-          rejected: rejectedReschedules,
+          pending: rescheduleRequests.filter((r) => r.status === "Pending")
+            .length,
         },
       },
     });
   } catch (error) {
     console.error("Get full student details error:", error);
-
-    return res.status(500).json({
-      success: false,
-
-      message: "Failed to fetch student details.",
-
-      error: error.message,
-    });
+    return res
+      .status(500)
+      .json({
+        success: false,
+        message: "Failed to fetch student details.",
+        error: error.message,
+      });
   }
 };
 
@@ -4722,7 +4528,7 @@ export const updateMentor = async (req, res) => {
 export const getAllAdminReviews = async (req, res) => {
   try {
     // =====================================================
-    // FETCH ALL REVIEWS
+    // 1. FETCH ALL MENTORSHIP & GENERAL REVIEWS
     // =====================================================
 
     const reviews = await Review.find({})
@@ -4763,16 +4569,49 @@ export const getAllAdminReviews = async (req, res) => {
       .lean();
 
     // =====================================================
-    // GET BOOKING IDS
+    // 2. FETCH ALL COURSES & EXTRACT EMBEDDED REVIEWS
+    // =====================================================
+
+    const courses = await Course.find({})
+      .populate({
+        path: "reviews.student",
+        model: "Student",
+        select:
+          "firstName lastName email phone profileImage role isVerified isActive createdAt",
+      })
+      .select("title category thumbnail level price reviews")
+      .lean();
+
+    // Flatten and normalize course reviews from the embedded array
+    let courseReviews = [];
+    courses.forEach((course) => {
+      if (course.reviews && Array.isArray(course.reviews)) {
+        course.reviews.forEach((rev) => {
+          courseReviews.push({
+            ...rev,
+            reviewType: "course",
+            studentId: rev.student, // Standardize student reference
+            course: {
+              _id: course._id,
+              title: course.title,
+              category: course.category,
+              thumbnail: course.thumbnail,
+              level: course.level,
+              price: course.price,
+            },
+            review: rev.comment, // Map comment to review for consistency
+          });
+        });
+      }
+    });
+
+    // =====================================================
+    // 3. GET BOOKING IDS & FIND RELATED MEETINGS
     // =====================================================
 
     const bookingIds = reviews
       .map((review) => review.bookingId?._id)
       .filter(Boolean);
-
-    // =====================================================
-    // FIND RELATED MEETINGS
-    // =====================================================
 
     const meetings = await Meeting.find({
       booking: {
@@ -4795,7 +4634,7 @@ export const getAllAdminReviews = async (req, res) => {
       .lean();
 
     // =====================================================
-    // MAP MEETINGS BY BOOKING ID
+    // 4. MAP MEETINGS BY BOOKING ID
     // =====================================================
 
     const meetingMap = new Map();
@@ -4807,29 +4646,38 @@ export const getAllAdminReviews = async (req, res) => {
     });
 
     // =====================================================
-    // ATTACH MEETING TO EACH REVIEW
+    // 5. NORMALIZE MENTORSHIP REVIEWS
     // =====================================================
 
-    const reviewsWithMeetings = reviews.map((review) => {
+    const normalizedMentorshipReviews = reviews.map((review) => {
       const bookingId = review.bookingId?._id?.toString();
 
       return {
         ...review,
-
+        reviewType: "mentorship",
         meeting: meetingMap.get(bookingId) || null,
       };
     });
 
     // =====================================================
-    // RESPONSE
+    // 6. COMBINE AND SORT ALL REVIEWS BY DATE
+    // =====================================================
+
+    const combinedReviews = [
+      ...normalizedMentorshipReviews,
+      ...courseReviews,
+    ].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    // =====================================================
+    // 7. RESPONSE
     // =====================================================
 
     return res.status(200).json({
       success: true,
-
-      count: reviewsWithMeetings.length,
-
-      reviews: reviewsWithMeetings,
+      count: combinedReviews.length,
+      mentorshipReviewsCount: normalizedMentorshipReviews.length,
+      courseReviewsCount: courseReviews.length,
+      reviews: combinedReviews,
     });
   } catch (error) {
     console.error("Get all admin reviews error:", error);
@@ -4900,5 +4748,246 @@ export const getAdminBookingById = async (req, res) => {
   }
 };
 
+
+export const createMentorByAdmin = async (req, res) => {
+  try {
+    const adminId = req.user.id;
+    const body = req.body;
+
+    // =====================================================
+    // HELPER FUNCTIONS FOR UPLOAD.ANY()
+    // =====================================================
+    const safeNumber = (value, fallback = 0) => {
+      const num = Number(value);
+      return Number.isNaN(num) ? fallback : num;
+    };
+
+    const parseJSON = (value, fallback = []) => {
+      try {
+        return value ? JSON.parse(value) : fallback;
+      } catch {
+        return fallback;
+      }
+    };
+
+    const getFilePath = (fieldname) => {
+      if (!req.files || !Array.isArray(req.files)) return "";
+      const matchedFile = req.files.find(
+        (file) => file.fieldname === fieldname
+      );
+      return matchedFile ? matchedFile.path : "";
+    };
+
+    // =====================================================
+    // REQUIRED FIELD VALIDATION
+    // =====================================================
+    if (
+      !body.firstName ||
+      !body.lastName ||
+      !body.email ||
+      !body.password ||
+      !body.phone ||
+      !body.profession ||
+      !body.degree ||
+      !body.college ||
+      !body.headline ||
+      !body.about ||
+      !body.sessionPrice
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Please fill all mandatory fields.",
+      });
+    }
+
+    // =====================================================
+    // CHECK EXISTING STUDENT
+    // =====================================================
+    const existingStudent = await Student.findOne({
+      email: body.email.trim().toLowerCase(),
+    });
+    if (existingStudent) {
+      return res.status(409).json({
+        success: false,
+        message: "User account with this email already exists.",
+      });
+    }
+
+    // =====================================================
+    // PARSE ARRAYS & VALUES
+    // =====================================================
+    const primarySkill = parseJSON(body.primarySkill)
+      .map((item) => String(item).trim())
+      .filter(Boolean);
+    const languages = parseJSON(body.languages)
+      .map((item) => String(item).trim())
+      .filter(Boolean);
+    const certifications = parseJSON(body.certifications)
+      .map((item) => String(item).trim())
+      .filter(Boolean);
+    const availableDays = parseJSON(body.availableDays)
+      .map((day) => String(day).trim())
+      .filter(Boolean);
+    const sessionTypes = parseJSON(body.sessionTypes)
+      .map((item) => String(item).trim())
+      .filter(Boolean);
+
+    const experience = safeNumber(body.experience);
+    const skillExperience = safeNumber(body.skillExperience);
+    const sessionPrice = safeNumber(body.sessionPrice);
+    const graduationYear = safeNumber(body.graduationYear);
+    const sessionDuration = safeNumber(body.sessionDuration || 60);
+
+    // =====================================================
+    // STEP 1: CREATE CORE STUDENT/USER RECORD (Role: Mentor)
+    // =====================================================
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(body.password, salt);
+
+    const newStudent = await Student.create({
+      firstName: body.firstName.trim(),
+      lastName: body.lastName.trim(),
+      email: body.email.trim().toLowerCase(),
+      password: hashedPassword,
+      phone: body.phone.trim(),
+      role: "mentor",
+      isVerified: true,
+      isActive: true,
+      profileImage: getFilePath("profileImage"),
+    });
+
+    // =====================================================
+    // STEP 2: CREATE VERIFIED MENTOR PROFILE RECORD (Mapped to 'student')
+    // =====================================================
+    const mentor = await Mentor.create({
+      student: newStudent._id, // FIXED: Using 'student' as required by your Mentor schema reference
+
+      firstName: body.firstName.trim(),
+      lastName: body.lastName.trim(),
+      email: body.email.trim().toLowerCase(),
+      phone: body.phone.trim(),
+      dob: body.dob || null,
+      gender: body.gender || "Male",
+
+      location: {
+        city: body.city?.trim() || "",
+        state: body.state?.trim() || "",
+        country: body.country?.trim() || "",
+      },
+
+      profession: body.profession.trim(),
+      company: body.company?.trim() || "",
+      experience,
+      industry: body.industry?.trim() || "",
+      linkedin: body.linkedin?.trim() || "",
+
+      primarySkill,
+      category: body.category?.trim() || "",
+      languages,
+      skillExperience,
+      skillLevel: body.skillLevel?.trim() || "Intermediate",
+
+      education: {
+        degree: body.degree.trim(),
+        college: body.college.trim(),
+        graduationYear,
+        cgpa: body.cgpa?.trim() || "",
+      },
+
+      certifications,
+
+      headline: body.headline.trim(),
+      about: body.about.trim(),
+      teachingStyle: body.teachingStyle?.trim() || "",
+
+      availability: {
+        availableDays:
+          availableDays.length > 0
+            ? availableDays
+            : ["Monday", "Wednesday", "Friday"],
+        preferredTime: body.preferredTime || "",
+        startTime: body.startTime || "",
+        endTime: body.endTime || "",
+        timezone: body.timezone || "Asia/Kolkata",
+        sessionDuration,
+      },
+
+      pricing: {
+        sessionTypes:
+          sessionTypes.length > 0 ? sessionTypes : ["1:1 Mentoring"],
+        sessionPrice,
+        currency: body.currency || "INR",
+        freeTrial: body.freeTrial === "true" || body.freeTrial === true,
+        pricingNote: body.pricingNote?.trim() || "",
+      },
+
+      profileImage: getFilePath("profileImage"),
+      resume: getFilePath("resume"),
+      governmentId: getFilePath("governmentId"),
+      degreeCertificate: getFilePath("degreeCertificate"),
+
+      reviews: [],
+      averageRating: 0,
+      totalReviews: 0,
+
+      agreement: true,
+      verificationStatus: "Approved",
+      isVerified: true,
+      accountStatus: "Active",
+      approvedBy: adminId,
+      approvedAt: new Date(),
+    });
+
+    // =====================================================
+    // STEP 3: AUDIT LOG ENTRY
+    // =====================================================
+    const adminUser = await Student.findById(adminId).select("-password");
+    if (adminUser) {
+      await createAuditLog({
+        req,
+        user: {
+          ...adminUser.toObject(),
+          role: "admin",
+        },
+        action: "Create Mentor By Admin",
+        module: "Mentor",
+        description: `Instantiated active verified mentor profile for ${mentor.firstName} ${mentor.lastName}.`,
+        targetId: mentor._id,
+        targetType: "Mentor",
+      });
+    }
+
+    return res.status(201).json({
+      success: true,
+      message: "Mentor account successfully created and verified by Admin.",
+      mentor,
+    });
+  } catch (error) {
+    console.error("======================================");
+    console.error("Admin Create Mentor Error:", error);
+    console.error("======================================");
+
+    if (error.code === 11000) {
+      return res.status(409).json({
+        success: false,
+        message: "Duplicate entry detected (Email already in use).",
+      });
+    }
+
+    if (error.name === "ValidationError") {
+      const errors = Object.values(error.errors).map((err) => err.message);
+      return res.status(400).json({
+        success: false,
+        message: errors.join(", "),
+      });
+    }
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error while creating mentor profile.",
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+    });
+  }
+};
 
 

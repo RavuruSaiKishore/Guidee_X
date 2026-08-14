@@ -886,13 +886,15 @@ const EventDetails = () => {
             </section>
 
             {/* FULL DESCRIPTION */}
+            {/* FULL DESCRIPTION */}
             <section className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm sm:p-8">
               <h2 className="text-xl font-bold text-gray-900 mb-4">
                 About This Event
               </h2>
-              <div className="text-sm leading-8 text-gray-600 whitespace-pre-line">
-                {event.description}
-              </div>
+              <div
+                className="prose prose-indigo max-w-none text-sm leading-8 text-gray-600 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_h3]:text-lg [&_h3]:font-bold [&_h3]:text-gray-900 [&_h3]:mt-4 [&_h3]:mb-2 [&_p]:mb-3"
+                dangerouslySetInnerHTML={{ __html: event.description }}
+              />
             </section>
 
             {/* RAW DATA INFO SECTIONS: BENEFITS, WHAT YOU LEARN, TARGET */}

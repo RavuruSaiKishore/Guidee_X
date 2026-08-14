@@ -25,6 +25,7 @@ import {
   Lock,
   Sparkles,
   ChevronRight,
+  BookOpen,
 } from "lucide-react";
 
 import {
@@ -174,6 +175,8 @@ const StudentAnalytics = () => {
 
   const eventAnalytics = analytics?.eventAnalytics || [];
 
+  const courseAnalytics = analytics?.courseAnalytics || [];
+
   const meetingAnalytics = analytics?.meetingAnalytics || [];
 
   const badgeAnalytics = analytics?.badgeAnalytics || [];
@@ -316,23 +319,11 @@ const StudentAnalytics = () => {
     },
 
     {
-      label: "Learning Hours",
+      label: "Enrolled Courses",
 
-      value: `${overview.learningHours || 0}h`,
+      value: overview.totalCoursesEnrolled || 0,
 
-      icon: Clock3,
-
-      bg: "bg-purple-100",
-
-      text: "text-purple-600",
-    },
-
-    {
-      label: "Mentors Consulted",
-
-      value: overview.mentorsConsulted || 0,
-
-      icon: Users,
+      icon: BookOpen,
 
       bg: "bg-indigo-100",
 
@@ -340,11 +331,23 @@ const StudentAnalytics = () => {
     },
 
     {
-      label: "Completion Rate",
+      label: "Events Registered",
 
-      value: `${overview.completionRate || 0}%`,
+      value: overview.eventsRegistered || 0,
 
-      icon: Target,
+      icon: CalendarCheck,
+
+      bg: "bg-purple-100",
+
+      text: "text-purple-600",
+    },
+
+    {
+      label: "Learning Hours",
+
+      value: `${overview.learningHours || 0}h`,
+
+      icon: Clock3,
 
       bg: "bg-amber-100",
 
@@ -396,7 +399,10 @@ const StudentAnalytics = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50">
+      <div
+        className="min-h-screen bg-slate-50"
+        style={{ fontFamily: "'Poppins', sans-serif" }}
+      >
         <main className="mx-auto max-w-[1600px] px-4 py-6 sm:px-6 lg:px-8">
           <div className="animate-pulse space-y-5">
             <div className="h-32 rounded-2xl bg-white" />
@@ -426,24 +432,34 @@ const StudentAnalytics = () => {
 
   if (error || !analytics) {
     return (
-      <div className="min-h-screen bg-slate-50">
+      <div
+        className="min-h-screen bg-slate-50"
+        style={{ fontFamily: "'Poppins', sans-serif" }}
+      >
         <main className="mx-auto flex min-h-[70vh] max-w-xl items-center justify-center px-4">
           <div className="w-full rounded-2xl border border-red-100 bg-white p-7 text-center shadow-sm">
             <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-xl bg-red-100">
               <AlertCircle size={27} className="text-red-600" />
             </div>
 
-            <h2 className="mt-4 text-xl font-bold text-slate-900">
+            <h2
+              className="mt-4 text-xl font-bold text-slate-900"
+              style={{ fontWeight: 600 }}
+            >
               Unable to Load Analytics
             </h2>
 
-            <p className="mt-2 text-sm text-slate-500">
+            <p
+              className="mt-2 text-sm text-slate-500"
+              style={{ fontWeight: 600 }}
+            >
               {error || "Something went wrong while loading your analytics."}
             </p>
 
             <button
               onClick={fetchAnalytics}
               className="mt-5 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700"
+              style={{ fontWeight: 600 }}
             >
               Try Again
             </button>
@@ -458,7 +474,10 @@ const StudentAnalytics = () => {
   // ==========================================================
 
   return (
-    <div className="min-h-screen bg-slate-50 mt-9">
+    <div
+      className="min-h-screen bg-slate-50 mt-9"
+      style={{ fontFamily: "'Poppins', sans-serif" }}
+    >
       <main className="mx-auto max-w-[1570px] px-4 py-5 sm:px-6 sm:py-6 lg:px-8">
         {/* =====================================================
             HEADER
@@ -473,6 +492,7 @@ const StudentAnalytics = () => {
                 <button
                   onClick={() => navigate(-1)}
                   className="mb-4 flex items-center gap-2 text-xs font-semibold text-blue-100 transition hover:text-white"
+                  style={{ fontWeight: 600 }}
                 >
                   <ArrowLeft size={16} />
                   Back
@@ -493,7 +513,10 @@ const StudentAnalytics = () => {
                         className="h-full w-full object-cover"
                       />
                     ) : (
-                      <span className="text-xl font-black text-white">
+                      <span
+                        className="text-xl font-black text-white"
+                        style={{ fontWeight: 600 }}
+                      >
                         {studentName
                           .split(" ")
                           .map((name) => name[0])
@@ -505,37 +528,58 @@ const StudentAnalytics = () => {
                   </div>
 
                   <div>
-                    <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-blue-100">
+                    <p
+                      className="text-[10px] font-bold uppercase tracking-[0.18em] text-blue-100"
+                      style={{ fontWeight: 600 }}
+                    >
                       Student Performance
                     </p>
 
-                    <h1 className="mt-1 text-2xl font-extrabold sm:text-3xl">
+                    <h1
+                      className="mt-1 text-2xl font-extrabold sm:text-3xl"
+                      style={{ fontWeight: 600 }}
+                    >
                       {studentName}
                     </h1>
 
-                    <p className="mt-1 text-sm font-semibold text-blue-100">
+                    <p
+                      className="mt-1 text-sm font-semibold text-blue-100"
+                      style={{ fontWeight: 600 }}
+                    >
                       {careerGoal}
                     </p>
 
                     <div className="mt-3 flex flex-wrap items-center gap-2">
-                      <span className="rounded-full bg-white/15 px-3 py-1 text-[11px] font-bold backdrop-blur">
+                      <span
+                        className="rounded-full bg-white/15 px-3 py-1 text-[11px] font-bold backdrop-blur"
+                        style={{ fontWeight: 600 }}
+                      >
                         Level {level}
                       </span>
 
-                      <span className="rounded-full bg-white/15 px-3 py-1 text-[11px] font-bold backdrop-blur">
+                      <span
+                        className="rounded-full bg-white/15 px-3 py-1 text-[11px] font-bold backdrop-blur"
+                        style={{ fontWeight: 600 }}
+                      >
                         {levelTitle}
                       </span>
 
-                      <span className="rounded-full bg-white/15 px-3 py-1 text-[11px] font-bold backdrop-blur">
+                      <span
+                        className="rounded-full bg-white/15 px-3 py-1 text-[11px] font-bold backdrop-blur"
+                        style={{ fontWeight: 600 }}
+                      >
                         {xp} XP
                       </span>
                     </div>
                   </div>
                 </div>
 
-                <p className="mt-4 max-w-2xl text-xs leading-5 text-blue-100 sm:text-sm">
-                  Track your mentorship journey, learning progress, investment,
-                  mentor engagement, and achievements.
+                <p
+                  className="mt-4 max-w-2xl text-xs leading-5 text-blue-100 sm:text-sm font-medium"
+                  style={{ fontWeight: 600 }}
+                >
+                  Track your mentorship journey, enrolled courses, events,
+                  investment, and achievements.
                 </p>
               </div>
 
@@ -547,6 +591,7 @@ const StudentAnalytics = () => {
                     value={period}
                     onChange={(e) => setPeriod(e.target.value)}
                     className="rounded-lg bg-white px-3 py-2 text-xs font-bold text-slate-800 outline-none"
+                    style={{ fontWeight: 600 }}
                   >
                     <option value="all">All Time</option>
 
@@ -561,6 +606,7 @@ const StudentAnalytics = () => {
                 <button
                   onClick={fetchAnalytics}
                   className="flex items-center justify-center gap-2 rounded-lg bg-white/15 px-4 py-2.5 text-xs font-bold backdrop-blur transition hover:bg-white/25"
+                  style={{ fontWeight: 600 }}
                 >
                   <RefreshCw size={15} />
                   Refresh
@@ -568,7 +614,10 @@ const StudentAnalytics = () => {
               </div>
             </div>
 
-            <div className="mt-5 flex flex-wrap items-center gap-3 text-xs text-blue-100">
+            <div
+              className="mt-5 flex flex-wrap items-center gap-3 text-xs text-blue-100"
+              style={{ fontWeight: 600 }}
+            >
               <div className="flex items-center gap-2">
                 <Activity size={14} />
                 Showing analytics for
@@ -600,7 +649,10 @@ const StudentAnalytics = () => {
           {/* LEVEL PROGRESS */}
 
           <div className="border-t border-white/10 bg-black/10 px-5 py-4 sm:px-6">
-            <div className="flex items-center justify-between text-xs">
+            <div
+              className="flex items-center justify-between text-xs"
+              style={{ fontWeight: 600 }}
+            >
               <div className="flex items-center gap-2">
                 <Zap size={14} />
 
@@ -646,11 +698,17 @@ const StudentAnalytics = () => {
                   <TrendingUp size={15} className="text-slate-300" />
                 </div>
 
-                <p className="mt-3 text-xs font-medium text-slate-500">
+                <p
+                  className="mt-3 text-xs font-medium text-slate-500"
+                  style={{ fontWeight: 600 }}
+                >
                   {item.label}
                 </p>
 
-                <h3 className="mt-0.5 text-xl font-extrabold text-slate-900">
+                <h3
+                  className="mt-0.5 text-xl font-extrabold text-slate-900"
+                  style={{ fontWeight: 600 }}
+                >
                   {item.value}
                 </h3>
               </div>
@@ -668,15 +726,24 @@ const StudentAnalytics = () => {
           <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-wider text-indigo-600">
+                <p
+                  className="text-[10px] font-bold uppercase tracking-wider text-indigo-600"
+                  style={{ fontWeight: 600 }}
+                >
                   Current Level
                 </p>
 
-                <h2 className="mt-1 text-2xl font-black text-slate-900">
+                <h2
+                  className="mt-1 text-2xl font-black text-slate-900"
+                  style={{ fontWeight: 600 }}
+                >
                   Level {level}
                 </h2>
 
-                <p className="mt-1 text-sm font-semibold text-slate-500">
+                <p
+                  className="mt-1 text-sm font-semibold text-slate-500"
+                  style={{ fontWeight: 600 }}
+                >
                   {levelTitle}
                 </p>
               </div>
@@ -687,7 +754,10 @@ const StudentAnalytics = () => {
             </div>
 
             <div className="mt-5">
-              <div className="flex justify-between text-[11px] font-semibold text-slate-500">
+              <div
+                className="flex justify-between text-[11px] font-semibold text-slate-500"
+                style={{ fontWeight: 600 }}
+              >
                 <span>XP Progress</span>
 
                 <span>
@@ -707,19 +777,33 @@ const StudentAnalytics = () => {
 
             <div className="mt-4 flex items-center justify-between rounded-xl bg-slate-50 p-3">
               <div>
-                <p className="text-[10px] font-semibold uppercase text-slate-400">
+                <p
+                  className="text-[10px] font-semibold uppercase text-slate-400"
+                  style={{ fontWeight: 600 }}
+                >
                   Total XP
                 </p>
 
-                <p className="mt-1 text-lg font-black text-indigo-600">{xp}</p>
+                <p
+                  className="mt-1 text-lg font-black text-indigo-600"
+                  style={{ fontWeight: 600 }}
+                >
+                  {xp}
+                </p>
               </div>
 
               <div className="text-right">
-                <p className="text-[10px] font-semibold uppercase text-slate-400">
+                <p
+                  className="text-[10px] font-semibold uppercase text-slate-400"
+                  style={{ fontWeight: 600 }}
+                >
                   Longest Streak
                 </p>
 
-                <p className="mt-1 text-lg font-black text-orange-500">
+                <p
+                  className="mt-1 text-lg font-black text-orange-500"
+                  style={{ fontWeight: 600 }}
+                >
                   {longestStreak} 🔥
                 </p>
               </div>
@@ -731,19 +815,33 @@ const StudentAnalytics = () => {
           <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-wider text-amber-600">
+                <p
+                  className="text-[10px] font-bold uppercase tracking-wider text-amber-600"
+                  style={{ fontWeight: 600 }}
+                >
                   Achievement Progress
                 </p>
 
-                <h2 className="mt-1 text-2xl font-black text-slate-900">
+                <h2
+                  className="mt-1 text-2xl font-black text-slate-900"
+                  style={{ fontWeight: 600 }}
+                >
                   {unlockedBadges}
-                  <span className="text-base text-slate-400">
+                  <span
+                    className="text-base text-slate-400"
+                    style={{ fontWeight: 600 }}
+                  >
                     {" "}
                     / {totalBadges}
                   </span>
                 </h2>
 
-                <p className="mt-1 text-sm text-slate-500">Badges unlocked</p>
+                <p
+                  className="mt-1 text-sm text-slate-500"
+                  style={{ fontWeight: 600 }}
+                >
+                  Badges unlocked
+                </p>
               </div>
 
               <div className="relative flex h-20 w-20 items-center justify-center">
@@ -777,7 +875,10 @@ const StudentAnalytics = () => {
                   />
                 </svg>
 
-                <span className="absolute text-sm font-black text-slate-900">
+                <span
+                  className="absolute text-sm font-black text-slate-900"
+                  style={{ fontWeight: 600 }}
+                >
                   {overallBadgeProgress}%
                 </span>
               </div>
@@ -787,7 +888,10 @@ const StudentAnalytics = () => {
               <div className="flex items-center gap-2">
                 <Trophy size={17} className="text-amber-600" />
 
-                <p className="text-xs font-bold text-amber-800">
+                <p
+                  className="text-xs font-bold text-amber-800"
+                  style={{ fontWeight: 600 }}
+                >
                   {unlockedBadges === totalBadges
                     ? "All achievements unlocked!"
                     : `${totalBadges - unlockedBadges} achievements remaining`}
@@ -801,15 +905,24 @@ const StudentAnalytics = () => {
           <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-wider text-orange-600">
+                <p
+                  className="text-[10px] font-bold uppercase tracking-wider text-orange-600"
+                  style={{ fontWeight: 600 }}
+                >
                   Learning Streak
                 </p>
 
-                <h2 className="mt-1 text-2xl font-black text-slate-900">
+                <h2
+                  className="mt-1 text-2xl font-black text-slate-900"
+                  style={{ fontWeight: 600 }}
+                >
                   {currentStreak} Days
                 </h2>
 
-                <p className="mt-1 text-sm text-slate-500">
+                <p
+                  className="mt-1 text-sm text-slate-500"
+                  style={{ fontWeight: 600 }}
+                >
                   Keep learning consistently.
                 </p>
               </div>
@@ -821,24 +934,68 @@ const StudentAnalytics = () => {
 
             <div className="mt-5 grid grid-cols-2 gap-3">
               <div className="rounded-xl bg-orange-50 p-3">
-                <p className="text-[10px] font-semibold text-orange-600">
+                <p
+                  className="text-[10px] font-semibold text-orange-600"
+                  style={{ fontWeight: 600 }}
+                >
                   Current
                 </p>
 
-                <p className="mt-1 text-lg font-black text-orange-700">
+                <p
+                  className="mt-1 text-lg font-black text-orange-700"
+                  style={{ fontWeight: 600 }}
+                >
                   {currentStreak}
                 </p>
               </div>
 
               <div className="rounded-xl bg-slate-50 p-3">
-                <p className="text-[10px] font-semibold text-slate-500">Best</p>
+                <p
+                  className="text-[10px] font-semibold text-slate-500"
+                  style={{ fontWeight: 600 }}
+                >
+                  Best
+                </p>
 
-                <p className="mt-1 text-lg font-black text-slate-800">
+                <p
+                  className="mt-1 text-lg font-black text-slate-800"
+                  style={{ fontWeight: 600 }}
+                >
                   {longestStreak}
                 </p>
               </div>
             </div>
           </div>
+        </div>
+
+        {/* =====================================================
+            COURSES + EVENTS SECTION
+        ====================================================== */}
+
+        <div className="mt-5 grid gap-5 xl:grid-cols-2">
+          <AnalyticsCard
+            title="Course Enrolments & Progress"
+            description="Overview of your active and completed professional learning programs."
+            icon={BookOpen}
+          >
+            <SimpleBarChart
+              data={courseAnalytics}
+              dataKey="count"
+              categoryKey="status"
+            />
+          </AnalyticsCard>
+
+          <AnalyticsCard
+            title="Event Registrations & Participation"
+            description="Your participation breakdown across webinars, workshops, and tech events."
+            icon={CalendarDays}
+          >
+            <SimpleBarChart
+              data={eventAnalytics}
+              dataKey="count"
+              categoryKey="category"
+            />
+          </AnalyticsCard>
         </div>
 
         {/* =====================================================
@@ -852,11 +1009,17 @@ const StudentAnalytics = () => {
             <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-indigo-600">
+                  <p
+                    className="text-[10px] font-bold uppercase tracking-wider text-indigo-600"
+                    style={{ fontWeight: 600 }}
+                  >
                     Current Achievement
                   </p>
 
-                  <h2 className="mt-1 text-xl font-black text-slate-900">
+                  <h2
+                    className="mt-1 text-xl font-black text-slate-900"
+                    style={{ fontWeight: 600 }}
+                  >
                     {currentBadge.title}
                   </h2>
                 </div>
@@ -878,18 +1041,24 @@ const StudentAnalytics = () => {
                 })()}
               </div>
 
-              <p className="mt-3 text-sm leading-6 text-slate-500">
+              <p
+                className="mt-3 text-sm leading-6 text-slate-500"
+                style={{ fontWeight: 600 }}
+              >
                 {currentBadge.description}
               </p>
 
-              <div className="mt-5 flex items-center gap-2 text-xs font-bold text-emerald-600">
+              <div
+                className="mt-5 flex items-center gap-2 text-xs font-bold text-emerald-600"
+                style={{ fontWeight: 600 }}
+              >
                 <CheckCircle2 size={16} />
                 Achievement unlocked
               </div>
             </div>
           ) : (
             <div className="rounded-2xl border border-slate-200 bg-white p-5">
-              <p className="text-sm text-slate-500">
+              <p className="text-sm text-slate-500" style={{ fontWeight: 600 }}>
                 Complete your first mentorship session to unlock your first
                 achievement.
               </p>
@@ -902,22 +1071,36 @@ const StudentAnalytics = () => {
             <div className="rounded-2xl bg-gradient-to-br from-indigo-600 to-violet-700 p-5 text-white shadow-lg">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-indigo-200">
+                  <p
+                    className="text-[10px] font-bold uppercase tracking-wider text-indigo-200"
+                    style={{ fontWeight: 600 }}
+                  >
                     Next Achievement
                   </p>
 
-                  <h2 className="mt-1 text-xl font-black">{nextBadge.title}</h2>
+                  <h2
+                    className="mt-1 text-xl font-black"
+                    style={{ fontWeight: 600 }}
+                  >
+                    {nextBadge.title}
+                  </h2>
                 </div>
 
                 <Target size={25} />
               </div>
 
-              <p className="mt-3 text-sm leading-6 text-indigo-100">
+              <p
+                className="mt-3 text-sm leading-6 text-indigo-100"
+                style={{ fontWeight: 600 }}
+              >
                 {nextBadge.description}
               </p>
 
               <div className="mt-5">
-                <div className="flex justify-between text-xs font-semibold text-indigo-100">
+                <div
+                  className="flex justify-between text-xs font-semibold text-indigo-100"
+                  style={{ fontWeight: 600 }}
+                >
                   <span>Progress</span>
 
                   <span>
@@ -935,7 +1118,10 @@ const StudentAnalytics = () => {
                 </div>
               </div>
 
-              <p className="mt-3 text-xs font-semibold text-indigo-100">
+              <p
+                className="mt-3 text-xs font-semibold text-indigo-100"
+                style={{ fontWeight: 600 }}
+              >
                 {nextBadge.remaining} more session
                 {nextBadge.remaining !== 1 ? "s" : ""} needed
               </p>
@@ -947,11 +1133,17 @@ const StudentAnalytics = () => {
               </div>
 
               <div>
-                <h3 className="font-black text-emerald-800">
+                <h3
+                  className="font-black text-emerald-800"
+                  style={{ fontWeight: 600 }}
+                >
                   All Achievements Unlocked!
                 </h3>
 
-                <p className="mt-1 text-xs text-emerald-700">
+                <p
+                  className="mt-1 text-xs text-emerald-700"
+                  style={{ fontWeight: 600 }}
+                >
                   You have completed every available achievement.
                 </p>
               </div>
@@ -1309,18 +1501,27 @@ const StudentAnalytics = () => {
               </div>
 
               <div>
-                <h2 className="text-lg font-bold text-slate-900">
+                <h2
+                  className="text-lg font-bold text-slate-900"
+                  style={{ fontWeight: 600 }}
+                >
                   Achievement Progress
                 </h2>
 
-                <p className="mt-0.5 text-xs text-slate-500">
+                <p
+                  className="mt-0.5 text-xs text-slate-500"
+                  style={{ fontWeight: 600 }}
+                >
                   Continue your learning journey to unlock new badges.
                 </p>
               </div>
             </div>
 
             <div className="rounded-lg bg-amber-50 px-3 py-2">
-              <span className="text-xs font-bold text-amber-700">
+              <span
+                className="text-xs font-bold text-amber-700"
+                style={{ fontWeight: 600 }}
+              >
                 {unlockedBadges} / {totalBadges} Unlocked
               </span>
             </div>
@@ -1353,27 +1554,42 @@ const StudentAnalytics = () => {
                       </div>
 
                       {badge.unlocked ? (
-                        <span className="rounded-full bg-emerald-50 px-3 py-1 text-[10px] font-black text-emerald-600">
+                        <span
+                          className="rounded-full bg-emerald-50 px-3 py-1 text-[10px] font-black text-emerald-600"
+                          style={{ fontWeight: 600 }}
+                        >
                           UNLOCKED
                         </span>
                       ) : (
-                        <span className="flex items-center gap-1 rounded-full bg-slate-100 px-3 py-1 text-[10px] font-black text-slate-500">
+                        <span
+                          className="flex items-center gap-1 rounded-full bg-slate-100 px-3 py-1 text-[10px] font-black text-slate-500"
+                          style={{ fontWeight: 600 }}
+                        >
                           <Lock size={11} />
                           LOCKED
                         </span>
                       )}
                     </div>
 
-                    <h3 className="mt-5 text-base font-black text-slate-900">
+                    <h3
+                      className="mt-5 text-base font-black text-slate-900"
+                      style={{ fontWeight: 600 }}
+                    >
                       {badge.title}
                     </h3>
 
-                    <p className="mt-2 min-h-[40px] text-xs leading-5 text-slate-500">
+                    <p
+                      className="mt-2 min-h-[40px] text-xs leading-5 text-slate-500"
+                      style={{ fontWeight: 600 }}
+                    >
                       {badge.description}
                     </p>
 
                     <div className="mt-5">
-                      <div className="flex justify-between text-[11px] font-semibold text-slate-500">
+                      <div
+                        className="flex justify-between text-[11px] font-semibold text-slate-500"
+                        style={{ fontWeight: 600 }}
+                      >
                         <span>Progress</span>
 
                         <span>
@@ -1393,12 +1609,18 @@ const StudentAnalytics = () => {
 
                     <div className="mt-4 border-t border-slate-100 pt-4">
                       {badge.unlocked ? (
-                        <div className="flex items-center gap-2 text-xs font-bold text-emerald-600">
+                        <div
+                          className="flex items-center gap-2 text-xs font-bold text-emerald-600"
+                          style={{ fontWeight: 600 }}
+                        >
                           <CheckCircle2 size={15} />
                           Achievement unlocked
                         </div>
                       ) : (
-                        <div className="flex items-center gap-2 text-xs font-semibold text-slate-500">
+                        <div
+                          className="flex items-center gap-2 text-xs font-semibold text-slate-500"
+                          style={{ fontWeight: 600 }}
+                        >
                           <Target size={15} />
                           {badge.remaining} more session
                           {badge.remaining !== 1 ? "s" : ""} needed
@@ -1424,11 +1646,17 @@ const StudentAnalytics = () => {
               </div>
 
               <div>
-                <h2 className="text-lg font-bold text-slate-900">
+                <h2
+                  className="text-lg font-bold text-slate-900"
+                  style={{ fontWeight: 600 }}
+                >
                   Recent XP Activity
                 </h2>
 
-                <p className="mt-0.5 text-xs text-slate-500">
+                <p
+                  className="mt-0.5 text-xs text-slate-500"
+                  style={{ fontWeight: 600 }}
+                >
                   Your latest learning experience points.
                 </p>
               </div>
@@ -1440,7 +1668,10 @@ const StudentAnalytics = () => {
                   key={item._id || index}
                   className="rounded-xl border border-slate-100 bg-slate-50 p-4"
                 >
-                  <div className="flex items-center justify-between">
+                  <div
+                    className="flex items-center justify-between"
+                    style={{ fontWeight: 600 }}
+                  >
                     <span className="text-xs font-bold text-slate-500">XP</span>
 
                     <span className="text-sm font-black text-indigo-600">
@@ -1448,12 +1679,18 @@ const StudentAnalytics = () => {
                     </span>
                   </div>
 
-                  <p className="mt-2 line-clamp-2 text-xs font-semibold text-slate-700">
+                  <p
+                    className="mt-2 line-clamp-2 text-xs font-semibold text-slate-700"
+                    style={{ fontWeight: 600 }}
+                  >
                     {item.reason || item.description || "Learning activity"}
                   </p>
 
                   {item.createdAt && (
-                    <p className="mt-2 text-[10px] text-slate-400">
+                    <p
+                      className="mt-2 text-[10px] text-slate-400"
+                      style={{ fontWeight: 600 }}
+                    >
                       {new Date(item.createdAt).toLocaleDateString("en-IN", {
                         day: "2-digit",
                         month: "short",
@@ -1484,9 +1721,17 @@ const AnalyticsCard = ({ title, description, icon: Icon, children }) => {
         </div>
 
         <div>
-          <h2 className="text-sm font-bold text-slate-900">{title}</h2>
+          <h2
+            className="text-sm font-bold text-slate-900"
+            style={{ fontWeight: 600 }}
+          >
+            {title}
+          </h2>
 
-          <p className="mt-0.5 text-[11px] leading-4 text-slate-500">
+          <p
+            className="mt-0.5 text-[11px] leading-4 text-slate-500"
+            style={{ fontWeight: 600 }}
+          >
             {description}
           </p>
         </div>
@@ -1509,7 +1754,10 @@ const ProgressCard = ({ title, value, suffix, icon: Icon, description }) => {
 
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-      <div className="flex items-center justify-between">
+      <div
+        className="flex items-center justify-between"
+        style={{ fontWeight: 600 }}
+      >
         <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-100">
           <Icon size={18} className="text-blue-600" />
         </div>
@@ -1520,9 +1768,19 @@ const ProgressCard = ({ title, value, suffix, icon: Icon, description }) => {
         </span>
       </div>
 
-      <h3 className="mt-4 text-sm font-bold text-slate-900">{title}</h3>
+      <h3
+        className="mt-4 text-sm font-bold text-slate-900"
+        style={{ fontWeight: 600 }}
+      >
+        {title}
+      </h3>
 
-      <p className="mt-1 text-[11px] leading-4 text-slate-500">{description}</p>
+      <p
+        className="mt-1 text-[11px] leading-4 text-slate-500"
+        style={{ fontWeight: 600 }}
+      >
+        {description}
+      </p>
 
       <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-slate-100">
         <div
@@ -1578,11 +1836,17 @@ const EmptyChartState = () => {
         <BarChart3 size={19} className="text-slate-400" />
       </div>
 
-      <p className="mt-3 text-xs font-semibold text-slate-700">
+      <p
+        className="mt-3 text-xs font-semibold text-slate-700"
+        style={{ fontWeight: 600 }}
+      >
         No data available
       </p>
 
-      <p className="mt-1 max-w-xs text-[11px] text-slate-400">
+      <p
+        className="mt-1 max-w-xs text-[11px] text-slate-400"
+        style={{ fontWeight: 600 }}
+      >
         There is not enough activity in the selected period to display this
         chart.
       </p>

@@ -13,9 +13,9 @@ import {
   ShieldCheck,
   MessageSquare,
   Clock,
-  UserRound,
   CheckCircle2,
   AlertCircle,
+  HelpCircle,
   Sparkles,
 } from "lucide-react";
 
@@ -55,7 +55,6 @@ const AdminMentorChatDetails = () => {
 
       const response = await fetch(
         `${API_BASE_URL}/api/mentor-contact/admin/${id}`,
-
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -74,7 +73,6 @@ const AdminMentorChatDetails = () => {
       setTimeout(() => {
         chatRef.current?.scrollTo({
           top: chatRef.current.scrollHeight,
-
           behavior: "smooth",
         });
       }, 300);
@@ -99,19 +97,14 @@ const AdminMentorChatDetails = () => {
 
       const response = await fetch(
         `${API_BASE_URL}/api/mentor-contact/admin/${id}/reply`,
-
         {
           method: "PUT",
-
           headers: {
             Authorization: `Bearer ${token}`,
-
             "Content-Type": "application/json",
           },
-
           body: JSON.stringify({
             adminReply: reply,
-
             status,
           }),
         }
@@ -125,25 +118,26 @@ const AdminMentorChatDetails = () => {
 
       setRequest((prev) => ({
         ...prev,
-
         status,
-
         conversation: [
           ...(prev.conversation || []),
-
           {
             _id: Date.now(),
-
             sender: "Admin",
-
             message: reply,
-
             sentAt: new Date(),
           },
         ],
       }));
 
       setReply("");
+
+      setTimeout(() => {
+        chatRef.current?.scrollTo({
+          top: chatRef.current.scrollHeight,
+          behavior: "smooth",
+        });
+      }, 100);
     } catch (error) {
       toast.error(error.message);
     } finally {
@@ -163,10 +157,8 @@ const AdminMentorChatDetails = () => {
     try {
       const response = await fetch(
         `${API_BASE_URL}/api/mentor-contact/admin/${id}`,
-
         {
           method: "DELETE",
-
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -186,41 +178,25 @@ const AdminMentorChatDetails = () => {
   const statusUI = {
     Pending: {
       icon: AlertCircle,
-
-      color: "bg-yellow-100 text-yellow-700",
+      badge: "border-amber-200 bg-amber-50 text-amber-700",
     },
-
     "In Progress": {
       icon: Clock,
-
-      color: "bg-blue-100 text-blue-700",
+      badge: "border-blue-200 bg-blue-50 text-blue-700",
     },
-
     Resolved: {
       icon: CheckCircle2,
-
-      color: "bg-green-100 text-green-700",
+      badge: "border-emerald-200 bg-emerald-50 text-emerald-700",
     },
   };
 
   if (loading) {
     return (
       <div
-        className="
-      h-screen
-      flex
-      items-center
-      justify-center
-      bg-slate-50
-      "
+        className="h-screen flex items-center justify-center bg-slate-50"
+        style={{ fontFamily: "'Poppins', sans-serif" }}
       >
-        <Loader2
-          size={45}
-          className="
-          animate-spin
-          text-indigo-600
-          "
-        />
+        <Loader2 size={45} className="animate-spin text-blue-600" />
       </div>
     );
   }
@@ -228,973 +204,392 @@ const AdminMentorChatDetails = () => {
   if (!request) {
     return (
       <div
-        className="
-      h-screen
-      flex
-      items-center
-      justify-center
-      "
+        className="h-screen flex items-center justify-center bg-slate-50 text-slate-900"
+        style={{ fontFamily: "'Poppins', sans-serif" }}
       >
-        <h2
-          className="
-        text-2xl
-        font-bold
-        "
-        >
+        <h2 className="text-base font-semibold" style={{ fontWeight: 600 }}>
           Chat Not Found
         </h2>
       </div>
     );
   }
 
-  const StatusIcon = statusUI[request.status]?.icon || Clock;
-
   return (
     <div
-      className="
-min-h-screen
-bg-slate-100
-p-5
-"
+      className="min-h-screen bg-slate-50 text-slate-950 pb-12"
+      style={{ fontFamily: "'Poppins', sans-serif", fontStyle: "normal" }}
     >
-      {/* ================= HEADER ================= */}
+      {/* ================= REFINED PREMIUM HEADER ================= */}
+      <section className="border-b border-slate-200 bg-white shadow-xs">
+        <div className="mx-auto max-w-7xl px-5 sm:px-6 lg:px-8 py-6">
+          <div className="relative overflow-hidden rounded-3xl bg-black px-6 py-7 sm:px-8 text-white shadow-md">
+            <div className="absolute -right-16 -top-16 h-48 w-48 rounded-full bg-blue-600/20 blur-3xl" />
+            <div className="absolute -bottom-20 left-1/4 h-40 w-40 rounded-full bg-blue-400/10 blur-2xl" />
 
-      {/* ================= PREMIUM HEADER ================= */}
-
-      <div
-        className="
-relative
-overflow-hidden
-bg-gradient-to-br
-from-slate-950
-via-indigo-950
-to-purple-950
-rounded-3xl
-px-7
-py-6
-shadow-2xl
-mb-5
-"
-      >
-        {/* Background Glow */}
-
-        <div
-          className="
-absolute
-top-0
-right-0
-w-72
-h-72
-bg-purple-500/20
-rounded-full
-blur-3xl
-"
-        />
-
-        <div
-          className="
-absolute
-bottom-0
-left-20
-w-52
-h-52
-bg-indigo-500/20
-rounded-full
-blur-3xl
-"
-        />
-
-        <div
-          className="
-relative
-z-10
-flex
-items-center
-justify-between
-"
-        >
-          {/* LEFT SECTION */}
-
-          <div
-            className="
-flex
-items-center
-gap-5
-"
-          >
-            {/* ICON */}
-
-            <div
-              className="
-w-16
-h-16
-rounded-2xl
-bg-white/10
-backdrop-blur-xl
-border
-border-white/20
-flex
-items-center
-justify-center
-shadow-lg
-"
-            >
-              <MessageSquare size={32} className="text-white" />
-            </div>
-
-            <div>
-              <div
-                className="
-flex
-items-center
-gap-3
-"
-              >
-                <h1
-                  className="
-text-3xl
-font-bold
-text-white
-tracking-tight
-"
+            <div className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+              <div className="flex items-start sm:items-center gap-4 sm:gap-5 min-w-0">
+                <Link
+                  to="/admin/mentor-requests"
+                  className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/10 border border-white/15 text-white hover:bg-white/20 transition backdrop-blur shadow-inner"
                 >
-                  Mentor Support
-                </h1>
+                  <ArrowLeft size={20} className="text-blue-400" />
+                </Link>
 
-                <span
-                  className="
-flex
-items-center
-gap-2
-px-3
-py-1
-rounded-full
-text-xs
-font-semibold
-bg-emerald-500/20
-text-emerald-300
-border
-border-emerald-400/20
-"
-                >
-                  <span
-                    className="
-w-2
-h-2
-rounded-full
-bg-emerald-400
-animate-pulse
-"
-                  />
-                  Active
-                </span>
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-3">
+                    <h1
+                      className="text-xl sm:text-2xl font-semibold tracking-tight text-white"
+                      style={{ fontWeight: 600 }}
+                    >
+                      Mentor Support #{request._id?.slice(-8).toUpperCase()}
+                    </h1>
+                    <span
+                      className={`px-3 py-1 rounded-full text-[11px] font-semibold border backdrop-blur ${
+                        status === "Pending"
+                          ? "bg-amber-500/10 text-amber-300 border-amber-500/20"
+                          : status === "In Progress"
+                          ? "bg-blue-500/10 text-blue-300 border-blue-500/20"
+                          : "bg-emerald-500/10 text-emerald-300 border-emerald-500/20"
+                      }`}
+                      style={{ fontWeight: 600 }}
+                    >
+                      {status}
+                    </span>
+                  </div>
+                  <p
+                    className="mt-1.5 text-xs text-slate-300 font-medium truncate max-w-xl"
+                    style={{ fontWeight: 600 }}
+                  >
+                    {request.subject ||
+                      request.category ||
+                      "Secure Support Channel"}
+                  </p>
+                </div>
               </div>
 
-              <div
-                className="
-flex
-items-center
-gap-4
-mt-2
-"
-              >
-                <p
-                  className="
-text-indigo-200
-text-sm
-"
+              <div className="flex items-center gap-3 shrink-0">
+                <button
+                  onClick={deleteRequest}
+                  className="inline-flex items-center gap-2 rounded-xl bg-red-500/10 border border-red-500/20 px-4 py-2.5 text-xs font-semibold text-red-300 transition hover:bg-red-500/20 backdrop-blur"
+                  style={{ fontWeight: 600 }}
                 >
-                  GuideX Mentor Communication Center
-                </p>
-
-                <span
-                  className="
-text-indigo-300
-text-xs
-"
-                >
-                  •
-                </span>
-
-                <p
-                  className="
-text-indigo-200
-text-sm
-"
-                >
-                  Ticket #{request._id?.slice(-6)}
-                </p>
+                  <Trash2 size={15} className="text-red-400" />
+                  <span>Delete Conversation</span>
+                </button>
               </div>
             </div>
-          </div>
-
-          {/* RIGHT SECTION */}
-
-          <div
-            className="
-flex
-items-center
-gap-3
-"
-          >
-            {/* STATUS */}
-
-            <div
-              className={`
-px-4
-py-2
-rounded-full
-backdrop-blur-xl
-border
-font-semibold
-text-sm
-flex
-items-center
-gap-2
-
-${statusUI[request.status]?.color}
-
-`}
-            >
-              <StatusIcon size={17} />
-
-              {request.status}
-            </div>
-
-            {/* BACK BUTTON */}
-
-            <Link
-              to="/admin/mentor-requests"
-              className="
-group
-flex
-items-center
-gap-2
-px-5
-py-2.5
-rounded-xl
-bg-white/10
-hover:bg-white/20
-border
-border-white/20
-text-white
-font-medium
-transition-all
-duration-300
-hover:-translate-x-1
-"
-            >
-              <ArrowLeft
-                size={18}
-                className="
-group-hover:-translate-x-1
-transition
-"
-              />
-              Back
-            </Link>
           </div>
         </div>
+      </section>
 
-        {/* Bottom Information Bar */}
-
-        <div
-          className="
-relative
-z-10
-mt-6
-pt-5
-border-t
-border-white/10
-flex
-items-center
-gap-8
-"
-        >
-          <div>
-            <p
-              className="
-text-xs
-text-indigo-300
-uppercase
-font-semibold
-"
-            >
-              Mentor
-            </p>
-
-            <p
-              className="
-text-white
-font-medium
-mt-1
-"
-            >
-              {request.mentorId?.firstName} {request.mentorId?.lastName}
-            </p>
-          </div>
-
-          <div>
-            <p
-              className="
-text-xs
-text-indigo-300
-uppercase
-font-semibold
-"
-            >
-              Category
-            </p>
-
-            <p
-              className="
-text-white
-font-medium
-mt-1
-"
-            >
-              {request.category || "General"}
-            </p>
-          </div>
-
-          <div>
-            <p
-              className="
-text-xs
-text-indigo-300
-uppercase
-font-semibold
-"
-            >
-              Created
-            </p>
-
-            <p
-              className="
-text-white
-font-medium
-mt-1
-"
-            >
-              {new Date(request.createdAt).toLocaleDateString()}
-            </p>
-          </div>
-        </div>
-      </div>
-      {/* ================= MAIN CONTENT ================= */}
-
-      <div
-        className="
-grid
-grid-cols-12
-gap-5
-"
-      >
-        {/* ================= MENTOR PROFILE ================= */}
-
-        <div
-          className="
-col-span-3
-bg-white
-rounded-3xl
-shadow-sm
-border
-border-slate-200
-p-5
-h-fit
-"
-        >
-          <div
-            className="
-flex
-items-center
-gap-3
-pb-4
-border-b
-"
-          >
-            <div
-              className="
-w-14
-h-14
-rounded-2xl
-bg-gradient-to-br
-from-indigo-600
-to-purple-600
-text-white
-flex
-items-center
-justify-center
-font-bold
-text-xl
-"
-            >
-              {request.mentorId?.firstName?.charAt(0)}
-
-              {request.mentorId?.lastName?.charAt(0)}
-            </div>
-
-            <div>
-              <h2
-                className="
-font-bold
-text-slate-800
-"
-              >
-                {request.mentorId?.firstName} {request.mentorId?.lastName}
-              </h2>
-
-              <p
-                className="
-text-xs
-text-indigo-600
-font-semibold
-"
-              >
-                Mentor
-              </p>
-            </div>
-          </div>
-
-          <div
-            className="
-mt-5
-space-y-3
-"
-          >
-            <div
-              className="
-flex
-items-center
-gap-3
-bg-slate-50
-rounded-xl
-p-3
-"
-            >
-              <div
-                className="
-w-8
-h-8
-rounded-lg
-bg-indigo-100
-flex
-items-center
-justify-center
-text-indigo-600
-"
-              >
-                <Mail size={16} />
+      {/* ================= MAIN LAYOUT: SPLIT WORKSPACE ================= */}
+      <main className="mx-auto max-w-7xl px-5 sm:px-6 lg:px-8 pt-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          {/* ================= LEFT COLUMN: MENTOR & TICKET METADATA (4 Cols) ================= */}
+          <div className="lg:col-span-4 space-y-6">
+            {/* Mentor Profile Card */}
+            <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-2xs">
+              <div className="flex items-center gap-3.5 pb-5 border-b border-slate-100">
+                <div
+                  className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-black text-white text-sm font-semibold shadow-xs"
+                  style={{ fontWeight: 600 }}
+                >
+                  {request.mentorId?.profileImage ? (
+                    <img
+                      src={`${API_BASE_URL}${request.mentorId?.profileImage}`}
+                      alt=""
+                      className="h-full w-full object-cover rounded-2xl"
+                    />
+                  ) : (
+                    <span>{request.mentorId?.firstName?.charAt(0) || "M"}</span>
+                  )}
+                </div>
+                <div className="min-w-0">
+                  <h2
+                    className="text-xs font-semibold text-slate-900 truncate tracking-tight"
+                    style={{ fontWeight: 600 }}
+                  >
+                    {request.mentorId?.firstName} {request.mentorId?.lastName}
+                  </h2>
+                  <p
+                    className="text-[11px] text-blue-600 font-medium"
+                    style={{ fontWeight: 600 }}
+                  >
+                    Registered Mentor
+                  </p>
+                </div>
               </div>
 
-              <p
-                className="
-text-xs
-text-slate-600
-break-all
-"
-              >
-                {request.mentorId?.email}
-              </p>
-            </div>
-
-            <div
-              className="
-flex
-items-center
-gap-3
-bg-slate-50
-rounded-xl
-p-3
-"
-            >
               <div
-                className="
-w-8
-h-8
-rounded-lg
-bg-indigo-100
-flex
-items-center
-justify-center
-text-indigo-600
-"
+                className="mt-5 space-y-3.5 text-xs font-semibold text-slate-700"
+                style={{ fontWeight: 600 }}
               >
-                <Phone size={16} />
-              </div>
+                <div className="flex items-center gap-3 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                  <Mail size={15} className="text-blue-600 shrink-0" />
+                  <span className="truncate">
+                    {request.mentorId?.email || "No email provided"}
+                  </span>
+                </div>
 
-              <p
-                className="
-text-sm
-text-slate-600
-"
-              >
-                {request.mentorId?.phone || "Not available"}
-              </p>
+                <div className="flex items-center gap-3 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                  <Phone size={15} className="text-blue-600 shrink-0" />
+                  <span>{request.mentorId?.phone || "No phone provided"}</span>
+                </div>
+
+                <div className="flex items-center gap-3 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                  <Calendar size={15} className="text-blue-600 shrink-0" />
+                  <span>
+                    Opened:{" "}
+                    {new Date(request.createdAt).toLocaleDateString("en-GB", {
+                      day: "2-digit",
+                      month: "short",
+                      year: "numeric",
+                    })}
+                  </span>
+                </div>
+              </div>
             </div>
 
-            <div
-              className="
-flex
-items-center
-gap-3
-bg-slate-50
-rounded-xl
-p-3
-"
-            >
-              <div
-                className="
-w-8
-h-8
-rounded-lg
-bg-indigo-100
-flex
-items-center
-justify-center
-text-indigo-600
-"
-              >
-                <Calendar size={16} />
-              </div>
-
-              <p
-                className="
-text-sm
-text-slate-600
-"
-              >
-                {new Date(request.createdAt).toLocaleDateString()}
-              </p>
-            </div>
-
-            <div
-              className="
-bg-indigo-50
-rounded-xl
-p-4
-mt-5
-"
-            >
-              <p
-                className="
-text-xs
-uppercase
-font-bold
-text-indigo-500
-"
-              >
-                Category
-              </p>
-
+            {/* Ticket Metadata Card */}
+            <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-2xs">
               <h3
-                className="
-font-semibold
-text-slate-800
-mt-1
-"
+                className="text-xs font-semibold uppercase tracking-widest text-slate-400 mb-4"
+                style={{ fontWeight: 600 }}
               >
-                {request.category || "General"}
+                Inquiry Details
               </h3>
-            </div>
 
-            <div
-              className="
-bg-purple-50
-rounded-xl
-p-4
-"
-            >
-              <p
-                className="
-text-xs
-uppercase
-font-bold
-text-purple-500
-"
+              <div
+                className="space-y-3 text-xs font-semibold text-slate-700"
+                style={{ fontWeight: 600 }}
               >
-                Subject
-              </p>
+                <div className="flex justify-between items-center py-2 border-b border-slate-100">
+                  <span className="text-slate-400">Category</span>
+                  <span className="text-slate-900 bg-slate-100 px-2.5 py-1 rounded-lg">
+                    {request.category || "General"}
+                  </span>
+                </div>
 
-              <h3
-                className="
-font-semibold
-text-slate-800
-mt-1
-"
+                <div className="flex justify-between items-center py-2 border-b border-slate-100">
+                  <span className="text-slate-400">Database ID</span>
+                  <span className="text-slate-900 font-mono text-[10px]">
+                    #{request._id.slice(-6).toUpperCase()}
+                  </span>
+                </div>
+
+                <div className="flex justify-between items-center py-2">
+                  <span className="text-slate-400">Messages Count</span>
+                  <span className="text-slate-900">
+                    {request.conversation?.length || 0}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* ================= RIGHT COLUMN: MERGED CHAT & REPLY HUB (8 Cols) ================= */}
+          <div className="lg:col-span-8 space-y-6">
+            {/* Original Subject Banner */}
+            <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-7 shadow-2xs">
+              <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-widest text-blue-600 mb-2">
+                <HelpCircle size={14} />
+                Subject: {request.subject}
+              </div>
+              <p
+                className="text-xs text-slate-700 font-medium leading-relaxed whitespace-pre-line bg-slate-50 p-4 rounded-2xl border border-slate-100 mt-2"
+                style={{ fontWeight: 600 }}
               >
                 {request.subject}
-              </h3>
-            </div>
-          </div>
-        </div>
-
-        {/* ================= CHAT WINDOW ================= */}
-
-        <div
-          className="
-col-span-9
-bg-white
-rounded-3xl
-shadow-sm
-border
-border-slate-200
-overflow-hidden
-flex
-flex-col
-"
-        >
-          {/* CHAT TOP BAR */}
-
-          <div
-            className="
-px-6
-py-4
-border-b
-flex
-items-center
-justify-between
-"
-          >
-            <div
-              className="
-flex
-items-center
-gap-3
-"
-            >
-              <div
-                className="
-w-11
-h-11
-rounded-xl
-bg-indigo-600
-text-white
-flex
-items-center
-justify-center
-"
-              >
-                <MessageSquare size={22} />
-              </div>
-
-              <div>
-                <h2
-                  className="
-font-bold
-text-slate-800
-"
-                >
-                  Conversation
-                </h2>
-
-                <p
-                  className="
-text-xs
-text-slate-500
-"
-                >
-                  {request.mentorId?.firstName} {request.mentorId?.lastName}↔
-                  GuideX Admin
-                </p>
-              </div>
+              </p>
             </div>
 
-            <p
-              className="
-text-xs
-text-slate-400
-"
-            >
-              {request.conversation?.length || 0}
-              Messages
-            </p>
-          </div>
-
-          {/* ================= MESSAGES ================= */}
-
-          <div
-            ref={chatRef}
-            className="
-h-[520px]
-overflow-y-auto
-bg-slate-50
-p-6
-space-y-5
-"
-          >
-            {request.conversation?.length > 0 ? (
-              request.conversation.map((chat) => (
-                <div
-                  key={chat._id}
-                  className={`
-flex
-${chat.sender === "Admin" ? "justify-end" : "justify-start"}
-
-`}
-                >
-                  <div
-                    className={`
-max-w-[70%]
-rounded-2xl
-p-4
-shadow-sm
-
-${
-  chat.sender === "Admin"
-    ? "bg-indigo-600 text-white rounded-br-none"
-    : "bg-white border text-slate-700 rounded-bl-none"
-}
-
-`}
-                  >
-                    <div
-                      className="
-flex
-items-center
-gap-2
-mb-2
-"
+            {/* Merged Interactive Chat Stream & Reply Hub */}
+            <div className="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-2xs">
+              <div className="bg-slate-50/70 border-b border-slate-100 px-6 py-4 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="h-9 w-9 rounded-xl bg-black text-white flex items-center justify-center shadow-xs">
+                    <MessageSquare size={17} className="text-blue-400" />
+                  </div>
+                  <div>
+                    <h3
+                      className="text-xs font-semibold text-slate-900 tracking-tight"
+                      style={{ fontWeight: 600 }}
                     >
-                      <div
-                        className={`
-w-8
-h-8
-rounded-full
-flex
-items-center
-justify-center
-font-bold
-text-xs
-
-${
-  chat.sender === "Admin"
-    ? "bg-white/20 text-white"
-    : "bg-indigo-100 text-indigo-700"
-}
-
-`}
-                      >
-                        {chat.sender === "Admin"
-                          ? "A"
-                          : request.mentorId?.firstName?.charAt(0)}
-                      </div>
-
-                      <div>
-                        <p
-                          className="
-text-xs
-font-bold
-"
-                        >
-                          {chat.sender === "Admin" ? "GuideX Admin" : "Mentor"}
-      
-                        </p>
-
-                        <p
-                          className="
-text-[10px]
-opacity-70
-"
-                        >
-                          {new Date(chat.sentAt).toLocaleString()}
-                        </p>
-                      </div>
-                    </div>
-
+                      Conversation Stream & Response Hub
+                    </h3>
                     <p
-                      className="
-text-sm
-leading-6
-whitespace-pre-line
-"
+                      className="text-[11px] text-slate-500 font-medium"
+                      style={{ fontWeight: 600 }}
                     >
-                      {chat.message}
+                      Official log and reply interface
                     </p>
                   </div>
                 </div>
-              ))
-            ) : (
-              <div
-                className="
-h-full
-flex
-items-center
-justify-center
-text-slate-400
-"
-              >
-                No messages yet
-              </div>
-            )}
-          </div>
-          {/* ================= REPLY SECTION ================= */}
 
-          <div
-            className="
-border-t
-bg-white
-p-5
-"
-          >
-            <div
-              className="
-grid
-grid-cols-12
-gap-4
-items-end
-"
-            >
-              {/* STATUS */}
-
-              <div
-                className="
-col-span-3
-"
-              >
-                <label
-                  className="
-text-xs
-font-bold
-uppercase
-text-slate-500
-block
-mb-2
-"
+                <div
+                  className="hidden sm:flex items-center gap-1.5 bg-blue-50 border border-blue-200 px-3 py-1 rounded-full text-[11px] font-semibold text-blue-700"
+                  style={{ fontWeight: 600 }}
                 >
-                  Status
-                </label>
-
-                <select
-                  value={status}
-                  onChange={(e) => setStatus(e.target.value)}
-                  className="
-w-full
-border
-border-slate-200
-rounded-xl
-px-4
-py-3
-text-sm
-font-semibold
-outline-none
-focus:ring-2
-focus:ring-indigo-500
-"
-                >
-                  <option value="Pending">Pending</option>
-
-                  <option value="In Progress">In Progress</option>
-
-                  <option value="Resolved">Resolved</option>
-                </select>
+                  <span className="h-2 w-2 rounded-full bg-blue-600 animate-pulse" />
+                  Live Sync
+                </div>
               </div>
 
-              {/* MESSAGE */}
-
+              {/* Chat Messages Display (Fit width to content) */}
               <div
-                className="
-col-span-7
-"
+                ref={chatRef}
+                className="p-6 space-y-4 max-h-[450px] overflow-y-auto bg-slate-50/30"
               >
-                <label
-                  className="
-text-xs
-font-bold
-uppercase
-text-slate-500
-block
-mb-2
-"
-                >
-                  Reply Message
-                </label>
+                {request.conversation?.length > 0 ? (
+                  request.conversation.map((chat) => (
+                    <div
+                      key={chat._id}
+                      className={`flex ${
+                        chat.sender === "Admin"
+                          ? "justify-end"
+                          : "justify-start"
+                      }`}
+                    >
+                      <div
+                        className={`
+                          w-fit
+                          max-w-[85%]
+                          sm:max-w-md
+                          p-4
+                          rounded-2xl
+                          shadow-xs
+                          ${
+                            chat.sender === "Admin"
+                              ? "bg-black text-white rounded-br-xs"
+                              : "bg-white text-slate-800 border border-slate-200 rounded-bl-xs"
+                          }
+                        `}
+                      >
+                        <div
+                          className="flex items-center justify-between gap-4 mb-2"
+                          style={{ fontWeight: 600 }}
+                        >
+                          <div className="flex items-center gap-2">
+                            <div
+                              className={`
+                                w-6 h-6 rounded-lg flex items-center justify-center text-[10px] font-semibold
+                                ${
+                                  chat.sender === "Admin"
+                                    ? "bg-blue-600 text-white"
+                                    : "bg-slate-100 text-slate-700 border border-slate-200"
+                                }
+                              `}
+                            >
+                              {chat.sender === "Admin" ? "A" : "M"}
+                            </div>
+                            <span className="text-xs">
+                              {chat.sender === "Admin"
+                                ? "GuideX Admin (You)"
+                                : `${request.mentorId?.firstName || "Mentor"}`}
+                            </span>
+                          </div>
 
-                <textarea
-                  rows="2"
-                  value={reply}
-                  onChange={(e) => setReply(e.target.value)}
-                  placeholder="
-Type your response to mentor...
-"
-                  className="
-w-full
-border
-border-slate-200
-rounded-xl
-px-4
-py-3
-resize-none
-text-sm
-outline-none
-focus:ring-2
-focus:ring-indigo-500
-"
-                ></textarea>
+                          <span className="text-[10px] opacity-60">
+                            {new Date(chat.sentAt).toLocaleDateString("en-GB", {
+                              day: "2-digit",
+                              month: "short",
+                              year: "numeric",
+                            })}
+                          </span>
+                        </div>
+
+                        <p
+                          className="text-xs leading-relaxed whitespace-pre-line font-medium"
+                          style={{ fontWeight: 600 }}
+                        >
+                          {chat.message}
+                        </p>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div
+                    className="text-center py-8 text-xs text-slate-400 font-semibold"
+                    style={{ fontWeight: 600 }}
+                  >
+                    No message exchanges logged yet.
+                  </div>
+                )}
               </div>
 
-              {/* BUTTONS */}
+              {/* Integrated Reply Box inside the Chat Container */}
+              <div className="border-t border-slate-200 bg-white p-5 sm:p-6">
+                <div className="space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                      <h4
+                        className="text-xs font-semibold text-slate-900 tracking-tight"
+                        style={{ fontWeight: 600 }}
+                      >
+                        Reply & Update Status
+                      </h4>
+                      <p
+                        className="text-[11px] text-slate-500 font-medium"
+                        style={{ fontWeight: 600 }}
+                      >
+                        Dispatch a response directly to the mentor account
+                      </p>
+                    </div>
 
-              <div
-                className="
-col-span-2
-flex
-gap-2
-"
-              >
-                <button
-                  onClick={deleteRequest}
-                  className="
-w-12
-h-12
-rounded-xl
-bg-red-50
-text-red-600
-hover:bg-red-100
-flex
-items-center
-justify-center
-transition
-"
-                  title="Delete Conversation"
-                >
-                  <Trash2 size={20} />
-                </button>
+                    <div className="w-full sm:w-48">
+                      <select
+                        value={status}
+                        onChange={(e) => setStatus(e.target.value)}
+                        className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-800 outline-none focus:border-blue-600 focus:bg-white focus:ring-2 focus:ring-blue-100"
+                        style={{ fontWeight: 600 }}
+                      >
+                        <option value="Pending">Pending</option>
+                        <option value="In Progress">In Progress</option>
+                        <option value="Resolved">Resolved</option>
+                      </select>
+                    </div>
+                  </div>
 
-                <button
-                  disabled={saving}
-                  onClick={sendReply}
-                  className="
-flex-1
-h-12
-rounded-xl
-bg-gradient-to-r
-from-indigo-600
-to-purple-600
-text-white
-font-semibold
-flex
-items-center
-justify-center
-gap-2
-hover:scale-[1.02]
-transition
-disabled:opacity-50
-"
-                >
-                  {saving ? (
-                    <Loader2 size={18} className="animate-spin" />
-                  ) : (
-                    <Send size={18} />
-                  )}
+                  <div>
+                    <textarea
+                      rows={3}
+                      value={reply}
+                      onChange={(e) => setReply(e.target.value)}
+                      placeholder="Type your official reply here..."
+                      className="w-full rounded-2xl border border-slate-200 bg-slate-50 p-4 text-xs font-semibold text-slate-800 outline-none focus:border-blue-600 focus:bg-white focus:ring-2 focus:ring-blue-100 resize-none"
+                      style={{ fontWeight: 600 }}
+                    />
+                  </div>
+                </div>
 
-                  {saving ? "Sending" : "Send"}
-                </button>
+                <div className="mt-4 flex justify-end pt-3 border-t border-slate-100">
+                  <button
+                    onClick={sendReply}
+                    disabled={saving}
+                    className="inline-flex items-center gap-2 rounded-xl bg-black hover:bg-slate-800 px-6 py-2.5 text-xs font-semibold text-white shadow-sm transition disabled:opacity-50"
+                    style={{ fontWeight: 600 }}
+                  >
+                    {saving ? (
+                      <>
+                        <Loader2
+                          size={15}
+                          className="animate-spin text-blue-400"
+                        />
+                        Dispatching...
+                      </>
+                    ) : (
+                      <>
+                        <Send size={15} className="text-blue-400" />
+                        Send Reply & Save
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 };

@@ -25,6 +25,7 @@ const EditCoursePage = () => {
     subCategory: "",
     level: "Beginner",
     language: "English",
+    isPaid: true,
     price: 0,
     compareAtPrice: 0,
     isPublished: true,
@@ -130,6 +131,7 @@ const EditCoursePage = () => {
             subCategory: data.course.subCategory || "",
             level: data.course.level || "Beginner",
             language: data.course.language || "English",
+            isPaid: data.course.isPaid ?? data.course.price > 0,
             price: data.course.price || 0,
             compareAtPrice: data.course.compareAtPrice || 0,
             isPublished: data.course.isPublished ?? true,
@@ -484,37 +486,92 @@ const EditCoursePage = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">
-                Selling Price ($)
-              </label>
-              <input
-                type="number"
-                min="0"
-                value={form.price}
-                onChange={(e) =>
-                  setForm({ ...form, price: Number(e.target.value) })
-                }
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-blue-600"
-                placeholder="0"
-              />
+          {/* Paid / Free Toggle Section */}
+          <div className="p-5 bg-gray-50 rounded-2xl border border-gray-200 space-y-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div>
+                <label className="block text-sm font-black text-gray-900">
+                  Course Access Type *
+                </label>
+                <p className="text-xs text-gray-500">
+                  Choose whether students can enroll in this course completely
+                  for free or if it requires purchase.
+                </p>
+              </div>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() =>
+                    setForm({
+                      ...form,
+                      isPaid: false,
+                      price: 0,
+                      compareAtPrice: 0,
+                    })
+                  }
+                  className={`px-6 py-2.5 rounded-xl font-bold text-xs transition cursor-pointer ${
+                    !form.isPaid
+                      ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/20"
+                      : "bg-white border border-gray-300 text-gray-600 hover:bg-gray-100"
+                  }`}
+                >
+                  Free Course
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setForm({ ...form, isPaid: true })}
+                  className={`px-6 py-2.5 rounded-xl font-bold text-xs transition cursor-pointer ${
+                    form.isPaid
+                      ? "bg-blue-600 text-white shadow-md shadow-blue-600/20"
+                      : "bg-white border border-gray-300 text-gray-600 hover:bg-gray-100"
+                  }`}
+                >
+                  Paid Course
+                </button>
+              </div>
             </div>
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">
-                Original Price ($)
-              </label>
-              <input
-                type="number"
-                min="0"
-                value={form.compareAtPrice}
-                onChange={(e) =>
-                  setForm({ ...form, compareAtPrice: Number(e.target.value) })
-                }
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-blue-600"
-                placeholder="199"
-              />
-            </div>
+
+            {form.isPaid && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-gray-200">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">
+                    Selling Price ($) *
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    required={form.isPaid}
+                    value={form.price}
+                    onChange={(e) =>
+                      setForm({ ...form, price: Number(e.target.value) })
+                    }
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-blue-600 bg-white"
+                    placeholder="99"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">
+                    Original Price ($)
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={form.compareAtPrice}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        compareAtPrice: Number(e.target.value),
+                      })
+                    }
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-blue-600 bg-white"
+                    placeholder="199"
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1">
                 Promo Trailer URL
@@ -556,7 +613,7 @@ const EditCoursePage = () => {
               <button
                 type="button"
                 onClick={addModule}
-                className="flex items-center gap-1 px-4 py-2 rounded-xl bg-blue-50 text-blue-600 text-sm font-semibold hover:bg-blue-100"
+                className="flex items-center gap-1 px-4 py-2 rounded-xl bg-blue-50 text-blue-600 text-sm font-semibold hover:bg-blue-100 cursor-pointer"
               >
                 <Plus size={16} /> Add Module
               </button>
@@ -584,7 +641,7 @@ const EditCoursePage = () => {
                     <button
                       type="button"
                       onClick={() => removeModule(modIdx)}
-                      className="p-2.5 rounded-xl bg-red-50 text-red-600"
+                      className="p-2.5 rounded-xl bg-red-50 text-red-600 cursor-pointer"
                     >
                       <Trash2 size={18} />
                     </button>
@@ -701,7 +758,7 @@ const EditCoursePage = () => {
                           <button
                             type="button"
                             onClick={() => removeLesson(modIdx, lesIdx)}
-                            className="text-red-500 hover:text-red-700"
+                            className="text-red-500 hover:text-red-700 cursor-pointer"
                           >
                             <Trash2 size={16} />
                           </button>
@@ -712,7 +769,7 @@ const EditCoursePage = () => {
                   <button
                     type="button"
                     onClick={() => addLesson(modIdx)}
-                    className="text-xs font-bold text-blue-600 hover:underline"
+                    className="text-xs font-bold text-blue-600 hover:underline cursor-pointer"
                   >
                     + Add Lesson
                   </button>
@@ -748,7 +805,7 @@ const EditCoursePage = () => {
                             ].assignment.questions.filter((_, i) => i !== qIdx);
                             setModules(up);
                           }}
-                          className="text-red-500 hover:text-red-700 font-bold"
+                          className="text-red-500 hover:text-red-700 font-bold cursor-pointer"
                         >
                           Remove
                         </button>
@@ -803,7 +860,7 @@ const EditCoursePage = () => {
                   <button
                     type="button"
                     onClick={() => addMCQ(modIdx)}
-                    className="text-xs font-bold text-indigo-600 hover:underline inline-flex items-center gap-1"
+                    className="text-xs font-bold text-indigo-600 hover:underline inline-flex items-center gap-1 cursor-pointer"
                   >
                     + Add MCQ Question ({mod.assignment.questions.length}/10)
                   </button>
@@ -884,7 +941,7 @@ const EditCoursePage = () => {
 
           <button
             type="submit"
-            className="w-full py-4 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold shadow-lg hover:shadow-xl transition"
+            className="w-full py-4 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold shadow-lg hover:shadow-xl transition cursor-pointer"
           >
             Update Course Curriculum
           </button>

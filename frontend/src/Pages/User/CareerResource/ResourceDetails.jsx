@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-
+import ReactMarkdown from "react-markdown";
+import rehypeRaw from "rehype-raw";
 import {
   ArrowLeft,
   Heart,
@@ -707,9 +708,12 @@ export default function ResourceDetails() {
                       <BookOpen size={18} className="text-indigo-600" />{" "}
                       Detailed Content & Guide
                     </div>
-                    <div className="max-h-[400px] overflow-y-auto rounded-xl bg-slate-50/80 p-4 border border-slate-100 scrollbar-thin scrollbar-thumb-slate-300">
-                      <div className="prose prose-slate max-w-none text-sm leading-relaxed text-slate-700 whitespace-pre-line">
-                        {resource.bodyContent}
+                    <div className="max-h-[600px] overflow-y-auto rounded-xl bg-slate-50/80 p-6 border border-slate-100 scrollbar-thin scrollbar-thumb-slate-300">
+                      <div className="prose prose-sm prose-slate max-w-none leading-relaxed">
+                        {/* rehypePlugins={[rehypeRaw]} allows it to parse raw HTML tags like <ul>, <li>, <h3> */}
+                        <ReactMarkdown rehypePlugins={[rehypeRaw]}>
+                          {resource.bodyContent}
+                        </ReactMarkdown>
                       </div>
                     </div>
                   </section>

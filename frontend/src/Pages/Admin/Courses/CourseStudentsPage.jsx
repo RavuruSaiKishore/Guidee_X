@@ -13,6 +13,10 @@ import {
   ShieldCheck,
   CreditCard,
   BookOpen,
+  Layers,
+  CheckCircle,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { toast } from "react-toastify";
 
@@ -24,6 +28,9 @@ const CourseStudentsPage = () => {
   const [enrollments, setEnrollments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+
+  // State to track which student cards are expanded
+  const [expandedCards, setExpandedCards] = useState({});
 
   const API_BASE_URL =
     import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
@@ -76,6 +83,14 @@ const CourseStudentsPage = () => {
     fetchCourseStudents();
   }, [id, API_BASE_URL]);
 
+  // Toggle card expansion
+  const toggleCard = (enrolId) => {
+    setExpandedCards((prev) => ({
+      ...prev,
+      [enrolId]: !prev[enrolId],
+    }));
+  };
+
   // Filter students based on search input (name or email)
   const filteredEnrollments = enrollments.filter((enrol) => {
     const fullName = `${enrol.student?.firstName || ""} ${
@@ -95,6 +110,11 @@ const CourseStudentsPage = () => {
       </div>
     );
   }
+
+  // Calculate total course modules and lessons count safely
+  const totalCourseModules = course?.modules?.length || 0;
+  const totalCourseLessons =
+    course?.modules?.reduce((acc, m) => acc + (m.lessons?.length || 0), 0) || 0;
 
   return (
     <div className="max-w-[96rem] mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
@@ -158,21 +178,42 @@ const CourseStudentsPage = () => {
           </p>
         </div>
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-4">
           {filteredEnrollments.map((enrol) => {
             const student = enrol.student;
             const progress = enrol.progressPercentage || 0;
             const profileImgUrl = getImageUrl(student?.profileImage);
+            const isExpanded = expandedCards[enrol._id];
+
+            // Compute completed vs remaining module/lesson metrics
+            const completedLessonsCount = enrol.completedLessons?.length || 0;
+            const remainingLessonsCount = Math.max(
+              0,
+              totalCourseLessons - completedLessonsCount
+            );
+
+            const completedModulesCount =
+              enrol.completedModules?.length ||
+              (totalCourseModules > 0 && totalCourseLessons > 0
+                ? Math.floor(
+                    (completedLessonsCount / totalCourseLessons) *
+                      totalCourseModules
+                  )
+                : 0);
+            const remainingModulesCount = Math.max(
+              0,
+              totalCourseModules - completedModulesCount
+            );
 
             return (
               <div
                 key={enrol._id}
-                className="bg-white rounded-3xl border border-slate-200/80 shadow-xl shadow-slate-200/50 p-6 sm:p-8 flex flex-col gap-6 hover:shadow-2xl transition-all duration-300"
+                className="bg-white rounded-3xl border border-slate-200/80 shadow-md p-5 sm:p-6 transition-all duration-200 hover:shadow-lg"
               >
-                {/* Top Row: Student Profile + Status Badges */}
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-100 pb-5">
+                {/* Compact Always-Visible Header Row */}
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                   <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 font-bold flex items-center justify-center flex-shrink-0 overflow-hidden border border-blue-100 shadow-inner">
+                    <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 font-bold flex items-center justify-center flex-shrink-0 overflow-hidden border border-blue-100 shadow-2xs">
                       {profileImgUrl ? (
                         <img
                           src={profileImgUrl}
@@ -180,30 +221,43 @@ const CourseStudentsPage = () => {
                           className="w-full h-full object-cover"
                         />
                       ) : (
-                        <span className="text-lg font-black uppercase">
+                        <span className="text-base font-black uppercase">
                           {student?.firstName ? (
                             student.firstName[0]
                           ) : (
-                            <User size={22} />
+                            <User size={18} />
                           )}
                         </span>
                       )}
                     </div>
                     <div>
-                      <h4 className="font-black text-slate-900 text-lg">
+                      <h4 className="font-black text-slate-900 text-base">
                         {student?.firstName || "Unknown"}{" "}
                         {student?.lastName || ""}
                       </h4>
                       <span className="text-xs text-slate-500 flex items-center gap-1.5 mt-0.5 font-medium">
-                        <Mail size={13} className="text-slate-400" />{" "}
+                        <Mail size={12} className="text-slate-400" />{" "}
                         {student?.email || "No email available"}
                       </span>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
+                    {/* Compact Progress summary */}
+                    <div className="flex items-center gap-2">
+                      <div className="w-24 bg-slate-100 h-2 rounded-full overflow-hidden border border-slate-200/80 hidden md:block">
+                        <div
+                          className="bg-blue-600 h-2 rounded-full"
+                          style={{ width: `${progress}%` }}
+                        ></div>
+                      </div>
+                      <span className="text-xs font-bold text-slate-700">
+                        {progress}%
+                      </span>
+                    </div>
+
                     <span
-                      className={`px-3.5 py-1.5 rounded-full text-xs font-black uppercase tracking-wider ${
+                      className={`px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider ${
                         enrol.paymentStatus === "paid"
                           ? "bg-emerald-50 text-emerald-600 border border-emerald-200/60"
                           : "bg-blue-50 text-blue-600 border border-blue-200/60"
@@ -213,92 +267,161 @@ const CourseStudentsPage = () => {
                     </span>
 
                     {enrol.isProgressComplete || progress === 100 ? (
-                      <span className="inline-flex items-center gap-1 px-3.5 py-1.5 rounded-full bg-emerald-50 text-emerald-600 text-xs font-black border border-emerald-200/60">
-                        <CheckCircle2 size={14} /> Completed
+                      <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-emerald-50 text-emerald-600 text-xs font-black border border-emerald-200/60 hidden sm:inline-flex">
+                        <CheckCircle2 size={13} /> Completed
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1 px-3.5 py-1.5 rounded-full bg-amber-50 text-amber-600 text-xs font-black border border-amber-200/60">
-                        <Clock size={14} /> In Progress
+                      <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-amber-50 text-amber-600 text-xs font-black border border-amber-200/60 hidden sm:inline-flex">
+                        <Clock size={13} /> In Progress
                       </span>
                     )}
-                  </div>
-                </div>
 
-                {/* Middle Row: Financial & Transaction Telemetry Cards */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 bg-slate-50/80 p-5 rounded-2xl border border-slate-200/60">
-                  <div className="space-y-1">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block flex items-center gap-1">
-                      <DollarSign size={13} className="text-emerald-600" />{" "}
-                      Amount Paid
-                    </span>
-                    <span className="text-base font-black text-slate-900">
-                      ₹
-                      {enrol.amountPaid > 0
-                        ? enrol.amountPaid
-                        : course?.price || 0}
-                    </span>
-                  </div>
-
-                  <div className="space-y-1">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block flex items-center gap-1">
-                      <Calendar size={13} className="text-blue-600" />{" "}
-                      Enrollment Date
-                    </span>
-                    <span className="text-xs font-bold text-slate-700">
-                      {new Date(enrol.createdAt).toLocaleDateString("en-US", {
-                        month: "short",
-                        day: "numeric",
-                        year: "numeric",
-                      })}
-                    </span>
-                  </div>
-
-                  <div className="space-y-1">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block flex items-center gap-1">
-                      <CreditCard size={13} className="text-indigo-600" />{" "}
-                      Razorpay Order ID
-                    </span>
-                    <span
-                      className="text-xs font-mono font-bold text-slate-800 truncate block"
-                      title={enrol.razorpayOrderId || "N/A (Free)"}
+                    {/* Toggle Button */}
+                    <button
+                      onClick={() => toggleCard(enrol._id)}
+                      className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 transition cursor-pointer flex items-center gap-1 text-xs font-bold"
                     >
-                      {enrol.razorpayOrderId || "Free / No Order ID"}
-                    </span>
-                  </div>
-
-                  <div className="space-y-1">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block flex items-center gap-1">
-                      <ShieldCheck size={13} className="text-cyan-600" />{" "}
-                      Razorpay Payment ID
-                    </span>
-                    <span
-                      className="text-xs font-mono font-bold text-slate-800 truncate block"
-                      title={enrol.razorpayPaymentId || "N/A"}
-                    >
-                      {enrol.razorpayPaymentId || "N/A"}
-                    </span>
+                      {isExpanded ? (
+                        <>
+                          <span className="hidden sm:inline">Less</span>{" "}
+                          <ChevronUp size={16} />
+                        </>
+                      ) : (
+                        <>
+                          <span className="hidden sm:inline">Details</span>{" "}
+                          <ChevronDown size={16} />
+                        </>
+                      )}
+                    </button>
                   </div>
                 </div>
 
-                {/* Bottom Row: Course Progression Tracking Bar */}
-                <div className="space-y-2 pt-1">
-                  <div className="flex justify-between items-center text-xs font-bold">
-                    <span className="text-slate-600 flex items-center gap-1.5">
-                      <BookOpen size={14} className="text-blue-600" /> Course
-                      Progression Roster
-                    </span>
-                    <span className="text-slate-900 font-black">
-                      {progress}% Completed (
-                      {enrol.completedLessons?.length || 0} Lessons Finished)
-                    </span>
+                {/* Collapsible Dropdown Content */}
+                {isExpanded && (
+                  <div className="mt-5 pt-5 border-t border-slate-100 space-y-5 animate-in fade-in duration-200">
+                    {/* Middle Row: Financial & Transaction Telemetry Cards */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 bg-slate-50/80 p-4 rounded-2xl border border-slate-200/60">
+                      <div className="space-y-1">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block flex items-center gap-1">
+                          <DollarSign size={13} className="text-emerald-600" />{" "}
+                          Amount Paid
+                        </span>
+                        <span className="text-sm font-black text-slate-900">
+                          ₹
+                          {enrol.amountPaid > 0
+                            ? enrol.amountPaid
+                            : course?.price || 0}
+                        </span>
+                      </div>
+
+                      <div className="space-y-1">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block flex items-center gap-1">
+                          <Calendar size={13} className="text-blue-600" />{" "}
+                          Enrollment Date
+                        </span>
+                        <span className="text-xs font-bold text-slate-700">
+                          {new Date(enrol.createdAt).toLocaleDateString(
+                            "en-US",
+                            {
+                              month: "short",
+                              day: "numeric",
+                              year: "numeric",
+                            }
+                          )}
+                        </span>
+                      </div>
+
+                      <div className="space-y-1">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block flex items-center gap-1">
+                          <CreditCard size={13} className="text-indigo-600" />{" "}
+                          Razorpay Order ID
+                        </span>
+                        <span
+                          className="text-xs font-mono font-bold text-slate-800 truncate block"
+                          title={enrol.razorpayOrderId || "N/A (Free)"}
+                        >
+                          {enrol.razorpayOrderId || "Free / No Order ID"}
+                        </span>
+                      </div>
+
+                      <div className="space-y-1">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block flex items-center gap-1">
+                          <ShieldCheck size={13} className="text-cyan-600" />{" "}
+                          Razorpay Payment ID
+                        </span>
+                        <span
+                          className="text-xs font-mono font-bold text-slate-800 truncate block"
+                          title={enrol.razorpayPaymentId || "N/A"}
+                        >
+                          {enrol.razorpayPaymentId || "N/A"}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Additional Row: Module & Lesson Completion Breakdown */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="p-3.5 rounded-2xl bg-emerald-50/50 border border-emerald-100 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 rounded-xl bg-emerald-100 text-emerald-700">
+                            <CheckCircle size={16} />
+                          </div>
+                          <div>
+                            <span className="text-[10px] font-black text-emerald-700 uppercase tracking-wider block">
+                              Completed Breakdown
+                            </span>
+                            <span className="text-xs font-extrabold text-slate-900">
+                              {completedModulesCount} / {totalCourseModules}{" "}
+                              Modules
+                            </span>
+                          </div>
+                        </div>
+                        <span className="text-xs font-bold text-emerald-600 bg-emerald-100 px-2.5 py-0.5 rounded-xl">
+                          {completedLessonsCount} Lessons Done
+                        </span>
+                      </div>
+
+                      <div className="p-3.5 rounded-2xl bg-amber-50/50 border border-amber-100 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 rounded-xl bg-amber-100 text-amber-700">
+                            <Layers size={16} />
+                          </div>
+                          <div>
+                            <span className="text-[10px] font-black text-amber-700 uppercase tracking-wider block">
+                              Remaining Breakdown
+                            </span>
+                            <span className="text-xs font-extrabold text-slate-900">
+                              {remainingModulesCount} / {totalCourseModules}{" "}
+                              Modules
+                            </span>
+                          </div>
+                        </div>
+                        <span className="text-xs font-bold text-amber-600 bg-amber-100 px-2.5 py-0.5 rounded-xl">
+                          {remainingLessonsCount} Lessons Left
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Bottom Row: Detailed Course Progression Tracking Bar */}
+                    <div className="space-y-2 pt-1">
+                      <div className="flex justify-between items-center text-xs font-bold">
+                        <span className="text-slate-600 flex items-center gap-1.5">
+                          <BookOpen size={14} className="text-blue-600" />{" "}
+                          Course Progression Roster
+                        </span>
+                        <span className="text-slate-900 font-black">
+                          {progress}% Completed ({completedLessonsCount} /{" "}
+                          {totalCourseLessons} Lessons Finished)
+                        </span>
+                      </div>
+                      <div className="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden border border-slate-200/80">
+                        <div
+                          className="bg-gradient-to-r from-blue-600 to-indigo-600 h-2.5 rounded-full transition-all duration-500 shadow-sm"
+                          style={{ width: `${progress}%` }}
+                        ></div>
+                      </div>
+                    </div>
                   </div>
-                  <div className="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden border border-slate-200/80">
-                    <div
-                      className="bg-gradient-to-r from-blue-600 to-indigo-600 h-2.5 rounded-full transition-all duration-500 shadow-sm"
-                      style={{ width: `${progress}%` }}
-                    ></div>
-                  </div>
-                </div>
+                )}
               </div>
             );
           })}

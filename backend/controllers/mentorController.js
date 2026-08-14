@@ -493,7 +493,6 @@ export const getAllMentors = async (req, res) => {
     const { category, skill, company, verified } = req.query;
 
     let filter = {};
-
     if (category) filter.category = category;
     if (skill) filter.primarySkill = skill;
     if (company) filter.company = company;
@@ -501,8 +500,7 @@ export const getAllMentors = async (req, res) => {
 
     const mentors = await Mentor.find(filter)
       .populate("student", "name email")
-      .sort({ createdAt: -1 })
-      .limit(4);
+      .sort({ createdAt: -1 });
 
     return res.status(200).json({
       success: true,
