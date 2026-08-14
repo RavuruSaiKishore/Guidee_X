@@ -73,10 +73,15 @@ const GoogleLoginButton = () => {
     <button
       type="button"
       onClick={handleCustomGoogleClick}
-      className="w-full h-14 rounded-2xl border-2 border-gray-200 bg-white hover:bg-gray-50 hover:border-blue-500 transition-all duration-300 flex items-center justify-center gap-3 font-semibold text-gray-700 shadow-sm"
+      className="w-full h-12 sm:h-14 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 hover:border-blue-600 transition-all duration-200 flex items-center justify-center gap-3 text-slate-700 shadow-2xs"
+      style={{
+        fontFamily: "'Source Sans Pro', Arial, sans-serif",
+        fontStyle: "normal",
+        fontWeight: 600,
+      }}
     >
       {/* Google G SVG Icon */}
-      <svg className="w-5 h-5" viewBox="0 0 24 24">
+      <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
         <path
           fill="#4285F4"
           d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -94,11 +99,10 @@ const GoogleLoginButton = () => {
           d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
         />
       </svg>
-      <span>Continue with Google</span>
+      <span className="text-xs sm:text-sm">Continue with Google</span>
     </button>
   );
 };
-
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -362,7 +366,6 @@ const LoginPage = () => {
       setTimeout(() => {
         navigate(data.redirectTo || "/", { replace: true });
       }, 500);
-      
     } catch (error) {
       console.error(error);
       toast.error("Unable to login");
@@ -482,7 +485,7 @@ const LoginPage = () => {
   // ============================================================
 
   const inputClass =
-    "w-full h-14 px-4 rounded-2xl border border-gray-200 bg-gray-50 text-gray-800 placeholder:text-gray-400 outline-none transition-all duration-300 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-100";
+    "w-full h-12 sm:h-14 px-4 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 placeholder:text-slate-400 outline-none transition-all duration-200 focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100 text-xs sm:text-sm";
 
   // ============================================================
   // CHANGE MODE
@@ -496,32 +499,44 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen mt-20 bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center p-4 md:p-8">
+    <div
+      className="min-h-screen mt-16 sm:mt-20 bg-slate-50 flex items-center justify-center p-3 sm:p-6 lg:p-8"
+      style={{
+        fontFamily: "'Source Sans Pro', Arial, sans-serif",
+        fontStyle: "normal",
+        fontWeight: 600,
+      }}
+    >
       <ToastContainer position="top-right" autoClose={2500} newestOnTop />
 
-      <div className="w-full max-w-6xl min-h-[680px] bg-white rounded-[2rem] shadow-2xl overflow-hidden flex flex-col lg:flex-row">
+      <div className="w-full max-w-[1400px] min-h-[650px] bg-white rounded-2xl sm:rounded-3xl shadow-xs border border-slate-200 overflow-hidden flex flex-col lg:flex-row">
         {/* ======================================================
             LEFT SIDE
         ====================================================== */}
 
-        <div className="hidden lg:flex lg:w-[48%] relative overflow-hidden bg-gradient-to-br from-blue-700 via-indigo-700 to-violet-800 text-white p-12 flex-col justify-between">
-          <div className="absolute -top-32 -right-32 w-96 h-96 rounded-full bg-white/10" />
-
-          <div className="absolute -bottom-40 -left-32 w-[500px] h-[500px] rounded-full bg-white/5" />
+        <div className="hidden lg:flex lg:w-[48%] relative overflow-hidden bg-black text-white p-8 sm:p-12 flex-col justify-between">
+          <div className="absolute -right-16 -top-16 h-56 w-56 rounded-full bg-blue-600/20 blur-3xl" />
+          <div className="absolute -bottom-20 left-1/4 h-48 w-48 rounded-full bg-blue-400/10 blur-2xl" />
 
           {/* Logo */}
 
-          <div className="relative z-10 flex items-center gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-white/15 backdrop-blur-xl border border-white/20 flex items-center justify-center">
-              <GraduationCap size={34} />
+          <div className="relative z-10 flex items-center gap-3.5">
+            <div className="w-12 h-12 rounded-xl border border-white/15 bg-white/10 backdrop-blur flex items-center justify-center text-blue-400 shadow-inner">
+              <GraduationCap size={24} />
             </div>
 
             <div>
-              <h1 className="text-4xl font-black">
-                Guide<span className="text-blue-200">X</span>
+              <h1
+                className="text-2xl sm:text-3xl font-semibold tracking-tight text-white"
+                style={{ fontWeight: 600 }}
+              >
+                Guide<span className="text-blue-400">X</span>
               </h1>
 
-              <p className="text-xs uppercase tracking-[0.3em] text-blue-100">
+              <p
+                className="text-[10px] uppercase tracking-wider text-slate-400"
+                style={{ fontWeight: 600 }}
+              >
                 Learn • Connect • Grow
               </p>
             </div>
@@ -529,40 +544,55 @@ const LoginPage = () => {
 
           {/* Content */}
 
-          <div className="relative z-10">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/10 text-sm mb-6">
-              <Sparkles size={16} />
+          <div className="relative z-10 space-y-4">
+            <div
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-white/15 bg-white/10 text-xs text-blue-300 backdrop-blur"
+              style={{ fontWeight: 600 }}
+            >
+              <Sparkles size={14} className="text-blue-400" />
               Your journey starts here
             </div>
 
-            <h2 className="text-5xl font-black leading-tight">
+            <h2
+              className="text-3xl sm:text-5xl font-semibold tracking-tight text-white leading-tight"
+              style={{ fontWeight: 600 }}
+            >
               Learn from
               <br />
-              <span className="text-blue-200">those who know.</span>
+              <span className="text-blue-400">those who know.</span>
             </h2>
 
-            <p className="mt-6 text-blue-100 text-lg leading-relaxed max-w-md">
+            <p
+              className="text-slate-300 text-xs sm:text-sm leading-relaxed max-w-md font-medium"
+              style={{ fontWeight: 600 }}
+            >
               Connect with experienced mentors, build meaningful skills, and
               take your career to the next level with GuideX.
             </p>
 
-            <div className="mt-8 space-y-4">
+            <div className="space-y-3 pt-2">
               {[
                 "Connect with industry mentors",
                 "Build real-world skills",
                 "Grow your professional network",
               ].map((item) => (
-                <div key={item} className="flex items-center gap-3">
-                  <CheckCircle2 size={20} />
-
+                <div
+                  key={item}
+                  className="flex items-center gap-2.5 text-xs sm:text-sm text-slate-200"
+                  style={{ fontWeight: 600 }}
+                >
+                  <CheckCircle2 size={16} className="text-blue-400 shrink-0" />
                   <span>{item}</span>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="relative z-10 flex items-center gap-3 text-sm text-blue-200">
-            <ShieldCheck size={18} />
+          <div
+            className="relative z-10 flex items-center gap-2 text-xs text-slate-400 font-medium"
+            style={{ fontWeight: 600 }}
+          >
+            <ShieldCheck size={16} className="text-blue-400" />
             Secure and trusted learning platform
           </div>
         </div>
@@ -571,17 +601,20 @@ const LoginPage = () => {
             RIGHT SIDE
         ====================================================== */}
 
-        <div className="w-full lg:w-[52%] flex items-center justify-center p-6 sm:p-10 md:p-14">
+        <div className="w-full lg:w-[52%] flex items-center justify-center p-4 sm:p-8 lg:p-12">
           <div className="w-full max-w-md">
             {/* Mobile Logo */}
 
-            <div className="lg:hidden text-center mb-8">
-              <div className="inline-flex items-center gap-3">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-600 to-violet-600 flex items-center justify-center text-white">
-                  <GraduationCap size={26} />
+            <div className="lg:hidden text-center mb-6">
+              <div className="inline-flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-xl bg-black flex items-center justify-center text-blue-400 border border-white/15">
+                  <GraduationCap size={22} />
                 </div>
 
-                <h1 className="text-3xl font-black">
+                <h1
+                  className="text-xl font-semibold text-slate-900"
+                  style={{ fontWeight: 600 }}
+                >
                   Guide<span className="text-blue-600">X</span>
                 </h1>
               </div>
@@ -593,24 +626,36 @@ const LoginPage = () => {
 
             {mode === "login" && (
               <div>
-                <div className="mb-8">
-                  <p className="text-sm font-semibold text-blue-600 mb-2">
+                <div className="mb-6">
+                  <span
+                    className="inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-[10px] sm:text-[11px] font-semibold text-blue-700 mb-2"
+                    style={{ fontWeight: 600 }}
+                  >
                     WELCOME BACK
-                  </p>
+                  </span>
 
-                  <h2 className="text-3xl md:text-4xl font-black text-gray-900">
+                  <h2
+                    className="text-2xl sm:text-3xl font-semibold tracking-tight text-slate-900"
+                    style={{ fontWeight: 600 }}
+                  >
                     Welcome back!
                   </h2>
 
-                  <p className="text-gray-500 mt-3">
+                  <p
+                    className="text-slate-500 text-xs sm:text-sm font-medium mt-1"
+                    style={{ fontWeight: 600 }}
+                  >
                     Sign in to continue your GuideX journey.
                   </p>
                 </div>
 
-                <form onSubmit={handleLogin} className="space-y-5">
+                <form onSubmit={handleLogin} className="space-y-4">
                   {/* LOCKOUT WARNING BANNER */}
                   {lockUntil !== null && (
-                    <div className="p-4 bg-red-50 border border-red-200 text-red-600 text-sm rounded-2xl text-center font-semibold animate-pulse">
+                    <div
+                      className="p-3.5 bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl text-center font-semibold animate-pulse"
+                      style={{ fontWeight: 600 }}
+                    >
                       Account locked due to multiple failed attempts. Try again
                       in{" "}
                       <span className="font-bold underline">
@@ -622,8 +667,14 @@ const LoginPage = () => {
 
                   {/* REMAINING ATTEMPTS BANNER */}
                   {lockUntil === null && attemptsRemaining !== null && (
-                    <div className="p-3 bg-amber-50 border border-amber-200 text-amber-700 text-xs rounded-xl flex items-center gap-2">
-                      <AlertCircle size={16} className="shrink-0" />
+                    <div
+                      className="p-3 bg-amber-50 border border-amber-200 text-amber-700 text-xs rounded-xl flex items-center gap-2"
+                      style={{ fontWeight: 600 }}
+                    >
+                      <AlertCircle
+                        size={15}
+                        className="shrink-0 text-amber-600"
+                      />
                       <span>
                         Invalid credentials. You have{" "}
                         <strong>{attemptsRemaining}</strong> attempt(s)
@@ -636,8 +687,8 @@ const LoginPage = () => {
 
                   <div className="relative">
                     <Mail
-                      size={19}
-                      className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
+                      size={18}
+                      className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
                     />
 
                     <input
@@ -647,7 +698,8 @@ const LoginPage = () => {
                       onChange={handleInputChange}
                       placeholder="Enter your email"
                       disabled={lockUntil !== null}
-                      className={`${inputClass} pl-12 disabled:bg-gray-200 disabled:cursor-not-allowed`}
+                      style={{ fontWeight: 600 }}
+                      className={`${inputClass} pl-11 disabled:bg-slate-100 disabled:cursor-not-allowed`}
                     />
                   </div>
 
@@ -655,8 +707,8 @@ const LoginPage = () => {
 
                   <div className="relative">
                     <Lock
-                      size={19}
-                      className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
+                      size={18}
+                      className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
                     />
 
                     <input
@@ -666,16 +718,17 @@ const LoginPage = () => {
                       onChange={handleInputChange}
                       placeholder="Enter your password"
                       disabled={lockUntil !== null}
-                      className={`${inputClass} pl-12 pr-12 disabled:bg-gray-200 disabled:cursor-not-allowed`}
+                      style={{ fontWeight: 600 }}
+                      className={`${inputClass} pl-11 pr-11 disabled:bg-slate-100 disabled:cursor-not-allowed`}
                     />
 
                     <button
                       type="button"
                       disabled={lockUntil !== null}
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-blue-600"
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-blue-600"
                     >
-                      {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                     </button>
                   </div>
 
@@ -683,7 +736,8 @@ const LoginPage = () => {
                     <button
                       type="button"
                       onClick={() => changeMode("forgot")}
-                      className="text-sm font-semibold text-blue-600"
+                      className="text-xs sm:text-sm font-semibold text-blue-600 hover:underline"
+                      style={{ fontWeight: 600 }}
                     >
                       Forgot password?
                     </button>
@@ -692,7 +746,8 @@ const LoginPage = () => {
                   <button
                     type="submit"
                     disabled={loading || lockUntil !== null}
-                    className="w-full h-14 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 text-white font-bold flex items-center justify-center gap-3 disabled:opacity-60 disabled:cursor-not-allowed"
+                    style={{ fontWeight: 600 }}
+                    className="w-full h-12 sm:h-14 rounded-xl bg-black hover:bg-slate-800 text-white text-xs sm:text-sm font-semibold flex items-center justify-center gap-2 transition shadow-xs disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {loading
                       ? "Signing in..."
@@ -700,18 +755,23 @@ const LoginPage = () => {
                       ? `Locked (${formatTime(countdown)})`
                       : "Sign In"}
 
-                    {!loading && lockUntil === null && <ArrowRight size={19} />}
+                    {!loading && lockUntil === null && (
+                      <ArrowRight size={16} className="text-blue-400" />
+                    )}
                   </button>
                 </form>
 
                 {/* GOOGLE SIGN IN BUTTON SECTION */}
-                <div className="mt-5">
+                <div className="mt-4">
                   <div className="relative my-4">
                     <div className="absolute inset-0 flex items-center">
-                      <div className="w-full border-t" />
+                      <div className="w-full border-t border-slate-200" />
                     </div>
                     <div className="relative flex justify-center">
-                      <span className="bg-white px-4 text-xs text-gray-400 uppercase tracking-wider">
+                      <span
+                        className="bg-white px-3 text-[11px] text-slate-400 uppercase tracking-wider font-semibold"
+                        style={{ fontWeight: 600 }}
+                      >
                         Or continue with
                       </span>
                     </div>
@@ -720,13 +780,16 @@ const LoginPage = () => {
                   <GoogleLoginButton />
                 </div>
 
-                <div className="relative my-6">
+                <div className="relative my-5">
                   <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t" />
+                    <div className="w-full border-t border-slate-200" />
                   </div>
 
                   <div className="relative flex justify-center">
-                    <span className="bg-white px-4 text-sm text-gray-400">
+                    <span
+                      className="bg-white px-3 text-xs text-slate-400 font-medium"
+                      style={{ fontWeight: 600 }}
+                    >
                       New to GuideX?
                     </span>
                   </div>
@@ -734,7 +797,8 @@ const LoginPage = () => {
 
                 <button
                   onClick={() => changeMode("register")}
-                  className="w-full h-14 rounded-2xl border-2 border-gray-200 font-bold hover:border-blue-500 hover:text-blue-600 transition"
+                  style={{ fontWeight: 600 }}
+                  className="w-full h-12 sm:h-14 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs sm:text-sm font-semibold text-slate-700 transition shadow-2xs"
                 >
                   Create an Account
                 </button>
@@ -750,26 +814,36 @@ const LoginPage = () => {
                 <button
                   type="button"
                   onClick={() => changeMode("login")}
-                  className="flex items-center gap-2 text-sm text-gray-500 mb-7"
+                  style={{ fontWeight: 600 }}
+                  className="flex items-center gap-1.5 text-xs text-slate-600 hover:text-blue-600 mb-5 font-semibold"
                 >
-                  <ArrowLeft size={17} />
+                  <ArrowLeft size={15} />
                   Back to login
                 </button>
 
-                <h2 className="text-3xl font-black">Create your account</h2>
+                <h2
+                  className="text-2xl sm:text-3xl font-semibold tracking-tight text-slate-900"
+                  style={{ fontWeight: 600 }}
+                >
+                  Create your account
+                </h2>
 
-                <p className="text-gray-500 mt-2 mb-7">
+                <p
+                  className="text-slate-500 text-xs sm:text-sm font-medium mt-1 mb-5"
+                  style={{ fontWeight: 600 }}
+                >
                   Join GuideX and start learning from experts.
                 </p>
 
-                <form onSubmit={handleRegister} className="space-y-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <form onSubmit={handleRegister} className="space-y-3.5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <input
                       type="text"
                       name="firstName"
                       value={formData.firstName}
                       onChange={handleInputChange}
                       placeholder="First name"
+                      style={{ fontWeight: 600 }}
                       className={inputClass}
                     />
 
@@ -779,6 +853,7 @@ const LoginPage = () => {
                       value={formData.lastName}
                       onChange={handleInputChange}
                       placeholder="Last name"
+                      style={{ fontWeight: 600 }}
                       className={inputClass}
                     />
                   </div>
@@ -789,6 +864,7 @@ const LoginPage = () => {
                     value={formData.email}
                     onChange={handleInputChange}
                     placeholder="Email address"
+                    style={{ fontWeight: 600 }}
                     className={inputClass}
                   />
 
@@ -799,15 +875,16 @@ const LoginPage = () => {
                       value={formData.password}
                       onChange={handleInputChange}
                       placeholder="Create password"
-                      className={`${inputClass} pr-12`}
+                      style={{ fontWeight: 600 }}
+                      className={`${inputClass} pr-11`}
                     />
 
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400"
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-blue-600"
                     >
-                      {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                     </button>
                   </div>
 
@@ -818,7 +895,8 @@ const LoginPage = () => {
                       value={formData.confirmPassword}
                       onChange={handleInputChange}
                       placeholder="Confirm password"
-                      className={`${inputClass} pr-12`}
+                      style={{ fontWeight: 600 }}
+                      className={`${inputClass} pr-11`}
                     />
 
                     <button
@@ -826,12 +904,12 @@ const LoginPage = () => {
                       onClick={() =>
                         setShowConfirmPassword(!showConfirmPassword)
                       }
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400"
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-blue-600"
                     >
                       {showConfirmPassword ? (
-                        <EyeOff size={20} />
+                        <EyeOff size={18} />
                       ) : (
-                        <Eye size={20} />
+                        <Eye size={18} />
                       )}
                     </button>
                   </div>
@@ -839,18 +917,23 @@ const LoginPage = () => {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full h-14 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 text-white font-bold disabled:opacity-60"
+                    style={{ fontWeight: 600 }}
+                    className="w-full h-12 sm:h-14 rounded-xl bg-black hover:bg-slate-800 text-white text-xs sm:text-sm font-semibold transition shadow-xs disabled:opacity-50 mt-1"
                   >
                     {loading ? "Creating account..." : "Create Account"}
                   </button>
                 </form>
 
-                <p className="text-center text-sm text-gray-500 mt-6">
+                <p
+                  className="text-center text-xs text-slate-500 font-medium mt-5"
+                  style={{ fontWeight: 600 }}
+                >
                   Already have an account?{" "}
                   <button
                     type="button"
                     onClick={() => changeMode("login")}
-                    className="font-bold text-blue-600"
+                    style={{ fontWeight: 600 }}
+                    className="font-semibold text-blue-600 hover:underline"
                   >
                     Sign in
                   </button>
@@ -867,27 +950,41 @@ const LoginPage = () => {
                 <button
                   type="button"
                   onClick={() => changeMode("register")}
-                  className="flex items-center gap-2 text-sm text-gray-500 mb-8"
+                  style={{ fontWeight: 600 }}
+                  className="flex items-center gap-1.5 text-xs text-slate-600 hover:text-blue-600 mb-6 font-semibold"
                 >
-                  <ArrowLeft size={17} />
+                  <ArrowLeft size={15} />
                   Back
                 </button>
 
                 <div className="text-center">
-                  <div className="mx-auto w-20 h-20 rounded-3xl bg-blue-50 text-blue-600 flex items-center justify-center mb-6">
-                    <Mail size={34} />
+                  <div className="mx-auto w-16 h-16 rounded-2xl bg-blue-50 border border-blue-100 text-blue-600 flex items-center justify-center mb-4">
+                    <Mail size={28} />
                   </div>
 
-                  <h2 className="text-3xl font-black">Verify your email</h2>
+                  <h2
+                    className="text-2xl sm:text-3xl font-semibold tracking-tight text-slate-900"
+                    style={{ fontWeight: 600 }}
+                  >
+                    Verify your email
+                  </h2>
 
-                  <p className="text-gray-500 mt-3">
+                  <p
+                    className="text-slate-500 text-xs sm:text-sm font-medium mt-1"
+                    style={{ fontWeight: 600 }}
+                  >
                     Enter the 6-digit OTP sent to
                   </p>
 
-                  <p className="font-bold mt-2 break-all">{formData.email}</p>
+                  <p
+                    className="font-semibold text-slate-800 text-xs sm:text-sm mt-1 break-all"
+                    style={{ fontWeight: 600 }}
+                  >
+                    {formData.email}
+                  </p>
                 </div>
 
-                <form onSubmit={handleVerifyOtp} className="mt-8 space-y-5">
+                <form onSubmit={handleVerifyOtp} className="mt-6 space-y-4">
                   <input
                     type="text"
                     inputMode="numeric"
@@ -897,13 +994,15 @@ const LoginPage = () => {
                     }
                     placeholder="Enter 6-digit OTP"
                     maxLength={6}
-                    className="w-full h-16 rounded-2xl border-2 border-gray-200 bg-gray-50 text-center text-2xl font-bold tracking-[0.5em] outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                    style={{ fontWeight: 600 }}
+                    className="w-full h-14 rounded-xl border border-slate-200 bg-slate-50 text-center text-xl font-semibold tracking-[0.4em] outline-none focus:border-blue-600 focus:bg-white focus:ring-2 focus:ring-blue-100 text-slate-800"
                   />
 
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full h-14 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold disabled:opacity-60"
+                    style={{ fontWeight: 600 }}
+                    className="w-full h-12 sm:h-14 rounded-xl bg-black hover:bg-slate-800 text-white text-xs sm:text-sm font-semibold transition shadow-xs disabled:opacity-50"
                   >
                     {loading ? "Verifying..." : "Verify Account"}
                   </button>
@@ -920,37 +1019,48 @@ const LoginPage = () => {
                 <button
                   type="button"
                   onClick={() => changeMode("login")}
-                  className="flex items-center gap-2 text-sm text-gray-500 mb-8"
+                  style={{ fontWeight: 600 }}
+                  className="flex items-center gap-1.5 text-xs text-slate-600 hover:text-blue-600 mb-6 font-semibold"
                 >
-                  <ArrowLeft size={17} />
+                  <ArrowLeft size={15} />
                   Back to login
                 </button>
 
-                <div className="mb-8">
-                  <div className="w-16 h-16 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mb-6">
-                    <Lock size={28} />
+                <div className="mb-6">
+                  <div className="w-14 h-14 rounded-2xl bg-blue-50 border border-blue-100 text-blue-600 flex items-center justify-center mb-4">
+                    <Lock size={24} />
                   </div>
 
-                  <h2 className="text-3xl font-black">Forgot your password?</h2>
+                  <h2
+                    className="text-2xl sm:text-3xl font-semibold tracking-tight text-slate-900"
+                    style={{ fontWeight: 600 }}
+                  >
+                    Forgot your password?
+                  </h2>
 
-                  <p className="text-gray-500 mt-3">
+                  <p
+                    className="text-slate-500 text-xs sm:text-sm font-medium mt-1"
+                    style={{ fontWeight: 600 }}
+                  >
                     Enter your email address and we'll send you an OTP.
                   </p>
                 </div>
 
-                <form onSubmit={handleForgotPassword} className="space-y-5">
+                <form onSubmit={handleForgotPassword} className="space-y-4">
                   <input
                     type="email"
                     value={resetEmail}
                     onChange={(e) => setResetEmail(e.target.value)}
                     placeholder="Enter your email"
+                    style={{ fontWeight: 600 }}
                     className={inputClass}
                   />
 
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full h-14 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold disabled:opacity-60"
+                    style={{ fontWeight: 600 }}
+                    className="w-full h-12 sm:h-14 rounded-xl bg-black hover:bg-slate-800 text-white text-xs sm:text-sm font-semibold transition shadow-xs disabled:opacity-50"
                   >
                     {loading ? "Sending OTP..." : "Send OTP"}
                   </button>
@@ -967,25 +1077,34 @@ const LoginPage = () => {
                 <button
                   type="button"
                   onClick={() => changeMode("forgot")}
-                  className="flex items-center gap-2 text-sm text-gray-500 mb-8"
+                  style={{ fontWeight: 600 }}
+                  className="flex items-center gap-1.5 text-xs text-slate-600 hover:text-blue-600 mb-6 font-semibold"
                 >
-                  <ArrowLeft size={17} />
+                  <ArrowLeft size={15} />
                   Back
                 </button>
 
-                <div className="mb-7">
-                  <div className="w-16 h-16 rounded-2xl bg-green-50 text-green-600 flex items-center justify-center mb-6">
-                    <ShieldCheck size={30} />
+                <div className="mb-5">
+                  <div className="w-14 h-14 rounded-2xl bg-emerald-50 border border-emerald-100 text-emerald-600 flex items-center justify-center mb-4">
+                    <ShieldCheck size={26} />
                   </div>
 
-                  <h2 className="text-3xl font-black">Reset your password</h2>
+                  <h2
+                    className="text-2xl sm:text-3xl font-semibold tracking-tight text-slate-900"
+                    style={{ fontWeight: 600 }}
+                  >
+                    Reset your password
+                  </h2>
 
-                  <p className="text-gray-500 mt-3">
+                  <p
+                    className="text-slate-500 text-xs sm:text-sm font-medium mt-1"
+                    style={{ fontWeight: 600 }}
+                  >
                     Enter the OTP and create your new password.
                   </p>
                 </div>
 
-                <form onSubmit={handleResetPassword} className="space-y-4">
+                <form onSubmit={handleResetPassword} className="space-y-3.5">
                   <input
                     type="text"
                     inputMode="numeric"
@@ -995,7 +1114,8 @@ const LoginPage = () => {
                     }
                     placeholder="Enter 6-digit OTP"
                     maxLength={6}
-                    className={`${inputClass} text-center font-bold tracking-[0.4em]`}
+                    style={{ fontWeight: 600 }}
+                    className={`${inputClass} text-center font-semibold tracking-[0.3em]`}
                   />
 
                   <div className="relative">
@@ -1004,18 +1124,19 @@ const LoginPage = () => {
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
                       placeholder="New password"
-                      className={`${inputClass} pr-12`}
+                      style={{ fontWeight: 600 }}
+                      className={`${inputClass} pr-11`}
                     />
 
                     <button
                       type="button"
                       onClick={() => setShowNewPassword(!showNewPassword)}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400"
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-blue-600"
                     >
                       {showNewPassword ? (
-                        <EyeOff size={20} />
+                        <EyeOff size={18} />
                       ) : (
-                        <Eye size={20} />
+                        <Eye size={18} />
                       )}
                     </button>
                   </div>
@@ -1026,7 +1147,8 @@ const LoginPage = () => {
                       value={confirmNewPassword}
                       onChange={(e) => setConfirmNewPassword(e.target.value)}
                       placeholder="Confirm new password"
-                      className={`${inputClass} pr-12`}
+                      style={{ fontWeight: 600 }}
+                      className={`${inputClass} pr-11`}
                     />
 
                     <button
@@ -1034,12 +1156,12 @@ const LoginPage = () => {
                       onClick={() =>
                         setShowConfirmNewPassword(!showConfirmNewPassword)
                       }
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400"
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-blue-600"
                     >
                       {showConfirmNewPassword ? (
-                        <EyeOff size={20} />
+                        <EyeOff size={18} />
                       ) : (
-                        <Eye size={20} />
+                        <Eye size={18} />
                       )}
                     </button>
                   </div>
@@ -1047,7 +1169,8 @@ const LoginPage = () => {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full h-14 rounded-2xl bg-gradient-to-r from-green-600 to-emerald-600 text-white font-bold disabled:opacity-60"
+                    style={{ fontWeight: 600 }}
+                    className="w-full h-12 sm:h-14 rounded-xl bg-black hover:bg-slate-800 text-white text-xs sm:text-sm font-semibold transition shadow-xs disabled:opacity-50 mt-1"
                   >
                     {loading ? "Resetting..." : "Reset Password"}
                   </button>
@@ -1055,7 +1178,10 @@ const LoginPage = () => {
               </div>
             )}
 
-            <p className="text-center text-xs text-gray-400 mt-8">
+            <p
+              className="text-center text-[11px] text-slate-400 font-medium mt-8"
+              style={{ fontWeight: 600 }}
+            >
               © {new Date().getFullYear()} GuideX. All rights reserved.
             </p>
           </div>
