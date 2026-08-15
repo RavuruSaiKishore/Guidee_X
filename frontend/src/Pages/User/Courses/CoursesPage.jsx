@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom"; // 👈 Added useNavigate
 import {
   ArrowRight,
   Search,
@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 
 const CoursesPage = () => {
+  const navigate = useNavigate(); // 👈 Initialize navigate hook
   const [courses, setCourses] = useState([]);
   const [filteredCourses, setFilteredCourses] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -30,7 +31,8 @@ const CoursesPage = () => {
   useEffect(() => {
     const fetchCourses = async () => {
       try {
-        const token = localStorage.getItem("UserToken");
+        const token =
+          localStorage.getItem("UserToken") || localStorage.getItem("token");
 
         const response = await fetch(`${API_BASE_URL}/api/courses`, {
           method: "GET",
@@ -49,7 +51,7 @@ const CoursesPage = () => {
         }
       } catch (error) {
         console.error("Failed to fetch courses:", error);
-      } finally {
+      } {
         setLoading(false);
       }
     };
@@ -82,6 +84,18 @@ const CoursesPage = () => {
     setFilteredCourses(result);
   }, [searchQuery, selectedCategory, selectedLevel, courses]);
 
+  // 🔐 Protected Navigation Handler for Course Clicks
+  const handleCourseClick = (e, courseId) => {
+    const token =
+      localStorage.getItem("UserToken") || localStorage.getItem("token");
+
+    if (!token) {
+      e.preventDefault(); // Stop direct navigation
+      const coursePath = `/courses/${courseId}`;
+      navigate(`/login?redirect=${encodeURIComponent(coursePath)}`);
+    }
+  };
+
   // Extract unique categories for filter tabs
   const categories = [
     "All",
@@ -109,7 +123,6 @@ const CoursesPage = () => {
     <div className="min-h-screen bg-slate-50/70 pb-32">
       {/* Modern Immersive Hero Header */}
       <div className="relative bg-gradient-to-br from-slate-950 via-indigo-950 to-blue-950 text-white py-24 px-4 sm:px-6 lg:px-8 mb-12 overflow-hidden border-b border-white/10 shadow-2xl">
-        {/* Abstract decorative background glow */}
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-600/20 rounded-full blur-3xl pointer-events-none"></div>
         <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-indigo-600/20 rounded-full blur-3xl pointer-events-none"></div>
 
@@ -132,7 +145,6 @@ const CoursesPage = () => {
             learning resources.
           </p>
 
-          {/* Feature Badges Row */}
           <div className="flex flex-wrap items-center justify-center gap-6 pt-2 text-xs font-bold text-gray-300">
             <span className="flex items-center gap-1.5">
               <CheckCircle2 size={16} className="text-emerald-400" /> Curated
@@ -148,7 +160,6 @@ const CoursesPage = () => {
             </span>
           </div>
 
-          {/* Modern Glassmorphic Search Bar */}
           <div className="pt-6 max-w-2xl mx-auto">
             <div className="relative flex items-center shadow-2xl rounded-2xl overflow-hidden bg-white/10 backdrop-blur-xl border border-white/20 p-2.5 transition-all focus-within:bg-white/20 focus-within:border-blue-400">
               <Search className="absolute left-6 text-gray-300" size={20} />
@@ -165,9 +176,7 @@ const CoursesPage = () => {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
-        {/* Filters and Categories Navigation Card */}
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 bg-white p-6 rounded-3xl border border-gray-100 shadow-xl shadow-slate-200/50">
-          {/* Category Tabs */}
           <div className="flex items-center gap-2.5 overflow-x-auto w-full lg:w-auto pb-2 lg:pb-0 scrollbar-none">
             <span className="text-xs font-black text-gray-400 uppercase tracking-wider flex items-center gap-1.5 mr-2">
               <Compass size={15} className="text-blue-600" /> Category:
@@ -187,7 +196,6 @@ const CoursesPage = () => {
             ))}
           </div>
 
-          {/* Level Filter Dropdown */}
           <div className="flex items-center gap-3 w-full lg:w-auto justify-end border-t lg:border-t-0 pt-4 lg:pt-0 border-slate-100">
             <span className="text-xs font-black text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
               <GraduationCap size={16} className="text-indigo-600" /> Level:
@@ -206,7 +214,6 @@ const CoursesPage = () => {
           </div>
         </div>
 
-        {/* Courses Grid */}
         {filteredCourses.length === 0 ? (
           <div className="text-center py-24 bg-white rounded-3xl border border-gray-100 shadow-xl shadow-slate-200/50 space-y-4 max-w-lg mx-auto">
             <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mx-auto shadow-inner">
@@ -243,7 +250,6 @@ const CoursesPage = () => {
                   className="bg-white rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/50 overflow-hidden flex flex-col justify-between group hover:shadow-2xl hover:border-blue-200 transition-all duration-500 transform hover:-translate-y-1.5"
                 >
                   <div>
-                    {/* Thumbnail Image Container */}
                     <div className="relative h-56 overflow-hidden bg-slate-100">
                       <img
                         src={imageUrl}
@@ -252,7 +258,6 @@ const CoursesPage = () => {
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-transparent to-transparent opacity-60"></div>
 
-                      {/* Top Badges */}
                       <div className="absolute top-4 left-4">
                         <span className="px-3.5 py-1 rounded-full bg-blue-600/90 backdrop-blur-md text-white text-[10px] font-black uppercase tracking-wider shadow-lg">
                           {course.category}
@@ -271,7 +276,6 @@ const CoursesPage = () => {
                       </div>
                     </div>
 
-                    {/* Course Body Content */}
                     <div className="p-6 space-y-3.5">
                       <div className="flex items-center justify-between text-xs font-semibold text-slate-400">
                         <span className="flex items-center gap-1.5 font-bold text-slate-600">
@@ -293,7 +297,6 @@ const CoursesPage = () => {
                     </div>
                   </div>
 
-                  {/* Pricing & Call-to-Action Footer */}
                   <div className="p-6 pt-4 flex items-center justify-between border-t border-slate-100 mt-2 bg-slate-50/50">
                     <div>
                       <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">
@@ -303,18 +306,20 @@ const CoursesPage = () => {
                         {course.price === 0 ? (
                           <span className="text-emerald-600">Free</span>
                         ) : (
-                          `$${course.price}`
+                          `₹${course.price}`
                         )}
                         {course.compareAtPrice > course.price && (
                           <span className="text-xs text-slate-400 line-through ml-2 font-normal">
-                            ${course.compareAtPrice}
+                            ₹{course.compareAtPrice}
                           </span>
                         )}
                       </span>
                     </div>
 
+                    {/* 🔐 Attached handleCourseClick here */}
                     <Link
                       to={`/courses/${course._id}`}
+                      onClick={(e) => handleCourseClick(e, course._id)}
                       className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-xs font-bold hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg shadow-blue-600/30 group-hover:scale-105"
                     >
                       View Curriculum{" "}

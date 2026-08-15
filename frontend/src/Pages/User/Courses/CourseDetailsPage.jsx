@@ -336,7 +336,7 @@ const CourseDetailsPage = () => {
                     Price
                   </span>
                   <span className="text-3xl font-black text-white">
-                    {course.price === 0 ? "Free" : `$${course.price}`}
+                    {course.price === 0 ? "Free" : `₹${course.price}`}
                   </span>
                 </div>
                 {course.compareAtPrice > course.price && (
@@ -650,7 +650,7 @@ const CourseDetailsPage = () => {
               </li>
               <li>
                 <span className="text-slate-500">pricingType:</span>{" "}
-                {course.price === 0 ? "Free" : `Paid ($${course.price})`}
+                {course.price === 0 ? "Free" : `Paid (₹${course.price})`}
               </li>
               <li>
                 <span className="text-slate-500">totalModules:</span>{" "}

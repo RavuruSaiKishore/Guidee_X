@@ -57,3 +57,65 @@ export const handleChatBotMessage = async (req, res) => {
     });
   }
 };
+
+
+const guideXKnowledgeBaseFormulti = `
+- Application Name: GuideX
+- Tagline: Learn. Connect. Grow.
+- Core Roles: Student, Mentor, and Admin.
+- Authentication Features: 
+  1. Email/Password registration secured with a 6-digit OTP.
+  2. Google OAuth login support.
+  3. Forgot Password & Reset Password flow via OTP.
+- Tech Stack: React, Vite, Tailwind CSS, Node.js, Express, MongoDB.
+- 360 Career Hub Tools: Resume Analyzer, Roadmap Generator, Mock Interview, Project Review, Skill Gap Test, and AI Mentor Matching.
+`;
+
+export const handleCareerHubAI = async (req, res) => {
+  try {
+    const { message, activeTool } = req.body;
+
+    if (!message) {
+      return res.status(400).json({
+        success: false,
+        message: "Message is required",
+      });
+    }
+
+    // Default tool context if none specified
+    const currentTool = activeTool || "General Career Intelligence";
+
+    const response = await ai.models.generateContent({
+      model: "gemini-3.5-flash",
+      contents: message,
+      config: {
+        systemInstruction: `
+          You are the specialized AI Career Assistant embedded within the "GuideX" platform's 360-Degree Career Hub.
+          
+          CURRENT ACTIVE WORKSPACE TOOL: "${currentTool}"
+          
+          KNOWLEDGE BASE ABOUT GUIDEX:
+          ${guideXKnowledgeBaseFormulti}
+
+          STRICT RULES YOU MUST FOLLOW:
+          1. Tailor your response contextually to the active tool ("${currentTool}") the student is using (e.g., if Resume Analyzer is active, focus on ATS metrics, bullet points, and keywords; if Roadmap Generator is active, provide structured learning steps).
+          2. Stay helpful, concise, and focused on student career growth, mentorship, and professional upskilling.
+          3. If a user asks about completely unrelated topics (like weather, movies, or general unrelated trivia), politely redirect them back to GuideX career tools.
+        `,
+      },
+    });
+
+    return res.status(200).json({
+      success: true,
+      reply: response.text,
+    });
+  } catch (error) {
+    console.error("Detailed GuideX Career Hub AI Error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch response from GuideX AI",
+      error: error.message,
+    });
+  }
+};

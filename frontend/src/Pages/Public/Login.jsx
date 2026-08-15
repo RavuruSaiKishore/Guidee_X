@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 
 import { ToastContainer, toast } from "react-toastify";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 
 import "react-toastify/dist/ReactToastify.css";
@@ -52,14 +52,18 @@ const GoogleLoginButton = () => {
       }
 
       login(data.token, data.user);
-      toast.success("Google sign-in successful!");
+      toast.success("Google authentication successful!");
+
+      const searchParams = new URLSearchParams(window.location.search);
+      const intendedRedirect = searchParams.get("redirect");
+      const finalDestination = intendedRedirect || data.redirectTo || "/";
 
       setTimeout(() => {
-        navigate(data.redirectTo || "/", { replace: true });
+        navigate(finalDestination, { replace: true });
       }, 500);
     } catch (err) {
       console.error("Google Sign-In Error:", err);
-      toast.error(err.message || "Failed to sign in with Google");
+      toast.error(err.message || "Failed to authenticate with Google");
     }
   };
 
@@ -73,7 +77,7 @@ const GoogleLoginButton = () => {
     <button
       type="button"
       onClick={handleCustomGoogleClick}
-      className="w-full h-12 sm:h-14 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 hover:border-blue-600 transition-all duration-200 flex items-center justify-center gap-3 text-slate-700 shadow-2xs"
+      className="w-full h-12 sm:h-14 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 hover:border-blue-600 transition-all duration-200 flex items-center justify-center gap-3 text-slate-700 shadow-2xs cursor-pointer"
       style={{
         fontFamily: "'Source Sans Pro', Arial, sans-serif",
         fontStyle: "normal",
@@ -107,6 +111,8 @@ const GoogleLoginButton = () => {
 const LoginPage = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
+  const [searchParams] = useSearchParams();
+  const intendedRedirect = searchParams.get("redirect");
 
   const API_BASE_URL =
     import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
@@ -363,8 +369,10 @@ const LoginPage = () => {
 
       toast.success("Login successful!");
 
+      const finalDestination = intendedRedirect || data.redirectTo || "/";
+
       setTimeout(() => {
-        navigate(data.redirectTo || "/", { replace: true });
+        navigate(finalDestination, { replace: true });
       }, 500);
     } catch (error) {
       console.error(error);
@@ -726,7 +734,7 @@ const LoginPage = () => {
                       type="button"
                       disabled={lockUntil !== null}
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-blue-600"
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-blue-600 cursor-pointer"
                     >
                       {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                     </button>
@@ -736,7 +744,7 @@ const LoginPage = () => {
                     <button
                       type="button"
                       onClick={() => changeMode("forgot")}
-                      className="text-xs sm:text-sm font-semibold text-blue-600 hover:underline"
+                      className="text-xs sm:text-sm font-semibold text-blue-600 hover:underline cursor-pointer"
                       style={{ fontWeight: 600 }}
                     >
                       Forgot password?
@@ -747,7 +755,7 @@ const LoginPage = () => {
                     type="submit"
                     disabled={loading || lockUntil !== null}
                     style={{ fontWeight: 600 }}
-                    className="w-full h-12 sm:h-14 rounded-xl bg-black hover:bg-slate-800 text-white text-xs sm:text-sm font-semibold flex items-center justify-center gap-2 transition shadow-xs disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full h-12 sm:h-14 rounded-xl bg-black hover:bg-slate-800 text-white text-xs sm:text-sm font-semibold flex items-center justify-center gap-2 transition shadow-xs disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                   >
                     {loading
                       ? "Signing in..."
@@ -798,7 +806,7 @@ const LoginPage = () => {
                 <button
                   onClick={() => changeMode("register")}
                   style={{ fontWeight: 600 }}
-                  className="w-full h-12 sm:h-14 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs sm:text-sm font-semibold text-slate-700 transition shadow-2xs"
+                  className="w-full h-12 sm:h-14 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs sm:text-sm font-semibold text-slate-700 transition shadow-2xs cursor-pointer"
                 >
                   Create an Account
                 </button>
@@ -815,7 +823,7 @@ const LoginPage = () => {
                   type="button"
                   onClick={() => changeMode("login")}
                   style={{ fontWeight: 600 }}
-                  className="flex items-center gap-1.5 text-xs text-slate-600 hover:text-blue-600 mb-5 font-semibold"
+                  className="flex items-center gap-1.5 text-xs text-slate-600 hover:text-blue-600 mb-5 font-semibold cursor-pointer"
                 >
                   <ArrowLeft size={15} />
                   Back to login
@@ -882,7 +890,7 @@ const LoginPage = () => {
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-blue-600"
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-blue-600 cursor-pointer"
                     >
                       {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                     </button>
@@ -904,7 +912,7 @@ const LoginPage = () => {
                       onClick={() =>
                         setShowConfirmPassword(!showConfirmPassword)
                       }
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-blue-600"
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-blue-600 cursor-pointer"
                     >
                       {showConfirmPassword ? (
                         <EyeOff size={18} />
@@ -918,7 +926,7 @@ const LoginPage = () => {
                     type="submit"
                     disabled={loading}
                     style={{ fontWeight: 600 }}
-                    className="w-full h-12 sm:h-14 rounded-xl bg-black hover:bg-slate-800 text-white text-xs sm:text-sm font-semibold transition shadow-xs disabled:opacity-50 mt-1"
+                    className="w-full h-12 sm:h-14 rounded-xl bg-black hover:bg-slate-800 text-white text-xs sm:text-sm font-semibold transition shadow-xs disabled:opacity-50 mt-1 cursor-pointer"
                   >
                     {loading ? "Creating account..." : "Create Account"}
                   </button>
@@ -933,7 +941,7 @@ const LoginPage = () => {
                     type="button"
                     onClick={() => changeMode("login")}
                     style={{ fontWeight: 600 }}
-                    className="font-semibold text-blue-600 hover:underline"
+                    className="font-semibold text-blue-600 hover:underline cursor-pointer"
                   >
                     Sign in
                   </button>
@@ -951,7 +959,7 @@ const LoginPage = () => {
                   type="button"
                   onClick={() => changeMode("register")}
                   style={{ fontWeight: 600 }}
-                  className="flex items-center gap-1.5 text-xs text-slate-600 hover:text-blue-600 mb-6 font-semibold"
+                  className="flex items-center gap-1.5 text-xs text-slate-600 hover:text-blue-600 mb-6 font-semibold cursor-pointer"
                 >
                   <ArrowLeft size={15} />
                   Back
@@ -1002,7 +1010,7 @@ const LoginPage = () => {
                     type="submit"
                     disabled={loading}
                     style={{ fontWeight: 600 }}
-                    className="w-full h-12 sm:h-14 rounded-xl bg-black hover:bg-slate-800 text-white text-xs sm:text-sm font-semibold transition shadow-xs disabled:opacity-50"
+                    className="w-full h-12 sm:h-14 rounded-xl bg-black hover:bg-slate-800 text-white text-xs sm:text-sm font-semibold transition shadow-xs disabled:opacity-50 cursor-pointer"
                   >
                     {loading ? "Verifying..." : "Verify Account"}
                   </button>
@@ -1020,7 +1028,7 @@ const LoginPage = () => {
                   type="button"
                   onClick={() => changeMode("login")}
                   style={{ fontWeight: 600 }}
-                  className="flex items-center gap-1.5 text-xs text-slate-600 hover:text-blue-600 mb-6 font-semibold"
+                  className="flex items-center gap-1.5 text-xs text-slate-600 hover:text-blue-600 mb-6 font-semibold cursor-pointer"
                 >
                   <ArrowLeft size={15} />
                   Back to login
@@ -1060,7 +1068,7 @@ const LoginPage = () => {
                     type="submit"
                     disabled={loading}
                     style={{ fontWeight: 600 }}
-                    className="w-full h-12 sm:h-14 rounded-xl bg-black hover:bg-slate-800 text-white text-xs sm:text-sm font-semibold transition shadow-xs disabled:opacity-50"
+                    className="w-full h-12 sm:h-14 rounded-xl bg-black hover:bg-slate-800 text-white text-xs sm:text-sm font-semibold transition shadow-xs disabled:opacity-50 cursor-pointer"
                   >
                     {loading ? "Sending OTP..." : "Send OTP"}
                   </button>
@@ -1078,7 +1086,7 @@ const LoginPage = () => {
                   type="button"
                   onClick={() => changeMode("forgot")}
                   style={{ fontWeight: 600 }}
-                  className="flex items-center gap-1.5 text-xs text-slate-600 hover:text-blue-600 mb-6 font-semibold"
+                  className="flex items-center gap-1.5 text-xs text-slate-600 hover:text-blue-600 mb-6 font-semibold cursor-pointer"
                 >
                   <ArrowLeft size={15} />
                   Back
@@ -1131,7 +1139,7 @@ const LoginPage = () => {
                     <button
                       type="button"
                       onClick={() => setShowNewPassword(!showNewPassword)}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-blue-600"
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-blue-600 cursor-pointer"
                     >
                       {showNewPassword ? (
                         <EyeOff size={18} />
@@ -1156,7 +1164,7 @@ const LoginPage = () => {
                       onClick={() =>
                         setShowConfirmNewPassword(!showConfirmNewPassword)
                       }
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-blue-600"
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-blue-600 cursor-pointer"
                     >
                       {showConfirmNewPassword ? (
                         <EyeOff size={18} />
@@ -1170,7 +1178,7 @@ const LoginPage = () => {
                     type="submit"
                     disabled={loading}
                     style={{ fontWeight: 600 }}
-                    className="w-full h-12 sm:h-14 rounded-xl bg-black hover:bg-slate-800 text-white text-xs sm:text-sm font-semibold transition shadow-xs disabled:opacity-50 mt-1"
+                    className="w-full h-12 sm:h-14 rounded-xl bg-black hover:bg-slate-800 text-white text-xs sm:text-sm font-semibold transition shadow-xs disabled:opacity-50 mt-1 cursor-pointer"
                   >
                     {loading ? "Resetting..." : "Reset Password"}
                   </button>

@@ -8,7 +8,7 @@ const userSchema = new mongoose.Schema(
       trim: true,
     },
 
-    lastName: { 
+    lastName: {
       type: String,
       required: true,
       trim: true,
@@ -22,10 +22,12 @@ const userSchema = new mongoose.Schema(
       trim: true,
     },
 
+    // In your User Schema
     password: {
       type: String,
-      required: true,
-      minlength: 6,
+      required: function () {
+        return this.authProvider !== "google";
+      },
     },
 
     role: {

@@ -57,6 +57,22 @@ const Navbar = () => {
   const API_BASE_URL =
     import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
 
+    // Replace with how you store your auth token (e.g., localStorage.getItem("token"))
+    const token = localStorage.getItem("token");
+
+  const handleNavbarClick = (e, targetPath, closeMenus = () => {}) => {
+    closeMenus(); // Close mobile drawer or dropdowns
+
+    // Check for your application's auth token keys
+    const token =
+      localStorage.getItem("UserToken");
+
+    if (!token) {
+      e.preventDefault(); // Stop normal router navigation
+      // Redirect to login with the clicked item's path as the return destination
+      navigate(`/login?redirect=${encodeURIComponent(targetPath)}`);
+    }
+  };
   // ==========================================
   // FETCH COURSES DYNAMICALLY FROM BACKEND
   // ==========================================
@@ -489,7 +505,11 @@ const Navbar = () => {
                             <Link
                               key={item.path}
                               to={item.path}
-                              onClick={() => setShowProgramsDropdown(false)}
+                              onClick={(e) =>
+                                handleNavbarClick(e, item.path, () =>
+                                  setShowProgramsDropdown(false)
+                                )
+                              }
                               className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-all duration-200 text-xs font-semibold ${
                                 active
                                   ? "bg-blue-600 text-white shadow-sm"
@@ -853,8 +873,7 @@ const Navbar = () => {
           <div className="space-y-1 mb-2">
             <Link
               to="/courses"
-              onClick={() => setMobileOpen(false)}
-              className="flex items-center gap-3.5 px-4 py-3 rounded-xl font-semibold text-sm text-gray-700 hover:bg-blue-50/80"
+              className="flex items-center gap-3.5 px-4 py-3 rounded-xl font-semibold text-sm text-gray-700 hover:bg-blue-500/10 hover:text-blue-600 transition"
             >
               <BookOpen size={18} />
               Explore Programs
@@ -899,7 +918,9 @@ const Navbar = () => {
                 <Link
                   key={item.path}
                   to={item.path}
-                  onClick={() => setMobileOpen(false)}
+                  onClick={(e) =>
+                    handleNavbarClick(e, item.path, () => setMobileOpen(false))
+                  }
                   className={`flex items-center gap-3.5 px-4 py-2.5 rounded-xl text-sm font-medium transition ${
                     active
                       ? "bg-blue-50 text-blue-600 font-semibold"

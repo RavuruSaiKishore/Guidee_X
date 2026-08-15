@@ -48,7 +48,8 @@ const Mentors = () => {
   const fetchMentors = async (category) => {
     try {
       setLoading(true);
-      const token = localStorage.getItem("UserToken");
+      const token =
+        localStorage.getItem("UserToken") || localStorage.getItem("token");
 
       let url = `${API_BASE_URL}/api/mentor/allMentors`;
       if (category && category !== "All Categories") {
@@ -57,7 +58,7 @@ const Mentors = () => {
 
       const res = await fetch(url, {
         headers: {
-          Authorization: `Bearer ${token}`,
+          ...(token && { Authorization: `Bearer ${token}` }),
         },
       });
 
@@ -83,9 +84,10 @@ const Mentors = () => {
   useEffect(() => {
     const fetchCategoriesList = async () => {
       try {
-        const token = localStorage.getItem("UserToken");
+        const token =
+          localStorage.getItem("UserToken") || localStorage.getItem("token");
         const res = await fetch(`${API_BASE_URL}/api/mentor/allMentors`, {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: { ...(token && { Authorization: `Bearer ${token}` }) },
         });
         const data = await res.json();
         if (res.ok && data.mentors) {
@@ -216,7 +218,7 @@ const Mentors = () => {
               </div>
             </div>
 
-            {/* PRESTIGIOUS UNIVERSITIES / INSTITUTIONS CARD (Mimicking Great Learning UI layout below category) */}
+            {/* PRESTIGIOUS UNIVERSITIES / INSTITUTIONS CARD */}
             <div className="bg-white rounded-3xl border border-slate-200/80 p-6 shadow-sm">
               <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">
                 EARN CERTIFICATES FROM
@@ -349,6 +351,19 @@ const MentorCard = ({ mentor, navigate, API_BASE_URL }) => {
         `${mentor.firstName || ""} ${mentor.lastName || ""}`
       )}&background=f1f5f9&color=0f172a&size=200`;
 
+  // 🔐 Protected Navigation Handler for Mentor Profile & Booking Clicks
+  const handleProtectedAction = (e, targetPath) => {
+    const token =
+      localStorage.getItem("UserToken") || localStorage.getItem("token");
+
+    if (!token) {
+      e.preventDefault();
+      navigate(`/login?redirect=${encodeURIComponent(targetPath)}`);
+    } else {
+      navigate(targetPath);
+    }
+  };
+
   return (
     <div className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl text-center">
       <div>
@@ -416,22 +431,26 @@ const MentorCard = ({ mentor, navigate, API_BASE_URL }) => {
         </div>
       </div>
 
-      {/* Action Buttons */}
+      {/* Action Buttons with Authentication Guard */}
       <div className="mt-6 pt-4 border-t border-slate-100 flex items-center gap-2">
         <button
-          onClick={() => navigate(`/mentor/profile/${mentor._id}`)}
-          className="flex-1 rounded-xl border border-slate-200 py-2 text-xs font-bold text-slate-700 transition hover:bg-slate-50"
+          onClick={(e) =>
+            handleProtectedAction(e, `/mentor/profile/${mentor._id}`)
+          }
+          className="flex-1 rounded-xl border border-slate-200 py-2 text-xs font-bold text-slate-700 transition hover:bg-slate-50 cursor-pointer"
         >
           Profile
         </button>
 
         <button
-          onClick={() => navigate(`/mentor/booking/${mentor._id}`)}
+          onClick={(e) =>
+            handleProtectedAction(e, `/mentor/booking/${mentor._id}`)
+          }
           disabled={mentor.accountStatus === "Suspended"}
           className={`flex flex-1 items-center justify-center gap-1 rounded-xl py-2 text-xs font-bold text-white shadow-sm transition ${
             mentor.accountStatus === "Suspended"
               ? "bg-slate-200 text-slate-400 cursor-not-allowed"
-              : "bg-slate-900 hover:bg-slate-800"
+              : "bg-slate-900 hover:bg-slate-800 cursor-pointer"
           }`}
         >
           {mentor.accountStatus === "Suspended" ? "Unavailable" : "Book"}

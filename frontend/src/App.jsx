@@ -82,6 +82,8 @@ const CertificatePage = lazy(() =>
   import("./Pages/User/Courses/CertificatePage")
 );
 
+
+
 // mentor routes
 const MentorLayout = lazy(() => import("./Pages/Mentor/Layout/MentorLayout"));
 const MentorDashboard = lazy(() =>
@@ -269,6 +271,7 @@ function App() {
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/blogs" element={<Blogs />} />
+          <Route path="/career-resources" element={<CareerResources />} />
 
           {/* ================= STUDENT PROTECTED ROUTES ================= */}
           <Route element={<ProtectedRoute allowedRole="student" />}>
@@ -295,7 +298,7 @@ function App() {
               path="/my-registrations/:id"
               element={<RegistrationDetails />}
             />
-            <Route path="/career-resources" element={<CareerResources />} />
+
             <Route
               path="/learning-resources/:id"
               element={<ResourceDetails />}

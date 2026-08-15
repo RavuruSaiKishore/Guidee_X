@@ -51,9 +51,7 @@ const categories = [
 
 const getToken = () => {
   return (
-    localStorage.getItem("UserToken") ||
-    localStorage.getItem("userToken") ||
-    localStorage.getItem("token")
+    localStorage.getItem("UserToken")
   );
 };
 

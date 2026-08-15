@@ -13,8 +13,6 @@ import { isStrongPassword } from "../utils/validatePassword.js";
 import { OAuth2Client } from "google-auth-library";
 
 
-
-
 export const registerUser = async (req, res) => {
   try {
     const { firstName, lastName, email, password, role, phone } = req.body;
