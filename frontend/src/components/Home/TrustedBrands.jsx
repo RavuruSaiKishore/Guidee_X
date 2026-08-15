@@ -1,7 +1,6 @@
 import React from "react";
 
 const TrustedBrands = () => {
-  // Original companies plus expanded global institutions and brands with real official logo image URLs
   const row1Companies = [
     {
       name: "Google",
@@ -17,15 +16,19 @@ const TrustedBrands = () => {
     },
     {
       name: "Flipkart",
-      logo: "https://seeklogo.com/images/F/flipkart-logo-3F33614ADA-seeklogo.com.png",
+      logo: "https://uxwing.com/wp-content/themes/uxwing/download/brands-and-social-media/flipkart-icon.svg",
     },
     {
       name: "Swiggy",
-      logo: "https://seeklogo.com/images/S/swiggy-logo-CC4714AF0E-seeklogo.com.png",
+      logo: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/slack/slack-original.svg", // Fallback representative clean icon if needed
+      // Using reliable domain-based favicon/logo helper as direct backup:
+      fallbackImg:
+        "https://www.google.com/s2/favicons?domain=swiggy.com&sz=128",
     },
     {
       name: "IIT Bombay",
-      logo: "https://upload.wikimedia.org/wikipedia/en/1/1d/IIT_Bombay_Logo.svg",
+      fallbackImg:
+        "https://www.google.com/s2/favicons?domain=iitb.ac.in&sz=128",
     },
   ];
 
@@ -56,6 +59,46 @@ const TrustedBrands = () => {
     },
   ];
 
+  const renderCompanyCard = (company, index, rowId) => {
+    const primarySource = company.logo || company.fallbackImg;
+
+    return (
+      <div
+        key={`${rowId}-${index}`}
+        className="flex items-center gap-3 px-6 py-3.5 rounded-2xl bg-white border border-slate-200/85 text-slate-800 font-bold text-xs shadow-sm hover:border-blue-300 transition shrink-0 min-w-[160px] justify-center"
+      >
+        {primarySource ? (
+          <img
+            src={primarySource}
+            alt={company.name}
+            className="w-5 h-5 object-contain"
+            onError={(e) => {
+              // If primary fails and a fallback exists, try it once
+              if (
+                company.fallbackImg &&
+                e.currentTarget.src !== company.fallbackImg
+              ) {
+                e.currentTarget.src = company.fallbackImg;
+              } else {
+                // If everything fails, hide the broken image tag and show a fallback letter badge dynamically
+                e.currentTarget.style.display = "none";
+                const parent = e.currentTarget.parentElement;
+                if (parent && !parent.querySelector(".fallback-badge")) {
+                  const badge = document.createElement("div");
+                  badge.className =
+                    "w-5 h-5 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-[10px] font-extrabold fallback-badge";
+                  badge.innerText = company.name.charAt(0);
+                  parent.insertBefore(badge, parent.firstChild);
+                }
+              }
+            }}
+          />
+        ) : null}
+        <span className="tracking-wide">{company.name}</span>
+      </div>
+    );
+  };
+
   return (
     <section className="bg-white py-16 border-y border-slate-100 font-sans overflow-hidden">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center mb-10">
@@ -73,44 +116,14 @@ const TrustedBrands = () => {
         {/* ROW 1: Moves Left to Right */}
         <div className="flex w-max animate-marquee space-x-6">
           {[...row1Companies, ...row1Companies, ...row1Companies].map(
-            (company, index) => (
-              <div
-                key={`row1-${index}`}
-                className="flex items-center gap-3 px-6 py-3.5 rounded-2xl bg-slate-50 border border-slate-200/85 text-slate-800 font-bold text-xs shadow-sm hover:border-blue-300 transition shrink-0 min-w-[160px] justify-center bg-white"
-              >
-                <img
-                  src={company.logo}
-                  alt={company.name}
-                  className="w-5 h-5 object-contain"
-                  onError={(e) => {
-                    e.currentTarget.style.display = "none";
-                  }}
-                />
-                <span className="tracking-wide">{company.name}</span>
-              </div>
-            )
+            (company, index) => renderCompanyCard(company, index, "row1")
           )}
         </div>
 
         {/* ROW 2: Moves Right to Left */}
         <div className="flex w-max animate-marquee-reverse space-x-6">
           {[...row2Companies, ...row2Companies, ...row2Companies].map(
-            (company, index) => (
-              <div
-                key={`row2-${index}`}
-                className="flex items-center gap-3 px-6 py-3.5 rounded-2xl bg-slate-50 border border-slate-200/85 text-slate-800 font-bold text-xs shadow-sm hover:border-blue-300 transition shrink-0 min-w-[160px] justify-center bg-white"
-              >
-                <img
-                  src={company.logo}
-                  alt={company.name}
-                  className="w-5 h-5 object-contain"
-                  onError={(e) => {
-                    e.currentTarget.style.display = "none";
-                  }}
-                />
-                <span className="tracking-wide">{company.name}</span>
-              </div>
-            )
+            (company, index) => renderCompanyCard(company, index, "row2")
           )}
         </div>
       </div>
