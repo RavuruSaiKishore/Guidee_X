@@ -732,7 +732,7 @@ const Navbar = () => {
                       <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-orange-100 text-orange-600">
                         <ClipboardList size={18} />
                       </div>
-                      <span className="font-medium">My Registrations</span>
+                      <span className="font-medium">My Events</span>
                     </Link>
 
                     <Link
@@ -1013,7 +1013,7 @@ const Navbar = () => {
                   }`}
                 >
                   <ClipboardList size={18} />
-                  My Registrations
+                  My Events
                 </Link>
 
                 <Link

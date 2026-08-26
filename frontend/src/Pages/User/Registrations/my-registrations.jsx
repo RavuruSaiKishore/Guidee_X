@@ -185,6 +185,26 @@ const MyRegistrations = () => {
     return event?.endDateTime;
   };
 
+  // Check if event is strictly in the past
+  const isEventCompleted = (registration) => {
+    const event = getEvent(registration);
+    if (!event) return false;
+
+    if (event.computedStatus === "Completed" || event.status === "Completed") {
+      return true;
+    }
+
+    const end = getEventEnd(event);
+    if (end) {
+      const eventEnd = new Date(end);
+      if (!isNaN(eventEnd.getTime()) && Date.now() > eventEnd.getTime()) {
+        return true;
+      }
+    }
+
+    return false;
+  };
+
   const canJoinEvent = (registration) => {
     const event = getEvent(registration);
     if (!event) return false;
@@ -194,6 +214,11 @@ const MyRegistrations = () => {
       registration.status === "cancelled" ||
       event.status === "Cancelled"
     ) {
+      return false;
+    }
+
+    // If event is already finished, joining is disabled
+    if (isEventCompleted(registration)) {
       return false;
     }
 
@@ -207,7 +232,6 @@ const MyRegistrations = () => {
     const now = Date.now();
 
     if (event.computedStatus === "Live Now") return true;
-    if (event.computedStatus === "Completed") return false;
 
     return now >= joinTime;
   };
@@ -332,7 +356,6 @@ const MyRegistrations = () => {
   }, [registrations]);
 
   const handleViewEvent = (registration) => {
-    // Use the registration document _id instead of the event._id
     const registrationId = registration._id || registration.registrationId;
 
     if (!registrationId) {
@@ -340,9 +363,9 @@ const MyRegistrations = () => {
       return;
     }
 
-    // Route to your registration details page
     navigate(`/my-registrations/${registrationId}`);
   };
+
   const handleJoinEvent = (registration) => {
     const event = getEvent(registration);
     if (!canJoinEvent(registration)) {
@@ -380,9 +403,7 @@ const MyRegistrations = () => {
       <ToastContainer position="top-right" autoClose={3000} theme="light" />
 
       <div className="mx-auto max-w-7xl px-4 pb-20 pt-28 sm:px-6 lg:px-8">
-        {/* =====================================================
-            HEADER WITH BACKGROUND COLOR 
-        ===================================================== */}
+        {/* HEADER */}
         <div className="rounded-3xl bg-gradient-to-r from-violet-900 via-indigo-900 to-slate-900 px-6 py-8 sm:px-10 sm:py-10 text-white shadow-xl">
           <button
             onClick={() => navigate(-1)}
@@ -584,9 +605,7 @@ const MyRegistrations = () => {
             </p>
           </div>
         ) : (
-          /* ===================================================
-             COMPACT HORIZONTAL CARDS LIST
-          =================================================== */
+          /* LIST OF CARDS */
           <div className="mt-6 space-y-4">
             {filteredRegistrations.map((registration) => {
               const event = getEvent(registration);
@@ -596,7 +615,7 @@ const MyRegistrations = () => {
               const eventEnd = getEventEnd(event);
               const eventStatus = event?.computedStatus || "Upcoming";
               const eventLive = eventStatus === "Live Now";
-              const eventCompleted = eventStatus === "Completed";
+              const eventCompleted = isEventCompleted(registration);
               const joinAvailable = canJoinEvent(registration);
 
               return (
@@ -604,7 +623,7 @@ const MyRegistrations = () => {
                   key={registration._id}
                   className="group flex flex-col lg:flex-row overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-all duration-200 hover:shadow-md"
                 >
-                  {/* LEFT: COMPACT BANNER IMAGE */}
+                  {/* LEFT: BANNER IMAGE */}
                   <div className="relative lg:w-72 h-48 lg:h-auto shrink-0 overflow-hidden bg-slate-900">
                     {bannerUrl ? (
                       <img
@@ -623,10 +642,10 @@ const MyRegistrations = () => {
                     <div className="absolute left-3 top-3 flex flex-wrap gap-1.5">
                       <span
                         className={`rounded-full border px-2.5 py-0.5 text-[10px] font-bold shadow-sm backdrop-blur-md ${getStatusStyle(
-                          eventStatus
+                          eventCompleted ? "Completed" : eventStatus
                         )}`}
                       >
-                        {eventStatus}
+                        {eventCompleted ? "Completed" : eventStatus}
                       </span>
                       <span
                         className={`rounded-full border px-2.5 py-0.5 text-[10px] font-bold shadow-sm ${getRegistrationStatusStyle(
@@ -637,7 +656,7 @@ const MyRegistrations = () => {
                       </span>
                     </div>
 
-                    {eventLive && (
+                    {eventLive && !eventCompleted && (
                       <div className="absolute left-3 bottom-3 flex items-center gap-1.5 rounded-full bg-teal-500 px-2.5 py-0.5 text-[10px] font-bold text-white shadow-md">
                         <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white" />
                         LIVE NOW
@@ -645,7 +664,7 @@ const MyRegistrations = () => {
                     )}
                   </div>
 
-                  {/* RIGHT: COMPACT CONTENT BODY */}
+                  {/* RIGHT: CONTENT BODY */}
                   <div className="flex flex-1 flex-col justify-between p-5 sm:p-6">
                     <div>
                       {/* DOMAIN & PRICING TAGS */}
@@ -676,7 +695,7 @@ const MyRegistrations = () => {
                         {event.description || "No event description available."}
                       </p>
 
-                      {/* COMPACT SCHEDULE & SPEAKER GRID */}
+                      {/* SCHEDULE & SPEAKER GRID */}
                       <div className="mt-4 grid grid-cols-1 gap-2.5 sm:grid-cols-3">
                         {/* DATE */}
                         <div className="flex items-center gap-2.5 rounded-xl bg-violet-50/50 p-2.5 border border-violet-100/40">
@@ -736,7 +755,7 @@ const MyRegistrations = () => {
 
                     {/* FOOTER METRICS & ACTIONS */}
                     <div className="mt-5 flex flex-col gap-3 border-t border-slate-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
-                      {/* REGISTRATION & ATTENDANCE METRICS */}
+                      {/* METRICS */}
                       <div className="flex flex-wrap items-center gap-3 text-[11px] font-medium text-slate-500">
                         <span>
                           Registered:{" "}
@@ -765,7 +784,7 @@ const MyRegistrations = () => {
                         </span>
                       </div>
 
-                      {/* ACTION BUTTONS */}
+                      {/* ACTIONS */}
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => handleViewEvent(registration)}
@@ -775,14 +794,24 @@ const MyRegistrations = () => {
                           View Event
                         </button>
 
-                        {joinAvailable && (
+                        {eventCompleted ? (
                           <button
-                            onClick={() => handleJoinEvent(registration)}
-                            className="flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-600 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-teal-100 transition hover:-translate-y-0.5 hover:shadow-lg"
+                            disabled
+                            className="flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-slate-100 px-4 py-2.5 text-xs font-bold text-slate-400 cursor-not-allowed"
                           >
-                            <Video size={15} />
-                            {eventLive ? "Join Live" : "Join Event"}
+                            <CheckCircle2 size={15} />
+                            Completed
                           </button>
+                        ) : (
+                          joinAvailable && (
+                            <button
+                              onClick={() => handleJoinEvent(registration)}
+                              className="flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-600 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-teal-100 transition hover:-translate-y-0.5 hover:shadow-lg"
+                            >
+                              <Video size={15} />
+                              {eventLive ? "Join Live" : "Join Event"}
+                            </button>
+                          )
                         )}
                       </div>
                     </div>
